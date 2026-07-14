@@ -1,0 +1,190 @@
+:root {
+    --paper-bg: #EAE6D7;
+    --ink-color: #1A1A1A;
+    --stamp-red: #A83232;
+    --dark-bg: #2C2C2C;
+}
+
+body {
+    background-color: var(--dark-bg);
+    color: var(--ink-color);
+    font-family: 'Courier New', Courier, monospace;
+    display: flex;
+    justify-content: center;
+    padding: 15px;
+    margin: 0;
+}
+
+/* --- МОДАЛЬНЕ ВІКНО --- */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(44, 44, 44, 0.95);
+    display: flex; justify-content: center; align-items: center; z-index: 100;
+}
+.modal-content {
+    background: var(--paper-bg); padding: 25px; border: 2px solid var(--ink-color);
+    width: 90%; max-width: 350px; box-shadow: 10px 10px 0px rgba(0,0,0,1);
+    text-align: center;
+}
+.input-group { margin-bottom: 15px; display: flex; flex-direction: column; text-align: left; }
+.input-group label { font-size: 14px; font-weight: bold; margin-bottom: 5px; }
+.input-group input { 
+    padding: 10px; font-family: inherit; font-size: 16px;
+    border: 2px solid var(--ink-color); background: transparent; color: var(--ink-color); 
+    outline: none;
+}
+.input-group input:focus { background: rgba(0,0,0,0.05); }
+
+/* --- ОСНОВНИЙ ЛИСТ --- */
+.app-wrapper { width: 100%; max-width: 500px; display: flex; flex-direction: column; align-items: center; }
+.sheet-container {
+    background-color: var(--paper-bg); width: 100%; box-sizing: border-box;
+    padding: 20px; border: 2px solid var(--ink-color); box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
+    margin-bottom: 20px;
+}
+
+.header-container { display: flex; align-items: center; border-bottom: 3px double var(--ink-color); margin-bottom: 20px; padding-bottom: 10px; }
+.photo-box {
+    width: 80px; height: 100px; border: 2px solid var(--ink-color);
+    display: flex; align-items: flex-end; justify-content: center;
+    background-color: var(--paper-bg); margin-right: 15px; overflow: hidden;
+}
+.photo-box svg { width: 90%; height: 90%; fill: var(--ink-color); }
+
+.header-text { flex-grow: 1; text-align: center; }
+.header-text h1 { margin: 0; font-size: 22px; letter-spacing: 1px; }
+.sub-header { margin: 5px 0 0 0; font-weight: bold; }
+
+.generate-btn {
+    width: 100%; background-color: var(--ink-color); color: var(--paper-bg);
+    border: 2px solid var(--ink-color); padding: 15px; font-family: inherit;
+    font-weight: bold; font-size: 16px; cursor: pointer; transition: all 0.2s;
+}
+.generate-btn:hover { background-color: #333; }
+.generate-btn:active { transform: scale(0.98); }
+
+.grid-section { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.box { border: 2px solid var(--ink-color); padding: 10px; display: flex; flex-direction: column; min-height: 50px; }
+.full-width { margin-bottom: 10px; }
+
+.label-row {
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid var(--ink-color); margin-bottom: 8px; padding-bottom: 2px;
+}
+.label { font-size: 12px; font-weight: bold; }
+.add-btn { background: none; border: none; color: var(--ink-color); font-family: inherit; font-weight: bold; font-size: 14px; cursor: pointer; padding: 0 5px; }
+
+/* --- ПОЛЯ З БЛЮРОМ І КНОПКОЮ --- */
+.field-content {
+    position: relative; flex-grow: 1; display: flex; flex-direction: column; 
+    justify-content: center; cursor: pointer; min-height: 40px; font-weight: bold;
+}
+.blurred-text { filter: blur(5px); color: transparent; text-shadow: 0 0 8px rgba(0,0,0,0.7); user-select: none; text-align: center; }
+
+/* --- ГЛОБАЛЬНИЙ БЛЮР НАД АНКЕТОЮ --- */
+.global-lock {
+    position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px;
+    background: rgba(234, 230, 215, 0.4);
+    backdrop-filter: blur(6px); /* Розмиває весь листок */
+    display: flex; justify-content: center; align-items: center; z-index: 50;
+}
+
+.start-round-btn {
+    background-color: var(--ink-color); color: var(--paper-bg);
+    border: 2px solid var(--ink-color); padding: 15px 40px;
+    font-family: inherit; font-weight: bold; font-size: 20px;
+    cursor: pointer; transition: transform 0.2s; 
+    box-shadow: 5px 5px 0px rgba(0,0,0,1);
+}
+.start-round-btn:active { transform: scale(0.95); box-shadow: 2px 2px 0px rgba(0,0,0,1); }
+
+/* --- ПОЛЯ З БЛЮРОМ (БЕЗ КНОПОК) --- */
+.field-content {
+    position: relative; flex-grow: 1; display: flex; flex-direction: column; 
+    justify-content: center; cursor: pointer; min-height: 40px; font-weight: bold;
+}
+.blurred-text { 
+    filter: blur(5px); color: transparent; text-shadow: 0 0 8px rgba(0,0,0,0.7); 
+    user-select: none; text-align: center; 
+}
+.revealed { text-align: left; }
+.reveal-btn:hover { background: var(--paper-bg); color: var(--ink-color); }
+
+.footer-stamp {
+    text-align: right; color: var(--stamp-red); font-weight: bold; font-size: 18px;
+    border: 3px solid var(--stamp-red); padding: 10px; transform: rotate(-5deg);
+    display: inline-block; margin-top: 20px; float: right;
+}
+.hidden { display: none; }
+.revealed { text-align: left; }
+/* --- ЗАПОБІЖНИК ДЛЯ ПРИХОВУВАННЯ --- */
+/* Це потрібно, щоб ID-селектори не перебивали клас .hidden на ПК */
+#character-sheet.hidden {
+    display: none !important;
+}
+
+/* --- АДАПТАЦІЯ ПІД ПК (ГОРИЗОНТАЛЬНА ID-КАРТКА) --- */
+@media (min-width: 800px) {
+    /* Робимо обгортку ширшою */
+    .app-wrapper {
+        max-width: 900px; 
+    }
+
+    /* Змінюємо напрямок на горизонтальний */
+    .sheet-container {
+        display: flex;
+        flex-direction: row;
+        border-radius: 15px; /* Заокруглені кути, як у пластикової картки */
+        padding: 30px;
+        min-height: 500px;
+        align-items: stretch;
+    }
+
+    /* Ліва колонка: Фото і ПІБ */
+    .header-container {
+        flex-direction: column;
+        width: 250px;
+        border-bottom: none;
+        border-right: 3px double var(--ink-color); /* Вертикальна лінія замість горизонтальної */
+        margin-bottom: 0;
+        padding-bottom: 0;
+        margin-right: 30px;
+        padding-right: 20px;
+        justify-content: center;
+    }
+
+    /* Робимо фотографію більшою на ПК */
+    .photo-box {
+        width: 140px;
+        height: 180px;
+        margin-right: 0;
+        margin-bottom: 20px;
+    }
+
+    .header-text h1 {
+        font-size: 26px;
+    }
+
+    /* ... попередній код всередині @media ... */
+
+    /* Права колонка: Характеристики */
+    #character-sheet {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    /* Акуратна кнопка генерації ПІД аркушем */
+    .generate-btn {
+        max-width: 350px;
+        border-radius: 8px;
+        margin-top: 20px;
+        align-self: center;
+    }
+    /* Запобігаємо розтягуванню штампу на всю ширину */
+    .footer-stamp {
+        align-self: flex-end;
+        margin-right: 10px;
+    }
+} /* Закриваємо @media */
