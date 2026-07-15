@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Стартове вікно для введення імені -->
     <div id="start-modal" class="modal-overlay">
         <div class="modal-content">
             <h2>ІДЕНТИФІКАЦІЯ УЧАСНИКА</h2>
@@ -26,9 +25,7 @@
     <div class="app-wrapper">
         <div class="sheet-container">
             <div class="header-container">
-                <div class="photo-box" id="profile-photo">
-                    <!-- Сюди скрипт вставить SVG силует -->
-                </div>
+                <div class="photo-box" id="profile-photo"></div>
                 <div class="header-text">
                     <h1>ОСОБОВА СПРАВА</h1>
                     <p class="sub-header">ОБ'ЄКТ № <span id="candidate-id">0000</span></p>
@@ -36,28 +33,33 @@
                 </div>
             </div>
 
-           <!-- ... верхня частина без змін ... -->
-
             <div id="character-sheet" class="hidden" style="position: relative;">
                 
-                <!-- ГЛОБАЛЬНИЙ БЛОКУВАЛЬНИК -->
                 <div id="global-lock" class="global-lock">
                     <button class="start-round-btn" onclick="unlockSheet()">РОЗПОЧАТИ</button>
                 </div>
 
                 <div class="grid-section">
-                    <div class="box">
-                        <div class="label-row">
-                            <span class="label">ПРОФЕСІЯ:</span>
-                            <button class="add-btn" onclick="addExtra('profession', 'professions')">[+]</button>
-                        </div>
-                        <div class="field-content" id="profession" onclick="revealField('profession', event)"></div>
-                    </div>
+                    <!-- Біометрія тепер зліва -->
                     <div class="box">
                         <div class="label-row">
                             <span class="label">БІОМЕТРІЯ:</span>
+                            <div class="action-btns">
+                                <button class="add-btn" onclick="resetField('bio', 'bio')" title="Перегенерувати">[↻]</button>
+                            </div>
                         </div>
                         <div class="field-content" id="bio" onclick="revealField('bio', event)"></div>
+                    </div>
+                    <!-- Професія тепер справа -->
+                    <div class="box">
+                        <div class="label-row">
+                            <span class="label">ПРОФЕСІЯ:</span>
+                            <div class="action-btns">
+                                <button class="add-btn" onclick="resetField('profession', 'professions')" title="Перегенерувати">[↻]</button>
+                                <button class="add-btn" onclick="addExtra('profession', 'professions')" title="Додати">[+]</button>
+                            </div>
+                        </div>
+                        <div class="field-content" id="profession" onclick="revealField('profession', event)"></div>
                     </div>
                 </div>
 
@@ -65,13 +67,19 @@
                     <div class="box">
                         <div class="label-row">
                             <span class="label">СТАЖ РОБОТИ:</span>
+                            <div class="action-btns">
+                                <button class="add-btn" onclick="resetField('experience', 'experience')">[↻]</button>
+                            </div>
                         </div>
                         <div class="field-content" id="experience" onclick="revealField('experience', event)"></div>
                     </div>
                     <div class="box">
                         <div class="label-row">
                             <span class="label">ЗДОРОВ'Я:</span>
-                            <button class="add-btn" onclick="addExtra('health', 'health')">[+]</button>
+                            <div class="action-btns">
+                                <button class="add-btn" onclick="resetField('health', 'health')">[↻]</button>
+                                <button class="add-btn" onclick="addExtra('health', 'health_diseases')">[+]</button>
+                            </div>
                         </div>
                         <div class="field-content" id="health" onclick="revealField('health', event)"></div>
                     </div>
@@ -79,24 +87,45 @@
 
                 <div class="box full-width">
                     <div class="label-row">
-                        <span class="label">ДОДАТКОВІ НАВИЧКИ / ХОБІ:</span>
-                        <button class="add-btn" onclick="addExtra('hobby', 'hobbies')">[+]</button>
+                        <span class="label">ХОБІ (ТА СТАЖ):</span>
+                        <div class="action-btns">
+                            <button class="add-btn" onclick="resetField('hobby', 'hobbies')">[↻]</button>
+                            <button class="add-btn" onclick="addExtra('hobby', 'hobbies')">[+]</button>
+                        </div>
                     </div>
                     <div class="field-content" id="hobby" onclick="revealField('hobby', event)"></div>
+                </div>
+
+                <!-- НОВЕ ПОЛЕ: Додаткова інформація -->
+                <div class="box full-width">
+                    <div class="label-row">
+                        <span class="label">ДОДАТКОВА ІНФОРМАЦІЯ:</span>
+                        <div class="action-btns">
+                            <button class="add-btn" onclick="resetField('info', 'additional_info')">[↻]</button>
+                            <button class="add-btn" onclick="addExtra('info', 'additional_info')">[+]</button>
+                        </div>
+                    </div>
+                    <div class="field-content" id="info" onclick="revealField('info', event)"></div>
                 </div>
 
                 <div class="grid-section">
                     <div class="box">
                         <div class="label-row">
                             <span class="label">БАГАЖ (ІНВЕНТАР):</span>
-                            <button class="add-btn" onclick="addExtra('inventory', 'inventory')">[+]</button>
+                            <div class="action-btns">
+                                <button class="add-btn" onclick="resetField('inventory', 'inventory')">[↻]</button>
+                                <button class="add-btn" onclick="addExtra('inventory', 'inventory')">[+]</button>
+                            </div>
                         </div>
                         <div class="field-content" id="inventory" onclick="revealField('inventory', event)"></div>
                     </div>
                     <div class="box">
                         <div class="label-row">
                             <span class="label">ФОБІЯ / РИСА:</span>
-                            <button class="add-btn" onclick="addExtra('trait', 'traits')">[+]</button>
+                            <div class="action-btns">
+                                <button class="add-btn" onclick="resetField('trait', 'traits')">[↻]</button>
+                                <button class="add-btn" onclick="addExtra('trait', 'traits')">[+]</button>
+                            </div>
                         </div>
                         <div class="field-content" id="trait" onclick="revealField('trait', event)"></div>
                     </div>
@@ -105,7 +134,10 @@
                 <div class="box full-width">
                     <div class="label-row">
                         <span class="label">ОСОБЛИВА КАРТА (ДІЯ):</span>
-                        <button class="add-btn" onclick="addExtra('special', 'specials')">[+]</button>
+                        <div class="action-btns">
+                            <button class="add-btn" onclick="resetField('special', 'specials')">[↻]</button>
+                            <button class="add-btn" onclick="addExtra('special', 'specials')">[+]</button>
+                        </div>
                     </div>
                     <div class="field-content" id="special" onclick="revealField('special', event)"></div>
                 </div>
@@ -113,13 +145,11 @@
                 <div class="footer-stamp">
                     <p>СТАТУС: ОЧІКУЄ РІШЕННЯ</p>
                 </div>
-            </div> <!-- Закриває character-sheet -->
-        </div> <!-- Закриває sheet-container (тут закінчується паперовий фон) -->
+            </div>
+        </div>
         
-        <!-- Кнопка має бути ТУТ -->
         <button id="generateBtn" class="generate-btn" style="display:none;" onclick="generateCharacter()">ЗГЕНЕРУВАТИ НОВЕ ДОСЬЄ</button>
-
-    </div> <!-- Закриває app-wrapper -->
+    </div>
 
     <script src="script.js"></script>
 </body>
