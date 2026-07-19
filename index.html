@@ -12,11 +12,13 @@
             <h2>ІДЕНТИФІКАЦІЯ УЧАСНИКА</h2>
             <div class="input-group">
                 <label>Ім'я (обов'язково)</label>
-                <input type="text" id="firstNameInput" placeholder="Введіть ім'я">
+                <!-- Додано підтримку клавіші Enter -->
+                <input type="text" id="firstNameInput" placeholder="Введіть ім'я" onkeydown="if(event.key === 'Enter') startGame()">
             </div>
             <div class="input-group">
                 <label>Прізвище (за бажанням)</label>
-                <input type="text" id="lastNameInput" placeholder="Введіть прізвище">
+                <!-- Додано підтримку клавіші Enter -->
+                <input type="text" id="lastNameInput" placeholder="Введіть прізвище" onkeydown="if(event.key === 'Enter') startGame()">
             </div>
             <button class="generate-btn" onclick="startGame()">РОЗПОЧАТИ СИМУЛЯЦІЮ</button>
         </div>
@@ -39,107 +41,108 @@
                     <button class="start-round-btn" onclick="unlockSheet()">РОЗПОЧАТИ</button>
                 </div>
 
+                <div class="box full-width">
+                    <div class="label-row">
+                        <span class="label">РОЛЬ (ХТО ТИ):</span>
+                        <div class="action-btns">
+                            <button class="add-btn" onclick="resetField('role', 'roles')" title="Перегенерувати">[↻]</button>
+                        </div>
+                    </div>
+                    <div class="field-content" id="role"></div>
+                </div>
+
                 <div class="grid-section">
-                    <!-- Біометрія тепер зліва -->
                     <div class="box">
                         <div class="label-row">
-                            <span class="label">БІОМЕТРІЯ:</span>
+                            <span class="label">ВІК ТА СТАТЬ (Статура):</span>
                             <div class="action-btns">
                                 <button class="add-btn" onclick="resetField('bio', 'bio')" title="Перегенерувати">[↻]</button>
                             </div>
                         </div>
-                        <div class="field-content" id="bio" onclick="revealField('bio', event)"></div>
+                        <div class="field-content" id="bio"></div>
                     </div>
-                    <!-- Професія тепер справа -->
                     <div class="box">
                         <div class="label-row">
                             <span class="label">ПРОФЕСІЯ:</span>
                             <div class="action-btns">
                                 <button class="add-btn" onclick="resetField('profession', 'professions')" title="Перегенерувати">[↻]</button>
-                                <button class="add-btn" onclick="addExtra('profession', 'professions')" title="Додати">[+]</button>
                             </div>
                         </div>
-                        <div class="field-content" id="profession" onclick="revealField('profession', event)"></div>
+                        <div class="field-content" id="profession"></div>
                     </div>
                 </div>
 
                 <div class="grid-section">
-                    <div class="box">
-                        <div class="label-row">
-                            <span class="label">СТАЖ РОБОТИ:</span>
-                            <div class="action-btns">
-                                <button class="add-btn" onclick="resetField('experience', 'experience')">[↻]</button>
-                            </div>
-                        </div>
-                        <div class="field-content" id="experience" onclick="revealField('experience', event)"></div>
-                    </div>
                     <div class="box">
                         <div class="label-row">
                             <span class="label">ЗДОРОВ'Я:</span>
                             <div class="action-btns">
-                                <button class="add-btn" onclick="resetField('health', 'health')">[↻]</button>
-                                <button class="add-btn" onclick="addExtra('health', 'health_diseases')">[+]</button>
+                                <button class="add-btn" onclick="resetField('health', 'health')" title="Перегенерувати">[↻]</button>
                             </div>
                         </div>
-                        <div class="field-content" id="health" onclick="revealField('health', event)"></div>
+                        <div class="field-content" id="health"></div>
                     </div>
-                </div>
-
-                <div class="box full-width">
-                    <div class="label-row">
-                        <span class="label">ХОБІ (ТА СТАЖ):</span>
-                        <div class="action-btns">
-                            <button class="add-btn" onclick="resetField('hobby', 'hobbies')">[↻]</button>
-                            <button class="add-btn" onclick="addExtra('hobby', 'hobbies')">[+]</button>
+                    <div class="box">
+                        <div class="label-row">
+                            <span class="label">ФОБІЇ / РИСИ:</span>
+                            <div class="action-btns">
+                                <button class="add-btn" onclick="resetField('trait', 'traits')" title="Перегенерувати">[↻]</button>
+                            </div>
                         </div>
+                        <div class="field-content" id="trait"></div>
                     </div>
-                    <div class="field-content" id="hobby" onclick="revealField('hobby', event)"></div>
-                </div>
-
-                <!-- НОВЕ ПОЛЕ: Додаткова інформація -->
-                <div class="box full-width">
-                    <div class="label-row">
-                        <span class="label">ДОДАТКОВА ІНФОРМАЦІЯ:</span>
-                        <div class="action-btns">
-                            <button class="add-btn" onclick="resetField('info', 'additional_info')">[↻]</button>
-                            <button class="add-btn" onclick="addExtra('info', 'additional_info')">[+]</button>
-                        </div>
-                    </div>
-                    <div class="field-content" id="info" onclick="revealField('info', event)"></div>
                 </div>
 
                 <div class="grid-section">
                     <div class="box">
                         <div class="label-row">
-                            <span class="label">БАГАЖ (ІНВЕНТАР):</span>
+                            <span class="label">ХОБІ:</span>
                             <div class="action-btns">
-                                <button class="add-btn" onclick="resetField('inventory', 'inventory')">[↻]</button>
-                                <button class="add-btn" onclick="addExtra('inventory', 'inventory')">[+]</button>
+                                <button class="add-btn" onclick="resetField('hobby', 'hobbies')" title="Перегенерувати">[↻]</button>
                             </div>
                         </div>
-                        <div class="field-content" id="inventory" onclick="revealField('inventory', event)"></div>
+                        <div class="field-content" id="hobby"></div>
                     </div>
                     <div class="box">
                         <div class="label-row">
-                            <span class="label">ФОБІЯ / РИСА:</span>
+                            <span class="label">РЮКЗАК:</span>
                             <div class="action-btns">
-                                <button class="add-btn" onclick="resetField('trait', 'traits')">[↻]</button>
-                                <button class="add-btn" onclick="addExtra('trait', 'traits')">[+]</button>
+                                <button class="add-btn" onclick="resetField('inventory', 'inventory')" title="Перегенерувати">[↻]</button>
                             </div>
                         </div>
-                        <div class="field-content" id="trait" onclick="revealField('trait', event)"></div>
+                        <div class="field-content" id="inventory"></div>
                     </div>
                 </div>
 
                 <div class="box full-width">
                     <div class="label-row">
-                        <span class="label">ОСОБЛИВА КАРТА (ДІЯ):</span>
+                        <span class="label">ДОД. ІНФОРМАЦІЯ:</span>
                         <div class="action-btns">
-                            <button class="add-btn" onclick="resetField('special', 'specials')">[↻]</button>
-                            <button class="add-btn" onclick="addExtra('special', 'specials')">[+]</button>
+                            <button class="add-btn" onclick="resetField('info', 'additional_info')" title="Перегенерувати">[↻]</button>
                         </div>
                     </div>
-                    <div class="field-content" id="special" onclick="revealField('special', event)"></div>
+                    <div class="field-content" id="info"></div>
+                </div>
+
+                <div class="grid-section">
+                    <div class="box">
+                        <div class="label-row">
+                            <span class="label">СТОП БУНКЕР 1:</span>
+                            <div class="action-btns">
+                                <button class="add-btn" onclick="resetField('special1', 'specials')" title="Перегенерувати">[↻]</button>
+                            </div>
+                        </div>
+                        <div class="field-content" id="special1"></div>
+                    </div>
+                    <div class="box">
+                        <div class="label-row">
+                            <span class="label">СТОП БУНКЕР 2:</span>
+                            <div class="action-btns">
+                                <button class="add-btn" onclick="resetField('special2', 'specials')" title="Перегенерувати">[↻]</button>
+                            </div>
+                        </div>
+                        <div class="field-content" id="special2"></div>
+                    </div>
                 </div>
 
                 <div class="footer-stamp">
