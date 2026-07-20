@@ -12,14 +12,18 @@
             <h2>ІДЕНТИФІКАЦІЯ УЧАСНИКА</h2>
             <div class="input-group">
                 <label>Ім'я (обов'язково)</label>
-                <!-- Додано підтримку клавіші Enter -->
                 <input type="text" id="firstNameInput" placeholder="Введіть ім'я" onkeydown="if(event.key === 'Enter') startGame()">
             </div>
             <div class="input-group">
                 <label>Прізвище (за бажанням)</label>
-                <!-- Додано підтримку клавіші Enter -->
                 <input type="text" id="lastNameInput" placeholder="Введіть прізвище" onkeydown="if(event.key === 'Enter') startGame()">
             </div>
+            <!-- НОВИЙ ПУНКТ: Галочка для ролей -->
+            <div class="input-group checkbox-group">
+                <input type="checkbox" id="enableRole" checked>
+                <label for="enableRole">Грати з прихованими ролями (Звичайний, Зрадник тощо)</label>
+            </div>
+            
             <button class="generate-btn" onclick="startGame()">РОЗПОЧАТИ СИМУЛЯЦІЮ</button>
         </div>
     </div>
@@ -41,7 +45,8 @@
                     <button class="start-round-btn" onclick="unlockSheet()">РОЗПОЧАТИ</button>
                 </div>
 
-                <div class="box full-width">
+                <!-- Блок ролі (може бути прихований налаштуваннями) -->
+                <div class="box full-width" id="role-box">
                     <div class="label-row">
                         <span class="label">РОЛЬ (ХТО ТИ):</span>
                         <div class="action-btns">
@@ -82,18 +87,29 @@
                         </div>
                         <div class="field-content" id="health"></div>
                     </div>
+                    <!-- РОЗДІЛЕНО: Тепер тільки Фобія -->
                     <div class="box">
                         <div class="label-row">
-                            <span class="label">ФОБІЇ / РИСИ:</span>
+                            <span class="label">ФОБІЯ:</span>
+                            <div class="action-btns">
+                                <button class="add-btn" onclick="resetField('phobia', 'phobias')" title="Перегенерувати">[↻]</button>
+                            </div>
+                        </div>
+                        <div class="field-content" id="phobia"></div>
+                    </div>
+                </div>
+
+                <div class="grid-section">
+                    <!-- РОЗДІЛЕНО: Тепер окремо Риса характеру -->
+                    <div class="box">
+                        <div class="label-row">
+                            <span class="label">РИСА ХАРАКТЕРУ:</span>
                             <div class="action-btns">
                                 <button class="add-btn" onclick="resetField('trait', 'traits')" title="Перегенерувати">[↻]</button>
                             </div>
                         </div>
                         <div class="field-content" id="trait"></div>
                     </div>
-                </div>
-
-                <div class="grid-section">
                     <div class="box">
                         <div class="label-row">
                             <span class="label">ХОБІ:</span>
@@ -103,6 +119,9 @@
                         </div>
                         <div class="field-content" id="hobby"></div>
                     </div>
+                </div>
+
+                <div class="grid-section">
                     <div class="box">
                         <div class="label-row">
                             <span class="label">РЮКЗАК:</span>
@@ -112,16 +131,15 @@
                         </div>
                         <div class="field-content" id="inventory"></div>
                     </div>
-                </div>
-
-                <div class="box full-width">
-                    <div class="label-row">
-                        <span class="label">ДОД. ІНФОРМАЦІЯ:</span>
-                        <div class="action-btns">
-                            <button class="add-btn" onclick="resetField('info', 'additional_info')" title="Перегенерувати">[↻]</button>
+                    <div class="box">
+                        <div class="label-row">
+                            <span class="label">ДОД. ІНФОРМАЦІЯ:</span>
+                            <div class="action-btns">
+                                <button class="add-btn" onclick="resetField('info', 'additional_info')" title="Перегенерувати">[↻]</button>
+                            </div>
                         </div>
+                        <div class="field-content" id="info"></div>
                     </div>
-                    <div class="field-content" id="info"></div>
                 </div>
 
                 <div class="grid-section">

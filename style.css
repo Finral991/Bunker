@@ -33,6 +33,26 @@ body {
     border: 2px solid var(--ink-color); background: transparent; color: var(--ink-color); 
     outline: none;
 }
+/* Стилі для чекбокса ролей */
+.checkbox-group {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    cursor: pointer;
+    margin-top: 10px;
+}
+.checkbox-group input {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    cursor: pointer;
+}
+.checkbox-group label {
+    font-size: 13px;
+    font-weight: normal;
+    margin-bottom: 0;
+    cursor: pointer;
+}
 .input-group input:focus { background: rgba(0,0,0,0.05); }
 
 /* --- ОСНОВНИЙ ЛИСТ --- */
