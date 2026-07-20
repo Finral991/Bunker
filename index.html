@@ -19,9 +19,13 @@
                 <input type="text" id="lastNameInput" placeholder="Введіть прізвище" onkeydown="if(event.key === 'Enter') startGame()">
             </div>
             <!-- НОВИЙ ПУНКТ: Галочка для ролей -->
-            <div class="input-group checkbox-group">
-                <input type="checkbox" id="enableRole" checked>
-                <label for="enableRole">Грати з прихованими ролями (Звичайний, Зрадник тощо)</label>
+            <!-- ВСТАВ ЦЕЙ БЛОК: -->
+            <div class="toggle-row">
+                    <span class="toggle-label">Приховані ролі (Звичайний, Зрадник)</span>
+                 <label class="switch">
+                  <input type="checkbox" id="enableRole" checked>
+                    <span class="slider round"></span>
+                  </label>
             </div>
             
             <button class="generate-btn" onclick="startGame()">РОЗПОЧАТИ СИМУЛЯЦІЮ</button>
