@@ -83,7 +83,7 @@ function startGame() {
     const fName = document.getElementById('firstNameInput').value.trim();
     const lName = document.getElementById('lastNameInput').value.trim();
     
-    playWithRoles = document.getElementById('enableRole').checked;
+    playWithRoles = !document.getElementById('disableRole').checked;
     
     if (!fName) { alert("Будь ласка, введіть хоча б Ім'я!"); return; }
     

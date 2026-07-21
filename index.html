@@ -18,10 +18,8 @@
                 <label>Прізвище (за бажанням)</label>
                 <input type="text" id="lastNameInput" placeholder="Введіть прізвище" onkeydown="if(event.key === 'Enter') startGame()">
             </div>
-            <!-- НОВИЙ ПУНКТ: Галочка для ролей -->
-            <!-- ВСТАВ ЦЕЙ БЛОК: -->
             <div class="toggle-row">
-                    <span class="toggle-label">Приховані ролі (Звичайний, Зрадник)</span>
+                    <span class="toggle-label">Грати без прихованих ролей</span>
                  <label class="switch">
                   <input type="checkbox" id="enableRole" checked>
                     <span class="slider round"></span>
@@ -31,7 +29,6 @@
             <button class="generate-btn" onclick="startGame()">РОЗПОЧАТИ СИМУЛЯЦІЮ</button>
         </div>
     </div>
-
     <div class="app-wrapper">
         <div class="sheet-container">
             <div class="header-container">
@@ -42,14 +39,10 @@
                     <p class="sub-header" id="candidate-name" style="display:none; margin-top: 5px;"></p>
                 </div>
             </div>
-
             <div id="character-sheet" class="hidden" style="position: relative;">
-                
                 <div id="global-lock" class="global-lock">
                     <button class="start-round-btn" onclick="unlockSheet()">РОЗПОЧАТИ</button>
                 </div>
-
-                <!-- Блок ролі (може бути прихований налаштуваннями) -->
                 <div class="box full-width" id="role-box">
                     <div class="label-row">
                         <span class="label">РОЛЬ (ХТО ТИ):</span>
@@ -59,7 +52,6 @@
                     </div>
                     <div class="field-content" id="role"></div>
                 </div>
-
                 <div class="grid-section">
                     <div class="box">
                         <div class="label-row">
@@ -80,7 +72,6 @@
                         <div class="field-content" id="profession"></div>
                     </div>
                 </div>
-
                 <div class="grid-section">
                     <div class="box">
                         <div class="label-row">
@@ -91,7 +82,6 @@
                         </div>
                         <div class="field-content" id="health"></div>
                     </div>
-                    <!-- РОЗДІЛЕНО: Тепер тільки Фобія -->
                     <div class="box">
                         <div class="label-row">
                             <span class="label">ФОБІЯ:</span>
@@ -102,9 +92,7 @@
                         <div class="field-content" id="phobia"></div>
                     </div>
                 </div>
-
                 <div class="grid-section">
-                    <!-- РОЗДІЛЕНО: Тепер окремо Риса характеру -->
                     <div class="box">
                         <div class="label-row">
                             <span class="label">РИСА ХАРАКТЕРУ:</span>
@@ -124,7 +112,6 @@
                         <div class="field-content" id="hobby"></div>
                     </div>
                 </div>
-
                 <div class="grid-section">
                     <div class="box">
                         <div class="label-row">
@@ -145,7 +132,6 @@
                         <div class="field-content" id="info"></div>
                     </div>
                 </div>
-
                 <div class="grid-section">
                     <div class="box">
                         <div class="label-row">
@@ -166,16 +152,13 @@
                         <div class="field-content" id="special2"></div>
                     </div>
                 </div>
-
                 <div class="footer-stamp">
                     <p>СТАТУС: ОЧІКУЄ РІШЕННЯ</p>
                 </div>
             </div>
         </div>
-        
         <button id="generateBtn" class="generate-btn" style="display:none;" onclick="generateCharacter()">ЗГЕНЕРУВАТИ НОВЕ ДОСЬЄ</button>
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>
