@@ -33,26 +33,6 @@ body {
     border: 2px solid var(--ink-color); background: transparent; color: var(--ink-color); 
     outline: none;
 }
-/* Стилі для чекбокса ролей */
-.checkbox-group {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    cursor: pointer;
-    margin-top: 10px;
-}
-.checkbox-group input {
-    width: 20px;
-    height: 20px;
-    margin-right: 10px;
-    cursor: pointer;
-}
-.checkbox-group label {
-    font-size: 13px;
-    font-weight: normal;
-    margin-bottom: 0;
-    cursor: pointer;
-}
 .input-group input:focus { background: rgba(0,0,0,0.05); }
 
 /* --- ОСНОВНИЙ ЛИСТ --- */
@@ -64,12 +44,24 @@ body {
 }
 
 .header-container { display: flex; align-items: center; border-bottom: 3px double var(--ink-color); margin-bottom: 20px; padding-bottom: 10px; }
+
+/* Виправлені стилі для фото в білій рамочці */
 .photo-box {
-    width: 80px; height: 100px; border: 2px solid var(--ink-color);
-    display: flex; align-items: flex-end; justify-content: center;
-    background-color: var(--paper-bg); margin-right: 15px; overflow: hidden;
+    width: 80px; height: 100px; 
+    border: 2px solid var(--ink-color); /* Зовнішня рамка, що пасує до стилю досьє */
+    padding: 5px; /* Створює ефект білої рамочки навколо самого фото */
+    display: flex; align-items: center; justify-content: center;
+    background-color: white; /* Фон самої рамочки */
+    margin-right: 15px; overflow: hidden;
+    box-sizing: border-box;
 }
-.photo-box svg { width: 90%; height: 90%; fill: var(--ink-color); }
+
+/* Новий клас для самого зображення всередині photo-box */
+.profile-photo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Заповнює область, зберігаючи пропорції */
+}
 
 .header-text { flex-grow: 1; text-align: center; }
 .header-text h1 { margin: 0; font-size: 22px; letter-spacing: 1px; }
@@ -95,11 +87,11 @@ body {
 .add-btn { background: none; border: none; color: var(--ink-color); font-family: inherit; font-weight: bold; font-size: 14px; cursor: pointer; padding: 0 5px; }
 .add-btn:hover { color: var(--stamp-red); }
 
-/* Додай цей блок: */
 .action-btns {
     display: flex;
     gap: 8px;
 }
+
 /* --- ПОЛЯ З БЛЮРОМ І КНОПКОЮ --- */
 .field-content {
     position: relative; flex-grow: 1; display: flex; flex-direction: column; 
@@ -125,16 +117,7 @@ body {
 .start-round-btn:active { transform: scale(0.95); box-shadow: 2px 2px 0px rgba(0,0,0,1); }
 
 /* --- ПОЛЯ З БЛЮРОМ (БЕЗ КНОПОК) --- */
-.field-content {
-    position: relative; flex-grow: 1; display: flex; flex-direction: column; 
-    justify-content: center; cursor: pointer; min-height: 40px; font-weight: bold;
-}
-.blurred-text { 
-    filter: blur(5px); color: transparent; text-shadow: 0 0 8px rgba(0,0,0,0.7); 
-    user-select: none; text-align: center; 
-}
 .revealed { text-align: left; }
-.reveal-btn:hover { background: var(--paper-bg); color: var(--ink-color); }
 
 .footer-stamp {
     text-align: right; color: var(--stamp-red); font-weight: bold; font-size: 18px;
@@ -142,7 +125,7 @@ body {
     display: inline-block; margin-top: 20px; float: right;
 }
 .hidden { display: none; }
-.revealed { text-align: left; }
+
 /* --- ЗАПОБІЖНИК ДЛЯ ПРИХОВУВАННЯ --- */
 /* Це потрібно, щоб ID-селектори не перебивали клас .hidden на ПК */
 #character-sheet.hidden {
@@ -191,8 +174,6 @@ body {
         font-size: 26px;
     }
 
-    /* ... попередній код всередині @media ... */
-
     /* Права колонка: Характеристики */
     #character-sheet {
         flex-grow: 1;
@@ -214,72 +195,3 @@ body {
         margin-right: 10px;
     }
 } /* Закриваємо @media */
-/* --- СТИЛІ ДЛЯ ПЕРЕМИКАЧА (СЛАЙДЕРА) --- */
-.toggle-row {
-    display: flex;
-    justify-content: space-between; /* Текст зліва, слайдер справа */
-    align-items: center;
-    margin-top: 15px;
-    margin-bottom: 20px;
-}
-
-.toggle-label {
-    font-size: 14px;
-    font-weight: bold;
-    color: #333;
-}
-
-/* Контейнер слайдера */
-.switch {
-    position: relative;
-    display: inline-block;
-    width: 44px;
-    height: 24px;
-    flex-shrink: 0;
-}
-
-/* Ховаємо стандартний системний чекбокс */
-.switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-/* Фон перемикача (сірий вимкнений) */
-.slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background-color: #ccc;
-    transition: .3s;
-}
-
-/* Круглий повзунок (білий) */
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 18px;
-    width: 18px;
-    left: 3px;
-    bottom: 3px;
-    background-color: white;
-    transition: .3s;
-}
-
-/* Якщо натиснуто (checked) - робимо фон зеленим */
-input:checked + .slider {
-    background-color: #958f20;
-}
-
-/* Якщо натиснуто - сунемо повзунок вправо */
-input:checked + .slider:before {
-    transform: translateX(20px);
-}
-
-/* Робимо краї круглими */
-.slider.round {
-    border-radius: 24px;
-}
-.slider.round:before {
-    border-radius: 50%;
-}

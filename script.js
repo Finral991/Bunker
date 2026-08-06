@@ -1,89 +1,81 @@
+// База тепер спочатку порожня
 const db = {
-    roles: ["Звичайний", "Потрібний", "Зрадник"], 
-    professions: [
-        "Хірург-травматолог", "Інженер-електрик", "Програміст (Python)", "Спецназівець", "Агроном", "Кухар", "Фермер", "Архітектор", "Пілот гелікоптера", "Ветеринар", "Зварювальник", "Столяр", "Водій вантажівки", "Хімік-технолог", "Мисливець", "Рятувальник МНС",
-        "Вчитель історії", "Бариста", "Майстер манікюру", "Священик", "Фітнес-тренер", "Дизайнер інтер'єрів", "Актор театру", "Перекладач з латини", "Продавець-консультант",
-        "Таролог", "Блогер-мільйонник", "Криптоінвестор", "Професійний гравець у покер", "Астролог", "Дегустатор корму для тварин", "Експерт з НЛО", "Критик ресторанів", "Сомельє"
-    ],
     genders: ["Чоловік", "Жінка"],
-    health_base: ["Ідеальне здоров'я", "Абсолютно здоровий", "Здоровий як бик", "Міцний імунітет", "Жодних скарг", "Спортивна статура"],
-    health_diseases: [
-        "Астма", "Короткозорість", "Цукровий діабет", "Хронічний кашель", "Сліпота на одне око", "Алергія на пилок", 
-        "Глухота на одне вухо", "Епілепсія", "Подагра", "Гемороїдальні вузли", "Алергія на арахіс (навіть на запах)", 
-        "Відсутність правої нирки", "Тахікардія", "Мігрені", "Лунатизм", "Шизофренія", "Хронічний гастрит", "Псоріаз", "Безсоння"
-    ],
+    health_base: [],
     health_stages: ["легкий", "середній", "важкий", "критичний"], 
-    hobbies: [
-        "Виживання в лісі", "В'язання", "Радіоаматорство", "Швидкісне читання", "Ботаніка", "Стрільба з лука", 
-        "Колекціонування марок", "Орігамі", "Скелелазіння", "Варіння крафтового пива", "Історична реконструкція", 
-        "Паркур", "Гра на баяні", "Езотерика", "Риболовля", "Метання ножів", "Створення отрут з рослин", "Збирання пазлів", "Астрономія", "Злом замків"
-    ],
-    additional_info: [
-        "Прочитав всі книги Стівена Кінга", "Вміє затримувати дихання на 3 хвилини", "Колишній чемпіон з покеру", 
-        "Має чорний пояс з карате", "Пережив удар блискавки", "Відсидів 3 роки за шахрайство", 
-        "Має імунітет до всіх штамів грипу", "Знає напам'ять карту міста", "Володіє навичками гіпнозу", 
-        "Хронічно не переносить брехню", "Є таємним агентом під прикриттям (можливо)", "Носить перуку", 
-        "Вміє відкривати замки шпилькою", "Жодного разу в житті не мив посуд", "Має татуювання на все тіло", "Колишній монах-самітник"
-    ],
-    inventory: [
-        "Військова аптечка", "Набір викруток", "Динамо-ліхтарик", "Гітара", "Ящик тушонки", "Насіння овочів", 
-        "Пляшка елітного віскі", "Том енциклопедії (літера 'К')", "Набір для пікніка", "Сонячна панель", 
-        "Рація", "Пачка презервативів", "Кілограм солі", "Мисливський ніж", "Намет на 2 особи", 
-        "Квадрокоптер", "Довідник з виживання", "Рулон армованого скотчу", "Колекція коміксів", "Протигаз", "Коробка цвяхів", "Сигнальна ракетниця"
-    ],
-    phobias: [
-        "Клаустрофобія (страх замкнутих просторів)", "Ніктофобія (страх темряви)", "Арахнофобія (страх павуків)", 
-        "Мізофобія (страх бруду та мікробів)", "Коулрофобія (страх клоунів)", "Номофобія (страх залишитися без телефону)", 
-        "Гемофобія (страх вигляду крові)", "Акрофобія (страх висоти)", "Анатидаефобія (страх, що за тобою стежить качка)", 
-        "Агорафобія (страх відкритого простору/натовпу)", "Фагофобія (страх подавитися їжею)", "Гідрофобія (страх води/плавання)",
-        "Аквафобія (панічна боязнь потонути)"
-    ],
-    traits: [
-        "Патологічний брехун (бреше без причини)", "Клептоманія (нав'язливе бажання красти)", 
-        "Абсолютна пам'ять (пам'ятає кожну деталь життя)", "Педант (дратується, якщо речі лежать нерівно)",
-        "Агресивний (легко провокується на конфлікт)", "Пацифіст (відмовляється від будь-якого насильства)",
-        "Оптиміст (жартує навіть під час апокаліпсису)", "Параноїк (нікому не довіряє, чекає зради)",
-        "Маніпулятор (майстерно стравлює людей між собою)", "Егоїст (завжди думає тільки про себе)",
-        "Альтруїст (готовий пожертвувати собою заради інших)"
-    ],
-    specials: [
-        "Забрати здоров'я в будь-якого гравця", "Перероздати всім здоров'я", "Дізнатися фобію будь-якого гравця", 
-        "Імунітет на одне голосування", "Вкрасти рюкзак сусіда", "Скасувати чужу карту Стоп Бункер",
-        "Змусити двох гравців помінятися рюкзаками", "Відкрити роль (Хто ти) обраного гравця",
-        "Отримати подвійний голос на наступному голосуванні", "Заборонити обраному гравцю розмовляти один раунд",
-        "Змусити будь-якого гравця відкрити випадкову картку", "Врятувати гравця від вигнання (скасувати результати голосування)"
-    ]
+    professions: [],
+    health_diseases: [],
+    hobbies: [],
+    additional_info: [],
+    inventory: [],
+    phobias: [],
+    traits: [],
+    specials: []
 };
 
-const imgMale = `<img src="man.jpg" style="width: 100%; height: 100%; object-fit: contain; background-color: white; border-radius: 4px;">`;
-const imgFemale = `<img src="woman.jpg" style="width: 100%; height: 100%; object-fit: contain; background-color: white; border-radius: 4px;">`;
+// Виправлено: Оптимізоване завантаження бази даних (паралельне)
+async function loadDatabase() {
+    const categories = ['health_base', 'professions', 'health_diseases', 'hobbies', 'additional_info', 'inventory', 'phobias', 'traits', 'specials'];
+    
+    try {
+        const fetchPromises = categories.map(cat => 
+            // Додаємо Date.now(), щоб браузер не кешував текстові файли
+            fetch(`${cat}.txt?v=${Date.now()}`)
+            .then(response => {
+                if (!response.ok) throw new Error(`Файл ${cat}.txt не знайдено`);
+                return response.text();
+            })
+            .then(text => {
+                // Розбиваємо текст на рядки, забираємо пробіли, ігноруємо порожні рядки
+                db[cat] = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+            })
+            .catch(error => {
+                console.error(`Помилка завантаження ${cat}.txt:`, error);
+                db[cat] = ["Помилка: Файл не знайдено або пустий"];
+            })
+        );
+
+        await Promise.all(fetchPromises);
+        console.log("База даних успішно завантажена.");
+    } catch (globalError) {
+        console.error("Критична помилка при завантаженні бази:", globalError);
+    }
+}
+
+// Запускаємо завантаження бази одразу при відкритті сторінки
+window.addEventListener('DOMContentLoaded', loadDatabase);
+
+const imgMale = `<img src="man.jpg" alt="Чоловік" class="profile-photo-img">`;
+const imgFemale = `<img src="woman.jpg" alt="Жінка" class="profile-photo-img">`;
 
 const typingAudio = new Audio('typewriter.mp3');
 typingAudio.loop = true; 
 typingAudio.preload = 'auto';
 
 let isTypingGlobal = false; 
-let playWithRoles = true; 
 
-// Утиліти
-const getRandomItem = (array) => array[Math.floor(Math.random() * array.length)];
+const getRandomItem = (array) => {
+    if (!array || array.length === 0) return "Дані відсутні";
+    return array[Math.floor(Math.random() * array.length)];
+};
+
 const getExperienceD6 = () => {
     const r = Math.floor(Math.random() * 6) + 1;
     return r === 1 ? "Дилетант (до 1 місяця)" : r === 2 ? "Новачок (від 1 до 12 місяців)" :
            r === 3 ? "Любитель (від 1 до 2 років)" : r === 4 ? "Досвідчений (від 2 до 5 років)" :
            r === 5 ? "Експерт (від 5 до 10 років)" : "Професіонал (понад 10 років)";
 };
+
 const getConstitutionText = () => {
     const r = Math.floor(Math.random() * 5) + 1;
-    return r === 1 ? "(Худорлява)" : r === 2 ? "(Струнка)" : r === 3 ? "(Середня)" : r === 4 ? "(Щільна)" : "(З надмірною вагою)";
+    return r === 1 ? "1 (Худорлява)" : r === 2 ? "2 (Струнка)" : r === 3 ? "3 (Середня)" : r === 4 ? "4 (Щільна)" : "5 (З надмірною вагою)";
 };
+
 const generateHealth = () => Math.random() > 0.4 ? getRandomItem(db.health_base) : `${getRandomItem(db.health_diseases)} (ступінь: ${getRandomItem(db.health_stages)})`;
 
 function startGame() {
     const fName = document.getElementById('firstNameInput').value.trim();
     const lName = document.getElementById('lastNameInput').value.trim();
-    
-    playWithRoles = !document.getElementById('disableRole').checked;
     
     if (!fName) { alert("Будь ласка, введіть хоча б Ім'я!"); return; }
     
@@ -97,19 +89,20 @@ function startGame() {
 }
 
 function generateCharacter() {
+    // Приховуємо картку, поки вона генерується
+    document.getElementById('character-sheet').classList.add('hidden');
     document.getElementById('global-lock').style.display = 'flex';
-    document.getElementById('role-box').style.display = playWithRoles ? 'flex' : 'none';
 
     const age = Math.floor(Math.random() * (65 - 18 + 1)) + 18;
     const gender = getRandomItem(db.genders);
-    const role = Math.random() > 0.4 ? "Звичайний" : getRandomItem(["Потрібний", "Зрадник"]);
 
     let sp1 = getRandomItem(db.specials);
     let sp2 = getRandomItem(db.specials);
-    while (sp1 === sp2) sp2 = getRandomItem(db.specials);
+    while (sp1 === sp2 && db.specials.length > 1) {
+        sp2 = getRandomItem(db.specials);
+    }
 
     const charData = {
-        role: role,
         bio: `${gender}, ${age} років\nСтатура: ${getConstitutionText()}`,
         profession: `${getRandomItem(db.professions)}\nДосвід: ${getExperienceD6()}`,
         health: generateHealth(),
@@ -133,33 +126,36 @@ function generateCharacter() {
             container.textContent = ""; 
         }
     }
+    // Показуємо картку з глобальним блокуванням
     document.getElementById('character-sheet').classList.remove('hidden');
 }
 
-// ОПТИМІЗОВАНО: Чиста функція друку (не смикає DOM на кожній літері)
 async function printText(element, text) {
     let currentString = "";
     for (let i = 0; i < text.length; i++) {
         currentString += text.charAt(i);
-        element.textContent = currentString; // textContent набагато швидший за innerHTML
-        await new Promise(r => setTimeout(r, 25)); 
+        element.textContent = currentString; 
+        // Невелика затримка для ефекту друку
+        await new Promise(r => setTimeout(r, 20)); 
     }
 }
 
 async function unlockSheet() {
-    document.getElementById('global-lock').style.display = 'none';
     if (isTypingGlobal) return;
     isTypingGlobal = true;
     
+    // ДОДАНО СЮДИ: одразу ховаємо блюр перед тим, як почнеться друк тексту
+    document.getElementById('global-lock').style.display = 'none';
+
     try { 
         const playPromise = typingAudio.play();
         if (playPromise !== undefined) await playPromise;
-    } catch(e) {}
+    } catch(e) {
+        // Деякі браузери блокують автовідтворення аудіо без взаємодії користувача
+    }
 
-    let fields = ['bio', 'profession', 'health', 'phobia', 'trait', 'hobby', 'inventory', 'info', 'special1', 'special2'];
-    if (playWithRoles) fields.unshift('role');
+    const fields = ['bio', 'profession', 'health', 'phobia', 'trait', 'hobby', 'inventory', 'info', 'special1', 'special2'];
     
-    // Запускаємо всі функції printText паралельно
     const promises = fields.map(id => {
         const container = document.getElementById(id);
         container.classList.add('revealed');
@@ -171,17 +167,18 @@ async function unlockSheet() {
     typingAudio.pause(); 
     typingAudio.currentTime = 0; 
     isTypingGlobal = false;
+    
+    // Звідси ми забрали приховування 'global-lock', бо перенесли його наверх
 }
 
-// Кнопка реролу [↻]
 async function resetField(elementId, dbKey) {
     if (isTypingGlobal) return;
     const container = document.getElementById(elementId);
+    if (!container.classList.contains('revealed')) return; // Не перегенеровуємо приховані поля
+    
     let newItem = "";
 
-    if (elementId === 'role') {
-        newItem = Math.random() > 0.4 ? "Звичайний" : getRandomItem(["Потрібний", "Зрадник"]);
-    } else if (elementId === 'bio') {
+    if (elementId === 'bio') {
         const age = Math.floor(Math.random() * (65 - 18 + 1)) + 18;
         newItem = `${getRandomItem(db.genders)}, ${age} років\nСтатура: ${getConstitutionText()}`;
     } else if (elementId === 'profession' || elementId === 'hobby') {
@@ -192,26 +189,24 @@ async function resetField(elementId, dbKey) {
         const otherId = elementId === 'special1' ? 'special2' : 'special1';
         const otherCardValue = document.getElementById(otherId).dataset.value;
         newItem = getRandomItem(db.specials);
-        while (newItem === otherCardValue) newItem = getRandomItem(db.specials);
+        while (newItem === otherCardValue && db.specials.length > 1) {
+            newItem = getRandomItem(db.specials);
+        }
     } else {
         newItem = getRandomItem(db[dbKey]);
     }
 
     container.dataset.value = newItem;
 
-    if (container.classList.contains('revealed')) {
-        isTypingGlobal = true;
-        try { 
-            const playPromise = typingAudio.play();
-            if (playPromise !== undefined) await playPromise;
-        } catch(e) {}
-        
-        await printText(container, newItem);
-        
-        typingAudio.pause(); 
-        typingAudio.currentTime = 0; 
-        isTypingGlobal = false;
-    } else {
-        container.textContent = "";
-    }
+    isTypingGlobal = true;
+    try { 
+        const playPromise = typingAudio.play();
+        if (playPromise !== undefined) await playPromise;
+    } catch(e) {}
+    
+    await printText(container, newItem);
+    
+    typingAudio.pause(); 
+    typingAudio.currentTime = 0; 
+    isTypingGlobal = false;
 }

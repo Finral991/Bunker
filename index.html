@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Досьє Бункера</title>
+    <!-- Стандартне і надійне підключення стилів -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -18,40 +19,30 @@
                 <label>Прізвище (за бажанням)</label>
                 <input type="text" id="lastNameInput" placeholder="Введіть прізвище" onkeydown="if(event.key === 'Enter') startGame()">
             </div>
-            <div class="toggle-row">
-                    <span class="toggle-label">Приховати ролі</span>
-                 <label class="switch">
-                  <input type="checkbox" id="disableRole" checked>
-                    <span class="slider round"></span>
-                  </label>
-            </div>
             
             <button class="generate-btn" onclick="startGame()">РОЗПОЧАТИ СИМУЛЯЦІЮ</button>
         </div>
     </div>
+
     <div class="app-wrapper">
         <div class="sheet-container">
             <div class="header-container">
-                <div class="photo-box" id="profile-photo"></div>
+                <div class="photo-box" id="profile-photo">
+                    <!-- Сюди JS підставлятиме фото -->
+                </div>
                 <div class="header-text">
                     <h1>ОСОБОВА СПРАВА</h1>
                     <p class="sub-header">ОБ'ЄКТ № <span id="candidate-id">0000</span></p>
                     <p class="sub-header" id="candidate-name" style="display:none; margin-top: 5px;"></p>
                 </div>
             </div>
+
             <div id="character-sheet" class="hidden" style="position: relative;">
+                
                 <div id="global-lock" class="global-lock">
                     <button class="start-round-btn" onclick="unlockSheet()">РОЗПОЧАТИ</button>
                 </div>
-                <div class="box full-width" id="role-box">
-                    <div class="label-row">
-                        <span class="label">РОЛЬ (ХТО ТИ):</span>
-                        <div class="action-btns">
-                            <button class="add-btn" onclick="resetField('role', 'roles')" title="Перегенерувати">[↻]</button>
-                        </div>
-                    </div>
-                    <div class="field-content" id="role"></div>
-                </div>
+
                 <div class="grid-section">
                     <div class="box">
                         <div class="label-row">
@@ -72,6 +63,7 @@
                         <div class="field-content" id="profession"></div>
                     </div>
                 </div>
+
                 <div class="grid-section">
                     <div class="box">
                         <div class="label-row">
@@ -92,6 +84,7 @@
                         <div class="field-content" id="phobia"></div>
                     </div>
                 </div>
+
                 <div class="grid-section">
                     <div class="box">
                         <div class="label-row">
@@ -112,26 +105,27 @@
                         <div class="field-content" id="hobby"></div>
                     </div>
                 </div>
-                <div class="grid-section">
-                    <div class="box">
-                        <div class="label-row">
-                            <span class="label">РЮКЗАК:</span>
-                            <div class="action-btns">
-                                <button class="add-btn" onclick="resetField('inventory', 'inventory')" title="Перегенерувати">[↻]</button>
-                            </div>
+
+                <div class="box full-width">
+                    <div class="label-row">
+                        <span class="label">РЮКЗАК:</span>
+                        <div class="action-btns">
+                            <button class="add-btn" onclick="resetField('inventory', 'inventory')" title="Перегенерувати">[↻]</button>
                         </div>
-                        <div class="field-content" id="inventory"></div>
                     </div>
-                    <div class="box">
-                        <div class="label-row">
-                            <span class="label">ДОД. ІНФОРМАЦІЯ:</span>
-                            <div class="action-btns">
-                                <button class="add-btn" onclick="resetField('info', 'additional_info')" title="Перегенерувати">[↻]</button>
-                            </div>
-                        </div>
-                        <div class="field-content" id="info"></div>
-                    </div>
+                    <div class="field-content" id="inventory"></div>
                 </div>
+
+                <div class="box full-width">
+                    <div class="label-row">
+                        <span class="label">ДОД. ІНФОРМАЦІЯ:</span>
+                        <div class="action-btns">
+                            <button class="add-btn" onclick="resetField('info', 'additional_info')" title="Перегенерувати">[↻]</button>
+                        </div>
+                    </div>
+                    <div class="field-content" id="info"></div>
+                </div>
+
                 <div class="grid-section">
                     <div class="box">
                         <div class="label-row">
@@ -152,13 +146,17 @@
                         <div class="field-content" id="special2"></div>
                     </div>
                 </div>
+
                 <div class="footer-stamp">
                     <p>СТАТУС: ОЧІКУЄ РІШЕННЯ</p>
                 </div>
             </div>
         </div>
+        
         <button id="generateBtn" class="generate-btn" style="display:none;" onclick="generateCharacter()">ЗГЕНЕРУВАТИ НОВЕ ДОСЬЄ</button>
     </div>
+
+    <!-- Стандартне і надійне підключення скрипта -->
     <script src="script.js"></script>
 </body>
 </html>
