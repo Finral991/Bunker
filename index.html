@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Досьє Бункера</title>
-    <!-- Стандартне і надійне підключення стилів -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -85,25 +84,15 @@
                     </div>
                 </div>
 
-                <div class="grid-section">
-                    <div class="box">
-                        <div class="label-row">
-                            <span class="label">РИСА ХАРАКТЕРУ:</span>
-                            <div class="action-btns">
-                                <button class="add-btn" onclick="resetField('trait', 'traits')" title="Перегенерувати">[↻]</button>
-                            </div>
+                <!-- Хобі тепер на всю ширину замість сусідства з Рисою характеру -->
+                <div class="box full-width">
+                    <div class="label-row">
+                        <span class="label">ХОБІ:</span>
+                        <div class="action-btns">
+                            <button class="add-btn" onclick="resetField('hobby', 'hobbies')" title="Перегенерувати">[↻]</button>
                         </div>
-                        <div class="field-content" id="trait"></div>
                     </div>
-                    <div class="box">
-                        <div class="label-row">
-                            <span class="label">ХОБІ:</span>
-                            <div class="action-btns">
-                                <button class="add-btn" onclick="resetField('hobby', 'hobbies')" title="Перегенерувати">[↻]</button>
-                            </div>
-                        </div>
-                        <div class="field-content" id="hobby"></div>
-                    </div>
+                    <div class="field-content" id="hobby"></div>
                 </div>
 
                 <div class="box full-width">
@@ -156,7 +145,6 @@
         <button id="generateBtn" class="generate-btn" style="display:none;" onclick="generateCharacter()">ЗГЕНЕРУВАТИ НОВЕ ДОСЬЄ</button>
     </div>
 
-    <!-- Стандартне і надійне підключення скрипта -->
     <script src="script.js"></script>
 </body>
 </html>
