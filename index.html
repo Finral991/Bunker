@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Модалка ідентифікації -->
     <div id="start-modal" class="modal-overlay">
         <div class="modal-content">
             <h2>ІДЕНТИФІКАЦІЯ УЧАСНИКА</h2>
@@ -18,17 +19,30 @@
                 <label>Прізвище (за бажанням)</label>
                 <input type="text" id="lastNameInput" placeholder="Введіть прізвище" onkeydown="if(event.key === 'Enter') startGame()">
             </div>
-            
             <button class="generate-btn" onclick="startGame()">РОЗПОЧАТИ СИМУЛЯЦІЮ</button>
+        </div>
+    </div>
+
+    <!-- Нова модалка для ручного вибору карток -->
+    <div id="edit-modal" class="modal-overlay" style="display: none; z-index: 200;">
+        <div class="modal-content">
+            <h2>ВИБІР ХАРАКТЕРИСТИКИ</h2>
+            <div class="input-group">
+                <select id="editSelect" style="width: 100%; padding: 10px; font-family: inherit; font-size: 16px; border: 2px solid var(--ink-color); background: transparent; color: var(--ink-color); outline: none;">
+                    <!-- Опції додаються через JS -->
+                </select>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="generate-btn" onclick="saveEditField()">ЗБЕРЕГТИ</button>
+                <button class="generate-btn" style="background: transparent; color: var(--ink-color);" onclick="closeEditModal()">СКАСУВАТИ</button>
+            </div>
         </div>
     </div>
 
     <div class="app-wrapper">
         <div class="sheet-container">
             <div class="header-container">
-                <div class="photo-box" id="profile-photo">
-                    <!-- Сюди JS підставлятиме фото -->
-                </div>
+                <div class="photo-box" id="profile-photo"></div>
                 <div class="header-text">
                     <h1>ОСОБОВА СПРАВА</h1>
                     <p class="sub-header">ОБ'ЄКТ № <span id="candidate-id">0000</span></p>
@@ -45,17 +59,42 @@
                 <div class="grid-section">
                     <div class="box">
                         <div class="label-row">
-                            <span class="label">ВІК ТА СТАТЬ (Статура):</span>
+                            <span class="label">СТАТЬ:</span>
                             <div class="action-btns">
-                                <button class="add-btn" onclick="resetField('bio', 'bio')" title="Перегенерувати">[↻]</button>
+                                <button class="add-btn" onclick="openEditModal('gender', 'genders')" title="Вибрати">[✎]</button>
+                                <button class="add-btn" onclick="resetField('gender', 'genders')" title="Перегенерувати">[↻]</button>
                             </div>
                         </div>
-                        <div class="field-content" id="bio"></div>
+                        <div class="field-content" id="gender"></div>
+                    </div>
+                    <div class="box">
+                        <div class="label-row">
+                            <span class="label">ВІК:</span>
+                            <div class="action-btns">
+                                <button class="add-btn" onclick="openEditModal('age', 'ages')" title="Вибрати">[✎]</button>
+                                <button class="add-btn" onclick="resetField('age', 'ages')" title="Перегенерувати">[↻]</button>
+                            </div>
+                        </div>
+                        <div class="field-content" id="age"></div>
+                    </div>
+                </div>
+
+                <div class="grid-section">
+                    <div class="box">
+                        <div class="label-row">
+                            <span class="label">СТАТУРА:</span>
+                            <div class="action-btns">
+                                <button class="add-btn" onclick="openEditModal('body', 'bodies')" title="Вибрати">[✎]</button>
+                                <button class="add-btn" onclick="resetField('body', 'bodies')" title="Перегенерувати">[↻]</button>
+                            </div>
+                        </div>
+                        <div class="field-content" id="body"></div>
                     </div>
                     <div class="box">
                         <div class="label-row">
                             <span class="label">ПРОФЕСІЯ:</span>
                             <div class="action-btns">
+                                <button class="add-btn" onclick="openEditModal('profession', 'professions')" title="Вибрати">[✎]</button>
                                 <button class="add-btn" onclick="resetField('profession', 'professions')" title="Перегенерувати">[↻]</button>
                             </div>
                         </div>
@@ -68,6 +107,7 @@
                         <div class="label-row">
                             <span class="label">ЗДОРОВ'Я:</span>
                             <div class="action-btns">
+                                <button class="add-btn" onclick="openEditModal('health', 'health')" title="Вибрати">[✎]</button>
                                 <button class="add-btn" onclick="resetField('health', 'health')" title="Перегенерувати">[↻]</button>
                             </div>
                         </div>
@@ -77,6 +117,7 @@
                         <div class="label-row">
                             <span class="label">ФОБІЯ:</span>
                             <div class="action-btns">
+                                <button class="add-btn" onclick="openEditModal('phobia', 'phobias')" title="Вибрати">[✎]</button>
                                 <button class="add-btn" onclick="resetField('phobia', 'phobias')" title="Перегенерувати">[↻]</button>
                             </div>
                         </div>
@@ -84,11 +125,11 @@
                     </div>
                 </div>
 
-                <!-- Хобі тепер на всю ширину замість сусідства з Рисою характеру -->
                 <div class="box full-width">
                     <div class="label-row">
                         <span class="label">ХОБІ:</span>
                         <div class="action-btns">
+                            <button class="add-btn" onclick="openEditModal('hobby', 'hobbies')" title="Вибрати">[✎]</button>
                             <button class="add-btn" onclick="resetField('hobby', 'hobbies')" title="Перегенерувати">[↻]</button>
                         </div>
                     </div>
@@ -99,6 +140,7 @@
                     <div class="label-row">
                         <span class="label">РЮКЗАК:</span>
                         <div class="action-btns">
+                            <button class="add-btn" onclick="openEditModal('inventory', 'inventory')" title="Вибрати">[✎]</button>
                             <button class="add-btn" onclick="resetField('inventory', 'inventory')" title="Перегенерувати">[↻]</button>
                         </div>
                     </div>
@@ -109,6 +151,7 @@
                     <div class="label-row">
                         <span class="label">ДОД. ІНФОРМАЦІЯ:</span>
                         <div class="action-btns">
+                            <button class="add-btn" onclick="openEditModal('info', 'additional_info')" title="Вибрати">[✎]</button>
                             <button class="add-btn" onclick="resetField('info', 'additional_info')" title="Перегенерувати">[↻]</button>
                         </div>
                     </div>
@@ -120,6 +163,8 @@
                         <div class="label-row">
                             <span class="label">СТОП БУНКЕР 1:</span>
                             <div class="action-btns">
+                                <button class="add-btn action-special" onclick="useSpecial('special1')" title="Використати">[⚡]</button>
+                                <button class="add-btn" onclick="openEditModal('special1', 'specials')" title="Вибрати">[✎]</button>
                                 <button class="add-btn" onclick="resetField('special1', 'specials')" title="Перегенерувати">[↻]</button>
                             </div>
                         </div>
@@ -129,6 +174,8 @@
                         <div class="label-row">
                             <span class="label">СТОП БУНКЕР 2:</span>
                             <div class="action-btns">
+                                <button class="add-btn action-special" onclick="useSpecial('special2')" title="Використати">[⚡]</button>
+                                <button class="add-btn" onclick="openEditModal('special2', 'specials')" title="Вибрати">[✎]</button>
                                 <button class="add-btn" onclick="resetField('special2', 'specials')" title="Перегенерувати">[↻]</button>
                             </div>
                         </div>
