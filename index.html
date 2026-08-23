@@ -19,7 +19,39 @@
                 <label>Прізвище (за бажанням)</label>
                 <input type="text" id="lastNameInput" placeholder="Введіть прізвище" onkeydown="if(event.key === 'Enter') startGame()">
             </div>
-            <button class="action-btn primary-btn" onclick="startGame()">РОЗПОЧАТИ</button>
+            <button class="action-btn primary-btn" style="width: 100%; margin-bottom: 10px;" onclick="startGame()">РОЗПОЧАТИ</button>
+            <button class="action-btn secondary-btn" style="width: 100%;" onclick="openRules()">ПРАВИЛА ГРИ</button>
+        </div>
+    </div>
+
+    <!-- Модальне вікно ПРАВИЛ -->
+    <div id="rules-modal" class="modal-overlay" style="display: none; z-index: 300;">
+        <div class="modal-content rules-dialog">
+            <h2>📜 ПРАВИЛА ГРИ</h2>
+            <div class="rules-content">
+                <p><strong>МЕТА:</strong> Довести, що саме ви найкорисніші для виживання та відродження людства після глобальної катастрофи, і потрапити до Бункера.</p>
+                <p><strong>ХІД ГРИ:</strong></p>
+                <ul>
+                    <li>Кожен гравець отримує випадкове досьє. Характеристики приховані.</li>
+                    <li>Гравці по колу відкривають по одній або кілька характеристик (за домовленістю) і пояснюють, чому це робить їх корисними.</li>
+                    <li>Обговорення та суперечки вітаються! Брехати про свої закриті картки не можна, але можна недоговорювати.</li>
+                </ul>
+                <p><strong>ГОЛОСУВАННЯ:</strong> Після кількох кіл відбувається голосування. Гравець, який набрав найбільше голосів проти себе, виганяється з Бункера.</p>
+                <p><strong>СТОП БУНКЕР:</strong> Це спеціальні картки, які можуть змінити хід гри (вкрасти чужу картку, скасувати голосування тощо). Їх можна використати лише один раз за гру.</p>
+            </div>
+            <button class="action-btn primary-btn" style="width: 100%;" onclick="closeRules()">ЗРОЗУМІЛО</button>
+        </div>
+    </div>
+
+    <!-- Модальне вікно ПІДТВЕРДЖЕННЯ ЗМІН -->
+    <div id="confirm-modal" class="modal-overlay" style="display: none; z-index: 250;">
+        <div class="modal-content confirm-dialog">
+            <h2>УВАГА!</h2>
+            <p>Ви впевнені, що хочете виконати цю дію? Повернути попереднє значення буде неможливо.</p>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="action-btn primary-btn" style="flex: 1;" onclick="confirmAction()">ТАК</button>
+                <button class="action-btn cancel-btn" style="flex: 1; margin: 0;" onclick="cancelAction()">НІ</button>
+            </div>
         </div>
     </div>
 
@@ -38,35 +70,37 @@
     <!-- Нижня панель навігації (Bottom Bar) -->
     <div class="bottom-nav" id="bottomNav" style="display: none;">
         <button class="bottom-btn" onclick="scrollToCard('card-gender')" title="Біографічні дані">
-            <span class="nav-icon">👤</span>
-            <span class="nav-text">Біо</span>
+            <span class="nav-icon">👤</span><span class="nav-text">Біо</span>
         </button>
         <button class="bottom-btn" onclick="scrollToCard('card-profession')" title="Професія">
-            <span class="nav-icon">💼</span>
-            <span class="nav-text">Фах</span>
+            <span class="nav-icon">💼</span><span class="nav-text">Фах</span>
         </button>
         <button class="bottom-btn" onclick="scrollToCard('card-health')" title="Здоров'я та Фобії">
-            <span class="nav-icon">⚕️</span>
-            <span class="nav-text">Стан</span>
+            <span class="nav-icon">⚕️</span><span class="nav-text">Стан</span>
         </button>
         <button class="bottom-btn" onclick="scrollToCard('card-inventory')" title="Рюкзак та Хобі">
-            <span class="nav-icon">🎒</span>
-            <span class="nav-text">Багаж</span>
+            <span class="nav-icon">🎒</span><span class="nav-text">Багаж</span>
         </button>
         <button class="bottom-btn" onclick="scrollToCard('card-special1')" title="Стоп Бункер">
-            <span class="nav-icon">🛑</span>
-            <span class="nav-text">Дії</span>
+            <span class="nav-icon">🛑</span><span class="nav-text">Дії</span>
         </button>
     </div>
 
     <div class="app-wrapper">
         <div class="sheet-container">
+            <!-- ОНОВЛЕНИЙ ЗАГОЛОВОК ЗІ СТАТУСОМ ТА КНОПКОЮ -->
             <div class="header-container">
-                <div class="photo-box" id="profile-photo"></div>
-                <div class="header-text">
-                    <h1>ОСОБОВА СПРАВА</h1>
-                    <p class="sub-header">ОБ'ЄКТ № <span id="candidate-id">0000</span></p>
-                    <p class="sub-header" id="candidate-name" style="display:none;"></p>
+                <div class="header-info">
+                    <div class="photo-box" id="profile-photo"></div>
+                    <div class="header-text">
+                        <h1>ОСОБОВА СПРАВА</h1>
+                        <p class="sub-header">ОБ'ЄКТ № <span id="candidate-id">0000</span></p>
+                        <p class="sub-header" id="candidate-name" style="display:none;"></p>
+                    </div>
+                </div>
+                <div class="header-actions" id="header-actions" style="display: none;">
+                    <div class="status-stamp">ОЧІКУЄ РІШЕННЯ</div>
+                    <button class="action-btn secondary-btn small-btn" onclick="requestNewDossier()">🔄 НОВЕ ДОСЬЄ</button>
                 </div>
             </div>
 
@@ -75,7 +109,7 @@
                     <button class="action-btn primary-btn large-btn" onclick="unlockSheetAndShowNav()">РОЗСЕКРЕТИТИ ДАНІ</button>
                 </div>
 
-                <!-- Адаптивна сітка карток -->
+                <!-- Адаптивна сітка карток (ОНОВЛЕНО НА requestResetField) -->
                 <div class="cards-grid">
                     
                     <div class="trait-card" id="card-gender">
@@ -83,7 +117,7 @@
                             <span class="label">СТАТЬ</span>
                             <div class="action-btns">
                                 <button class="icon-btn" onclick="openEditModal('gender', 'genders')" title="Вибрати вручну">✏️</button>
-                                <button class="icon-btn" onclick="resetField('gender', 'genders')" title="Випадково">🎲</button>
+                                <button class="icon-btn" onclick="requestResetField('gender', 'genders')" title="Випадково">🎲</button>
                             </div>
                         </div>
                         <div class="field-content" id="gender"></div>
@@ -94,7 +128,7 @@
                             <span class="label">ВІК</span>
                             <div class="action-btns">
                                 <button class="icon-btn" onclick="openEditModal('age', 'ages')" title="Вибрати вручну">✏️</button>
-                                <button class="icon-btn" onclick="resetField('age', 'ages')" title="Випадково">🎲</button>
+                                <button class="icon-btn" onclick="requestResetField('age', 'ages')" title="Випадково">🎲</button>
                             </div>
                         </div>
                         <div class="field-content" id="age"></div>
@@ -105,7 +139,7 @@
                             <span class="label">СТАТУРА</span>
                             <div class="action-btns">
                                 <button class="icon-btn" onclick="openEditModal('body', 'bodies')" title="Вибрати вручну">✏️</button>
-                                <button class="icon-btn" onclick="resetField('body', 'bodies')" title="Випадково">🎲</button>
+                                <button class="icon-btn" onclick="requestResetField('body', 'bodies')" title="Випадково">🎲</button>
                             </div>
                         </div>
                         <div class="field-content" id="body"></div>
@@ -116,7 +150,7 @@
                             <span class="label">ПРОФЕСІЯ</span>
                             <div class="action-btns">
                                 <button class="icon-btn" onclick="openEditModal('profession', 'professions')" title="Вибрати вручну">✏️</button>
-                                <button class="icon-btn" onclick="resetField('profession', 'professions')" title="Випадково">🎲</button>
+                                <button class="icon-btn" onclick="requestResetField('profession', 'professions')" title="Випадково">🎲</button>
                             </div>
                         </div>
                         <div class="field-content" id="profession"></div>
@@ -127,7 +161,7 @@
                             <span class="label">ЗДОРОВ'Я</span>
                             <div class="action-btns">
                                 <button class="icon-btn" onclick="openEditModal('health', 'health')" title="Вибрати вручну">✏️</button>
-                                <button class="icon-btn" onclick="resetField('health', 'health')" title="Випадково">🎲</button>
+                                <button class="icon-btn" onclick="requestResetField('health', 'health')" title="Випадково">🎲</button>
                             </div>
                         </div>
                         <div class="field-content" id="health"></div>
@@ -138,7 +172,7 @@
                             <span class="label">ФОБІЯ</span>
                             <div class="action-btns">
                                 <button class="icon-btn" onclick="openEditModal('phobia', 'phobias')" title="Вибрати вручну">✏️</button>
-                                <button class="icon-btn" onclick="resetField('phobia', 'phobias')" title="Випадково">🎲</button>
+                                <button class="icon-btn" onclick="requestResetField('phobia', 'phobias')" title="Випадково">🎲</button>
                             </div>
                         </div>
                         <div class="field-content" id="phobia"></div>
@@ -149,7 +183,7 @@
                             <span class="label">ХОБІ</span>
                             <div class="action-btns">
                                 <button class="icon-btn" onclick="openEditModal('hobby', 'hobbies')" title="Вибрати вручну">✏️</button>
-                                <button class="icon-btn" onclick="resetField('hobby', 'hobbies')" title="Випадково">🎲</button>
+                                <button class="icon-btn" onclick="requestResetField('hobby', 'hobbies')" title="Випадково">🎲</button>
                             </div>
                         </div>
                         <div class="field-content" id="hobby"></div>
@@ -160,7 +194,7 @@
                             <span class="label">РЮКЗАК</span>
                             <div class="action-btns">
                                 <button class="icon-btn" onclick="openEditModal('inventory', 'inventory')" title="Вибрати вручну">✏️</button>
-                                <button class="icon-btn" onclick="resetField('inventory', 'inventory')" title="Випадково">🎲</button>
+                                <button class="icon-btn" onclick="requestResetField('inventory', 'inventory')" title="Випадково">🎲</button>
                             </div>
                         </div>
                         <div class="field-content" id="inventory"></div>
@@ -171,7 +205,7 @@
                             <span class="label">ДОДАТКОВА ІНФОРМАЦІЯ</span>
                             <div class="action-btns">
                                 <button class="icon-btn" onclick="openEditModal('info', 'additional_info')" title="Вибрати вручну">✏️</button>
-                                <button class="icon-btn" onclick="resetField('info', 'additional_info')" title="Випадково">🎲</button>
+                                <button class="icon-btn" onclick="requestResetField('info', 'additional_info')" title="Випадково">🎲</button>
                             </div>
                         </div>
                         <div class="field-content" id="info"></div>
@@ -183,7 +217,7 @@
                             <div class="action-btns">
                                 <button class="icon-btn lightning-btn" onclick="useSpecial('special1')" title="Використати">⚡</button>
                                 <button class="icon-btn" onclick="openEditModal('special1', 'specials')" title="Вибрати вручну">✏️</button>
-                                <button class="icon-btn" onclick="resetField('special1', 'specials')" title="Випадково">🎲</button>
+                                <button class="icon-btn" onclick="requestResetField('special1', 'specials')" title="Випадково">🎲</button>
                             </div>
                         </div>
                         <div class="field-content" id="special1"></div>
@@ -195,19 +229,14 @@
                             <div class="action-btns">
                                 <button class="icon-btn lightning-btn" onclick="useSpecial('special2')" title="Використати">⚡</button>
                                 <button class="icon-btn" onclick="openEditModal('special2', 'specials')" title="Вибрати вручну">✏️</button>
-                                <button class="icon-btn" onclick="resetField('special2', 'specials')" title="Випадково">🎲</button>
+                                <button class="icon-btn" onclick="requestResetField('special2', 'specials')" title="Випадково">🎲</button>
                             </div>
                         </div>
                         <div class="field-content" id="special2"></div>
                     </div>
-
                 </div>
-
-                <div class="footer-stamp">СТАТУС: ОЧІКУЄ РІШЕННЯ</div>
             </div>
         </div>
-        
-        <button id="generateBtn" class="action-btn secondary-btn" style="display:none; width: 100%; margin-top: 10px;" onclick="generateCharacter()">ЗГЕНЕРУВАТИ НОВЕ ДОСЬЄ</button>
     </div>
 
     <script src="script.js"></script>

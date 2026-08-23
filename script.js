@@ -50,6 +50,7 @@ typingAudio.preload = 'auto';
 
 let isTypingGlobal = false; 
 let currentEditField = ""; 
+let pendingAction = null; // Зберігає дію до підтвердження
 
 const getRandomItem = (array) => {
     if (!array || array.length === 0) return "Дані відсутні";
@@ -75,6 +76,53 @@ const generateHealth = () => {
     }
 };
 
+/* --- ПРАВИЛА ГРИ --- */
+function openRules() {
+    document.getElementById('rules-modal').style.display = 'flex';
+}
+function closeRules() {
+    document.getElementById('rules-modal').style.display = 'none';
+}
+
+/* --- СИСТЕМА ПІДТВЕРДЖЕННЯ ДІЙ --- */
+function requestResetField(elementId, dbKey) {
+    if (isTypingGlobal) return;
+    if (!document.getElementById(elementId).classList.contains('revealed')) return;
+    pendingAction = { type: 'random', fieldId: elementId, dbKey: dbKey };
+    document.getElementById('confirm-modal').style.display = 'flex';
+}
+
+function requestSaveEditField(selectedValue) {
+    pendingAction = { type: 'manual', fieldId: currentEditField, value: selectedValue };
+    document.getElementById('edit-modal').style.display = 'none';
+    document.getElementById('confirm-modal').style.display = 'flex';
+}
+
+function requestNewDossier() {
+    pendingAction = { type: 'new_dossier' };
+    document.getElementById('confirm-modal').style.display = 'flex';
+}
+
+function confirmAction() {
+    document.getElementById('confirm-modal').style.display = 'none';
+    if (!pendingAction) return;
+
+    if (pendingAction.type === 'random') {
+        resetField(pendingAction.fieldId, pendingAction.dbKey);
+    } else if (pendingAction.type === 'manual') {
+        saveEditField(pendingAction.value);
+    } else if (pendingAction.type === 'new_dossier') {
+        generateCharacter();
+    }
+    pendingAction = null;
+}
+
+function cancelAction() {
+    document.getElementById('confirm-modal').style.display = 'none';
+    pendingAction = null;
+}
+
+/* --- ОСНОВНА ЛОГІКА --- */
 function startGame() {
     const fName = document.getElementById('firstNameInput').value.trim();
     const lName = document.getElementById('lastNameInput').value.trim();
@@ -86,13 +134,13 @@ function startGame() {
     nameDisplay.style.display = 'block';
 
     generateCharacter();
-    document.getElementById('generateBtn').style.display = 'block';
 }
 
 function generateCharacter() {
     document.getElementById('character-sheet').classList.add('hidden');
     document.getElementById('global-lock').style.display = 'flex';
     document.getElementById('bottomNav').style.display = 'none';
+    document.getElementById('header-actions').style.display = 'flex'; // Показуємо дії в шапці
 
     const gender = getRandomItem(db.genders);
 
@@ -196,7 +244,7 @@ function openEditModal(fieldId, dbKey) {
         const el = document.createElement('div');
         el.className = 'option-item';
         el.textContent = opt;
-        el.onclick = () => saveEditField(opt); 
+        el.onclick = () => requestSaveEditField(opt); 
         list.appendChild(el);
     });
 
@@ -224,9 +272,7 @@ function filterOptions() {
 
 async function saveEditField(selectedValue) {
     let newValue = selectedValue;
-    const fieldId = currentEditField;
-
-    document.getElementById('edit-modal').style.display = 'none';
+    const fieldId = pendingAction.fieldId; // Беремо з кешу дії
 
     if (fieldId === 'profession' || fieldId === 'hobby') {
         newValue += `\nДосвід: ${getExperienceD6()}`;
@@ -265,10 +311,7 @@ async function saveEditField(selectedValue) {
 }
 
 async function resetField(elementId, dbKey) {
-    if (isTypingGlobal) return;
     const container = document.getElementById(elementId);
-    if (!container.classList.contains('revealed')) return; 
-    
     container.classList.remove('used-special'); 
     let newItem = "";
 

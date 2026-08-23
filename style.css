@@ -9,32 +9,27 @@
 
 * { box-sizing: border-box; }
 
-html {
-    scroll-behavior: smooth;
-}
+html { scroll-behavior: smooth; }
 
 body {
-    background-color: var(--bg-color);
-    color: var(--text-color);
+    background-color: var(--bg-color); color: var(--text-color);
     font-family: 'Courier New', Courier, monospace;
-    display: flex;
-    justify-content: center;
-    padding: 15px;
-    margin: 0;
-    padding-bottom: 100px; /* Відступ знизу, щоб контент не ховався під баром */
+    display: flex; justify-content: center;
+    padding: 15px; margin: 0; padding-bottom: 100px; 
 }
 
 /* --- КНОПКИ --- */
 .action-btn {
     padding: 12px 20px; font-family: inherit; font-weight: bold; font-size: 16px;
     border: 2px solid var(--border-color); box-shadow: 2px 2px 0px var(--border-color);
-    cursor: pointer; transition: all 0.1s; border-radius: 4px;
+    cursor: pointer; transition: all 0.1s; border-radius: 4px; display: inline-block;
 }
 .action-btn:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px var(--border-color); }
 .primary-btn { background-color: var(--text-color); color: var(--card-bg); }
 .secondary-btn { background-color: var(--card-bg); color: var(--text-color); }
 .cancel-btn { background-color: #e0e0e0; width: 100%; margin-top: 10px; }
 .large-btn { font-size: 18px; padding: 15px 30px; box-shadow: 4px 4px 0px var(--border-color); }
+.small-btn { font-size: 13px; padding: 8px 12px; }
 
 .icon-btn {
     background: var(--card-bg); border: 1.5px solid var(--border-color); border-radius: 6px;
@@ -55,6 +50,9 @@ body {
     border-radius: 8px; width: 90%; max-width: 350px; box-shadow: var(--shadow);
 }
 .edit-dialog { max-width: 500px; height: 85vh; display: flex; flex-direction: column; }
+.rules-dialog { max-width: 500px; text-align: left; }
+.confirm-dialog { max-width: 400px; text-align: center; }
+
 .input-group { margin-bottom: 15px; display: flex; flex-direction: column; }
 .input-group label { font-size: 14px; font-weight: bold; margin-bottom: 5px; }
 .input-group input, #searchInput { 
@@ -72,24 +70,15 @@ body {
 .option-item:hover, .option-item:active {
     background: var(--text-color); color: var(--bg-color); border-color: var(--text-color);
 }
+.rules-content { max-height: 60vh; overflow-y: auto; font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
 
 /* --- НИЖНЯ ПАНЕЛЬ НАВІГАЦІЇ (BOTTOM BAR) --- */
 .bottom-nav {
-    position: fixed;
-    bottom: 15px; 
-    left: 50%;
-    transform: translateX(-50%);
-    width: 95%;
-    max-width: 600px; 
-    z-index: 90;
-    display: flex;
-    justify-content: space-around; 
-    align-items: center;
-    background: rgba(244, 241, 234, 0.85); 
-    backdrop-filter: blur(10px); 
-    padding: 10px 5px;
-    border-radius: 20px; 
-    border: 2px solid var(--border-color);
+    position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%);
+    width: 95%; max-width: 600px; z-index: 90; display: flex;
+    justify-content: space-around; align-items: center;
+    background: rgba(244, 241, 234, 0.85); backdrop-filter: blur(10px); 
+    padding: 10px 5px; border-radius: 20px; border: 2px solid var(--border-color);
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
 }
 .bottom-btn {
@@ -104,17 +93,30 @@ body {
 /* --- ОСНОВНИЙ ЛИСТ --- */
 .app-wrapper { width: 100%; max-width: 800px; display: flex; flex-direction: column; align-items: center; }
 .sheet-container { width: 100%; position: relative; }
+
+/* Оновлений заголовок (гнучкий для всіх екранів) */
 .header-container { 
-    display: flex; align-items: center; margin-bottom: 25px; background: var(--card-bg); 
-    padding: 15px; border: 2px solid var(--border-color); border-radius: 8px; box-shadow: var(--shadow);
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;
+    margin-bottom: 25px; background: var(--card-bg); padding: 15px; 
+    border: 2px solid var(--border-color); border-radius: 8px; box-shadow: var(--shadow);
 }
+.header-info { display: flex; align-items: center; }
+.header-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+
 .photo-box {
-    width: 80px; height: 100px; flex-shrink: 0; border: 2px solid var(--border-color); 
-    background-color: #fff; margin-right: 20px; overflow: hidden;
+    width: 70px; height: 90px; flex-shrink: 0; border: 2px solid var(--border-color); 
+    background-color: #fff; margin-right: 15px; overflow: hidden;
 }
 .profile-photo-img { width: 100%; height: 100%; object-fit: cover; }
-.header-text h1 { margin: 0; font-size: 24px; letter-spacing: 1px; }
-.sub-header { margin: 5px 0 0 0; font-weight: bold; font-size: 16px; }
+.header-text h1 { margin: 0; font-size: 22px; letter-spacing: 1px; }
+.sub-header { margin: 5px 0 0 0; font-weight: bold; font-size: 14px; }
+
+/* Статус штамп (переміщено нагору) */
+.status-stamp {
+    color: var(--accent-red); font-weight: bold; font-size: 14px;
+    border: 2px solid var(--accent-red); padding: 6px 10px; transform: rotate(-3deg);
+    border-radius: 4px; background: rgba(255, 255, 255, 0.9); box-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+}
 
 /* Сітка карток */
 .cards-grid {
@@ -146,12 +148,6 @@ body {
     position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px;
     background: rgba(244, 241, 234, 0.7); backdrop-filter: blur(5px);
     display: flex; justify-content: center; align-items: center; z-index: 50; border-radius: 8px;
-}
-
-.footer-stamp {
-    text-align: right; color: var(--accent-red); font-weight: bold; font-size: 20px;
-    border: 3px solid var(--accent-red); padding: 10px 15px; transform: rotate(-3deg);
-    display: inline-block; margin-top: 25px; float: right; border-radius: 4px;
 }
 .hidden { display: none !important; }
 
