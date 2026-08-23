@@ -10,7 +10,7 @@
     <!-- Модалка ідентифікації -->
     <div id="start-modal" class="modal-overlay">
         <div class="modal-content">
-            <h2>ІДЕНТИФІКАЦІЯ УЧАСНИКА</h2>
+            <h2>ІДЕНТИФІКАЦІЯ</h2>
             <div class="input-group">
                 <label>Ім'я (обов'язково)</label>
                 <input type="text" id="firstNameInput" placeholder="Введіть ім'я" onkeydown="if(event.key === 'Enter') startGame()">
@@ -19,24 +19,35 @@
                 <label>Прізвище (за бажанням)</label>
                 <input type="text" id="lastNameInput" placeholder="Введіть прізвище" onkeydown="if(event.key === 'Enter') startGame()">
             </div>
-            <button class="generate-btn" onclick="startGame()">РОЗПОЧАТИ СИМУЛЯЦІЮ</button>
+            <button class="action-btn primary-btn" onclick="startGame()">РОЗПОЧАТИ</button>
         </div>
     </div>
 
-    <!-- Нова модалка для ручного вибору карток -->
+    <!-- Модальне вікно з ПОШУКОМ для вибору -->
     <div id="edit-modal" class="modal-overlay" style="display: none; z-index: 200;">
-        <div class="modal-content">
-            <h2>ВИБІР ХАРАКТЕРИСТИКИ</h2>
-            <div class="input-group">
-                <select id="editSelect" style="width: 100%; padding: 10px; font-family: inherit; font-size: 16px; border: 2px solid var(--ink-color); background: transparent; color: var(--ink-color); outline: none;">
-                    <!-- Опції додаються через JS -->
-                </select>
+        <div class="modal-content edit-dialog">
+            <h2>ОБЕРІТЬ ВАРІАНТ</h2>
+            <!-- Поле для швидкого пошуку -->
+            <input type="text" id="searchInput" placeholder="Пошук (введіть слово)..." onkeyup="filterOptions()">
+            
+            <!-- Контейнер для списку, який можна гортати -->
+            <div id="optionsList" class="options-container">
+                <!-- Опції додаються через JS -->
             </div>
-            <div style="display: flex; gap: 10px;">
-                <button class="generate-btn" onclick="saveEditField()">ЗБЕРЕГТИ</button>
-                <button class="generate-btn" style="background: transparent; color: var(--ink-color);" onclick="closeEditModal()">СКАСУВАТИ</button>
-            </div>
+            
+            <button class="action-btn cancel-btn" onclick="closeEditModal()">СКАСУВАТИ</button>
         </div>
+    </div>
+
+    <!-- Плаваюча бічна панель навігації -->
+    <div class="sidebar-nav" id="sidebarNav" style="display: none;">
+        <button class="side-btn" onclick="scrollToCard('card-gender')" title="Біографічні дані">👤</button>
+        <button class="side-btn" onclick="scrollToCard('card-profession')" title="Професія">💼</button>
+        <button class="side-btn" onclick="scrollToCard('card-health')" title="Здоров'я">⚕️</button>
+        <button class="side-btn" onclick="scrollToCard('card-hobby')" title="Хобі">🎨</button>
+        <button class="side-btn" onclick="scrollToCard('card-inventory')" title="Рюкзак">🎒</button>
+        <button class="side-btn" onclick="scrollToCard('card-info')" title="Дод. інформація">📝</button>
+        <button class="side-btn" onclick="scrollToCard('card-special1')" title="Стоп Бункер">🛑</button>
     </div>
 
     <div class="app-wrapper">
@@ -46,152 +57,158 @@
                 <div class="header-text">
                     <h1>ОСОБОВА СПРАВА</h1>
                     <p class="sub-header">ОБ'ЄКТ № <span id="candidate-id">0000</span></p>
-                    <p class="sub-header" id="candidate-name" style="display:none; margin-top: 5px;"></p>
+                    <p class="sub-header" id="candidate-name" style="display:none;"></p>
                 </div>
             </div>
 
-            <div id="character-sheet" class="hidden" style="position: relative;">
-                
+            <div id="character-sheet" class="hidden">
                 <div id="global-lock" class="global-lock">
-                    <button class="start-round-btn" onclick="unlockSheet()">РОЗПОЧАТИ</button>
+                    <button class="action-btn primary-btn large-btn" onclick="unlockSheetAndShowNav()">РОЗСЕКРЕТИТИ ДАНІ</button>
                 </div>
 
-                <div class="grid-section">
-                    <div class="box">
-                        <div class="label-row">
-                            <span class="label">СТАТЬ:</span>
+                <!-- Адаптивна сітка карток -->
+                <div class="cards-grid">
+                    
+                    <div class="trait-card" id="card-gender">
+                        <div class="card-header">
+                            <span class="label">СТАТЬ</span>
                             <div class="action-btns">
-                                <button class="add-btn" onclick="openEditModal('gender', 'genders')" title="Вибрати">[✎]</button>
-                                <button class="add-btn" onclick="resetField('gender', 'genders')" title="Перегенерувати">[↻]</button>
+                                <button class="icon-btn" onclick="openEditModal('gender', 'genders')" title="Вибрати вручну">✏️</button>
+                                <button class="icon-btn" onclick="resetField('gender', 'genders')" title="Випадково">🎲</button>
                             </div>
                         </div>
                         <div class="field-content" id="gender"></div>
                     </div>
-                    <div class="box">
-                        <div class="label-row">
-                            <span class="label">ВІК:</span>
+
+                    <div class="trait-card" id="card-age">
+                        <div class="card-header">
+                            <span class="label">ВІК</span>
                             <div class="action-btns">
-                                <button class="add-btn" onclick="openEditModal('age', 'ages')" title="Вибрати">[✎]</button>
-                                <button class="add-btn" onclick="resetField('age', 'ages')" title="Перегенерувати">[↻]</button>
+                                <button class="icon-btn" onclick="openEditModal('age', 'ages')" title="Вибрати вручну">✏️</button>
+                                <button class="icon-btn" onclick="resetField('age', 'ages')" title="Випадково">🎲</button>
                             </div>
                         </div>
                         <div class="field-content" id="age"></div>
                     </div>
-                </div>
 
-                <div class="grid-section">
-                    <div class="box">
-                        <div class="label-row">
-                            <span class="label">СТАТУРА:</span>
+                    <div class="trait-card" id="card-body">
+                        <div class="card-header">
+                            <span class="label">СТАТУРА</span>
                             <div class="action-btns">
-                                <button class="add-btn" onclick="openEditModal('body', 'bodies')" title="Вибрати">[✎]</button>
-                                <button class="add-btn" onclick="resetField('body', 'bodies')" title="Перегенерувати">[↻]</button>
+                                <button class="icon-btn" onclick="openEditModal('body', 'bodies')" title="Вибрати вручну">✏️</button>
+                                <button class="icon-btn" onclick="resetField('body', 'bodies')" title="Випадково">🎲</button>
                             </div>
                         </div>
                         <div class="field-content" id="body"></div>
                     </div>
-                    <div class="box">
-                        <div class="label-row">
-                            <span class="label">ПРОФЕСІЯ:</span>
+
+                    <div class="trait-card" id="card-profession">
+                        <div class="card-header">
+                            <span class="label">ПРОФЕСІЯ</span>
                             <div class="action-btns">
-                                <button class="add-btn" onclick="openEditModal('profession', 'professions')" title="Вибрати">[✎]</button>
-                                <button class="add-btn" onclick="resetField('profession', 'professions')" title="Перегенерувати">[↻]</button>
+                                <button class="icon-btn" onclick="openEditModal('profession', 'professions')" title="Вибрати вручну">✏️</button>
+                                <button class="icon-btn" onclick="resetField('profession', 'professions')" title="Випадково">🎲</button>
                             </div>
                         </div>
                         <div class="field-content" id="profession"></div>
                     </div>
-                </div>
 
-                <div class="grid-section">
-                    <div class="box">
-                        <div class="label-row">
-                            <span class="label">ЗДОРОВ'Я:</span>
+                    <div class="trait-card" id="card-health">
+                        <div class="card-header">
+                            <span class="label">ЗДОРОВ'Я</span>
                             <div class="action-btns">
-                                <button class="add-btn" onclick="openEditModal('health', 'health')" title="Вибрати">[✎]</button>
-                                <button class="add-btn" onclick="resetField('health', 'health')" title="Перегенерувати">[↻]</button>
+                                <button class="icon-btn" onclick="openEditModal('health', 'health')" title="Вибрати вручну">✏️</button>
+                                <button class="icon-btn" onclick="resetField('health', 'health')" title="Випадково">🎲</button>
                             </div>
                         </div>
                         <div class="field-content" id="health"></div>
                     </div>
-                    <div class="box">
-                        <div class="label-row">
-                            <span class="label">ФОБІЯ:</span>
+
+                    <div class="trait-card" id="card-phobia">
+                        <div class="card-header">
+                            <span class="label">ФОБІЯ</span>
                             <div class="action-btns">
-                                <button class="add-btn" onclick="openEditModal('phobia', 'phobias')" title="Вибрати">[✎]</button>
-                                <button class="add-btn" onclick="resetField('phobia', 'phobias')" title="Перегенерувати">[↻]</button>
+                                <button class="icon-btn" onclick="openEditModal('phobia', 'phobias')" title="Вибрати вручну">✏️</button>
+                                <button class="icon-btn" onclick="resetField('phobia', 'phobias')" title="Випадково">🎲</button>
                             </div>
                         </div>
                         <div class="field-content" id="phobia"></div>
                     </div>
-                </div>
 
-                <div class="box full-width">
-                    <div class="label-row">
-                        <span class="label">ХОБІ:</span>
-                        <div class="action-btns">
-                            <button class="add-btn" onclick="openEditModal('hobby', 'hobbies')" title="Вибрати">[✎]</button>
-                            <button class="add-btn" onclick="resetField('hobby', 'hobbies')" title="Перегенерувати">[↻]</button>
-                        </div>
-                    </div>
-                    <div class="field-content" id="hobby"></div>
-                </div>
-
-                <div class="box full-width">
-                    <div class="label-row">
-                        <span class="label">РЮКЗАК:</span>
-                        <div class="action-btns">
-                            <button class="add-btn" onclick="openEditModal('inventory', 'inventory')" title="Вибрати">[✎]</button>
-                            <button class="add-btn" onclick="resetField('inventory', 'inventory')" title="Перегенерувати">[↻]</button>
-                        </div>
-                    </div>
-                    <div class="field-content" id="inventory"></div>
-                </div>
-
-                <div class="box full-width">
-                    <div class="label-row">
-                        <span class="label">ДОД. ІНФОРМАЦІЯ:</span>
-                        <div class="action-btns">
-                            <button class="add-btn" onclick="openEditModal('info', 'additional_info')" title="Вибрати">[✎]</button>
-                            <button class="add-btn" onclick="resetField('info', 'additional_info')" title="Перегенерувати">[↻]</button>
-                        </div>
-                    </div>
-                    <div class="field-content" id="info"></div>
-                </div>
-
-                <div class="grid-section">
-                    <div class="box">
-                        <div class="label-row">
-                            <span class="label">СТОП БУНКЕР 1:</span>
+                    <div class="trait-card wide-card" id="card-hobby">
+                        <div class="card-header">
+                            <span class="label">ХОБІ</span>
                             <div class="action-btns">
-                                <button class="add-btn action-special" onclick="useSpecial('special1')" title="Використати">[⚡]</button>
-                                <button class="add-btn" onclick="openEditModal('special1', 'specials')" title="Вибрати">[✎]</button>
-                                <button class="add-btn" onclick="resetField('special1', 'specials')" title="Перегенерувати">[↻]</button>
+                                <button class="icon-btn" onclick="openEditModal('hobby', 'hobbies')" title="Вибрати вручну">✏️</button>
+                                <button class="icon-btn" onclick="resetField('hobby', 'hobbies')" title="Випадково">🎲</button>
+                            </div>
+                        </div>
+                        <div class="field-content" id="hobby"></div>
+                    </div>
+
+                    <div class="trait-card wide-card" id="card-inventory">
+                        <div class="card-header">
+                            <span class="label">РЮКЗАК</span>
+                            <div class="action-btns">
+                                <button class="icon-btn" onclick="openEditModal('inventory', 'inventory')" title="Вибрати вручну">✏️</button>
+                                <button class="icon-btn" onclick="resetField('inventory', 'inventory')" title="Випадково">🎲</button>
+                            </div>
+                        </div>
+                        <div class="field-content" id="inventory"></div>
+                    </div>
+
+                    <div class="trait-card wide-card" id="card-info">
+                        <div class="card-header">
+                            <span class="label">ДОДАТКОВА ІНФОРМАЦІЯ</span>
+                            <div class="action-btns">
+                                <button class="icon-btn" onclick="openEditModal('info', 'additional_info')" title="Вибрати вручну">✏️</button>
+                                <button class="icon-btn" onclick="resetField('info', 'additional_info')" title="Випадково">🎲</button>
+                            </div>
+                        </div>
+                        <div class="field-content" id="info"></div>
+                    </div>
+
+                    <div class="trait-card special-card" id="card-special1">
+                        <div class="card-header">
+                            <span class="label">СТОП БУНКЕР 1</span>
+                            <div class="action-btns">
+                                <button class="icon-btn lightning-btn" onclick="useSpecial('special1')" title="Використати">⚡</button>
+                                <button class="icon-btn" onclick="openEditModal('special1', 'specials')" title="Вибрати вручну">✏️</button>
+                                <button class="icon-btn" onclick="resetField('special1', 'specials')" title="Випадково">🎲</button>
                             </div>
                         </div>
                         <div class="field-content" id="special1"></div>
                     </div>
-                    <div class="box">
-                        <div class="label-row">
-                            <span class="label">СТОП БУНКЕР 2:</span>
+
+                    <div class="trait-card special-card" id="card-special2">
+                        <div class="card-header">
+                            <span class="label">СТОП БУНКЕР 2</span>
                             <div class="action-btns">
-                                <button class="add-btn action-special" onclick="useSpecial('special2')" title="Використати">[⚡]</button>
-                                <button class="add-btn" onclick="openEditModal('special2', 'specials')" title="Вибрати">[✎]</button>
-                                <button class="add-btn" onclick="resetField('special2', 'specials')" title="Перегенерувати">[↻]</button>
+                                <button class="icon-btn lightning-btn" onclick="useSpecial('special2')" title="Використати">⚡</button>
+                                <button class="icon-btn" onclick="openEditModal('special2', 'specials')" title="Вибрати вручну">✏️</button>
+                                <button class="icon-btn" onclick="resetField('special2', 'specials')" title="Випадково">🎲</button>
                             </div>
                         </div>
                         <div class="field-content" id="special2"></div>
                     </div>
+
                 </div>
 
-                <div class="footer-stamp">
-                    <p>СТАТУС: ОЧІКУЄ РІШЕННЯ</p>
-                </div>
+                <div class="footer-stamp">СТАТУС: ОЧІКУЄ РІШЕННЯ</div>
             </div>
         </div>
         
-        <button id="generateBtn" class="generate-btn" style="display:none;" onclick="generateCharacter()">ЗГЕНЕРУВАТИ НОВЕ ДОСЬЄ</button>
+        <button id="generateBtn" class="action-btn secondary-btn" style="display:none; width: 100%; margin-top: 10px;" onclick="generateCharacter()">ЗГЕНЕРУВАТИ НОВЕ ДОСЬЄ</button>
     </div>
 
     <script src="script.js"></script>
+    
+    <!-- Невеликий скрипт для показу панелі після розблокування -->
+    <script>
+        function unlockSheetAndShowNav() {
+            unlockSheet();
+            document.getElementById('sidebarNav').style.display = 'flex';
+        }
+    </script>
 </body>
 </html>

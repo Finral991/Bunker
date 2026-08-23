@@ -1,13 +1,21 @@
 :root {
-    --paper-bg: #EAE6D7;
-    --ink-color: #1A1A1A;
-    --stamp-red: #A83232;
-    --dark-bg: #2C2C2C;
+    --bg-color: #f4f1ea;
+    --card-bg: #ffffff;
+    --text-color: #1a1a1a;
+    --accent-red: #d32f2f;
+    --border-color: #1a1a1a;
+    --shadow: 3px 3px 0px #1a1a1a;
+}
+
+* { box-sizing: border-box; }
+
+html {
+    scroll-behavior: smooth;
 }
 
 body {
-    background-color: var(--dark-bg);
-    color: var(--ink-color);
+    background-color: var(--bg-color);
+    color: var(--text-color);
     font-family: 'Courier New', Courier, monospace;
     display: flex;
     justify-content: center;
@@ -15,203 +23,185 @@ body {
     margin: 0;
 }
 
+/* --- КНОПКИ (Великі, зручні для сенсора) --- */
+.action-btn {
+    padding: 12px 20px;
+    font-family: inherit;
+    font-weight: bold;
+    font-size: 16px;
+    border: 2px solid var(--border-color);
+    box-shadow: 2px 2px 0px var(--border-color);
+    cursor: pointer;
+    transition: all 0.1s;
+    border-radius: 4px;
+}
+.action-btn:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px var(--border-color); }
+
+.primary-btn { background-color: var(--text-color); color: var(--card-bg); }
+.secondary-btn { background-color: var(--card-bg); color: var(--text-color); }
+.cancel-btn { background-color: #e0e0e0; width: 100%; margin-top: 10px; }
+.large-btn { font-size: 18px; padding: 15px 30px; box-shadow: 4px 4px 0px var(--border-color); }
+
+.icon-btn {
+    background: var(--card-bg);
+    border: 1.5px solid var(--border-color);
+    border-radius: 6px;
+    width: 36px; height: 36px;
+    display: flex; justify-content: center; align-items: center;
+    font-size: 16px; cursor: pointer; transition: 0.1s;
+}
+.icon-btn:not(.lightning-btn) { filter: grayscale(100%); }
+.icon-btn:active { transform: scale(0.9); background: #eee; }
+.lightning-btn { border-color: var(--accent-red); color: var(--accent-red); background: #fff5f5; filter: none !important; }
+
+/* --- МОДАЛЬНІ ВІКНА --- */
 .modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(44, 44, 44, 0.95);
+    background: rgba(0, 0, 0, 0.8);
     display: flex; justify-content: center; align-items: center; z-index: 100;
 }
-
 .modal-content {
-    background: var(--paper-bg); padding: 25px; border: 2px solid var(--ink-color);
-    width: 90%; max-width: 350px; box-shadow: 10px 10px 0px rgba(0,0,0,1);
-    text-align: center;
+    background: var(--bg-color); padding: 25px; 
+    border: 3px solid var(--border-color); border-radius: 8px;
+    width: 90%; max-width: 350px; box-shadow: var(--shadow);
 }
 
-.input-group { margin-bottom: 15px; display: flex; flex-direction: column; text-align: left; }
+.edit-dialog { max-width: 500px; height: 85vh; display: flex; flex-direction: column; }
+
+.input-group { margin-bottom: 15px; display: flex; flex-direction: column; }
 .input-group label { font-size: 14px; font-weight: bold; margin-bottom: 5px; }
-.input-group input { 
-    padding: 10px; font-family: inherit; font-size: 16px;
-    border: 2px solid var(--ink-color); background: transparent; color: var(--ink-color); 
-    outline: none;
-}
-.input-group input:focus { background: rgba(0,0,0,0.05); }
-
-.app-wrapper { width: 100%; max-width: 500px; display: flex; flex-direction: column; align-items: center; }
-
-.sheet-container {
-    background-color: var(--paper-bg); width: 100%; box-sizing: border-box;
-    padding: 20px; border: 2px solid var(--ink-color); box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
-    margin-bottom: 20px;
+.input-group input, #searchInput { 
+    padding: 12px; font-family: inherit; font-size: 16px;
+    border: 2px solid var(--border-color); border-radius: 4px;
+    background: var(--card-bg); outline: none; margin-bottom: 15px;
 }
 
-.header-container { display: flex; align-items: center; border-bottom: 3px double var(--ink-color); margin-bottom: 20px; padding-bottom: 10px; }
-
-.photo-box {
-    width: 80px; height: 100px; 
-    border: 2px solid var(--ink-color);
-    padding: 5px; 
-    display: flex; align-items: center; justify-content: center;
-    background-color: white; 
-    margin-right: 15px; overflow: hidden;
-    box-sizing: border-box;
+/* Список для вибору */
+.options-container {
+    flex-grow: 1; overflow-y: auto; background: var(--card-bg);
+    border: 2px solid var(--border-color); border-radius: 4px;
+    display: flex; flex-direction: column; padding: 5px; gap: 4px;
+}
+.option-item {
+    padding: 12px; border: 1px solid transparent; border-bottom: 1px solid #ddd;
+    cursor: pointer; font-size: 15px; transition: 0.1s; border-radius: 4px;
+}
+.option-item:hover, .option-item:active {
+    background: var(--text-color); color: var(--bg-color); border-color: var(--text-color);
 }
 
-.profile-photo-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; 
-}
-
-.header-text { flex-grow: 1; text-align: center; }
-.header-text h1 { margin: 0; font-size: 22px; letter-spacing: 1px; }
-.sub-header { margin: 5px 0 0 0; font-weight: bold; }
-
-.generate-btn {
-    width: 100%; background-color: var(--ink-color); color: var(--paper-bg);
-    border: 2px solid var(--ink-color); padding: 15px; font-family: inherit;
-    font-weight: bold; font-size: 16px; cursor: pointer; transition: all 0.2s;
-}
-.generate-btn:hover { background-color: #333; }
-.generate-btn:active { transform: scale(0.98); }
-
-.grid-section { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-.box { border: 2px solid var(--ink-color); padding: 10px; display: flex; flex-direction: column; min-height: 50px; }
-.full-width { margin-bottom: 10px; }
-
-.label-row {
-    display: flex; justify-content: space-between; align-items: center;
-    border-bottom: 1px solid var(--ink-color); margin-bottom: 8px; padding-bottom: 2px;
-}
-
-.label { font-size: 12px; font-weight: bold; }
-.add-btn { background: none; border: none; color: var(--ink-color); font-family: inherit; font-weight: bold; font-size: 14px; cursor: pointer; padding: 0 5px; }
-.add-btn:hover { color: var(--stamp-red); }
-
-.action-btns {
+/* --- БІЧНА ПАНЕЛЬ НАВІГАЦІЇ (SIDE-RAIL) --- */
+.sidebar-nav {
+    position: fixed;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 90;
     display: flex;
-    gap: 8px;
+    flex-direction: column;
+    gap: 12px;
+    background: rgba(244, 241, 234, 0.85); 
+    backdrop-filter: blur(8px); 
+    padding: 15px 8px;
+    border-radius: 30px; 
+    border: 2px solid var(--border-color);
+    box-shadow: 3px 3px 0px var(--border-color);
 }
+
+.side-btn {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--card-bg); border: 2px solid var(--border-color);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; cursor: pointer; transition: all 0.2s;
+    filter: grayscale(100%) contrast(150%);
+    padding: 0;
+}
+.side-btn:active { transform: scale(0.9); background: var(--text-color); }
+
+/* --- ОСНОВНИЙ ЛИСТ --- */
+.app-wrapper { width: 100%; max-width: 800px; display: flex; flex-direction: column; align-items: center; }
+.sheet-container { width: 100%; position: relative; }
+
+.header-container { 
+    display: flex; align-items: center; margin-bottom: 25px; 
+    background: var(--card-bg); padding: 15px; 
+    border: 2px solid var(--border-color); border-radius: 8px; box-shadow: var(--shadow);
+}
+.photo-box {
+    width: 80px; height: 100px; flex-shrink: 0;
+    border: 2px solid var(--border-color); background-color: #fff; 
+    margin-right: 20px; overflow: hidden;
+}
+.profile-photo-img { width: 100%; height: 100%; object-fit: cover; }
+.header-text h1 { margin: 0; font-size: 24px; letter-spacing: 1px; }
+.sub-header { margin: 5px 0 0 0; font-weight: bold; font-size: 16px; }
+
+/* Сітка карток */
+.cards-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;
+    padding-right: 55px; /* Місце для бічної панелі */
+}
+
+.trait-card {
+    background: var(--card-bg); border: 2px solid var(--border-color);
+    border-radius: 8px; padding: 12px; box-shadow: var(--shadow);
+    display: flex; flex-direction: column; position: relative;
+    scroll-margin-top: 50px; /* Щоб картка не прилипала до самого верху при скролі */
+}
+.wide-card { grid-column: 1 / -1; } 
+
+.card-header {
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid #ddd; padding-bottom: 8px; margin-bottom: 10px;
+}
+.label { font-size: 13px; font-weight: bold; color: #555; }
+.action-btns { display: flex; gap: 8px; }
 
 .field-content {
-    position: relative; flex-grow: 1; display: flex; flex-direction: column; 
-    justify-content: center; cursor: pointer; min-height: 40px; font-weight: bold;
+    flex-grow: 1; display: flex; flex-direction: column; justify-content: center;
+    font-weight: bold; font-size: 15px; min-height: 40px; word-break: break-word; line-height: 1.4;
 }
-.blurred-text { filter: blur(5px); color: transparent; text-shadow: 0 0 8px rgba(0,0,0,0.7); user-select: none; text-align: center; }
+
+.blurred-text { filter: blur(5px); color: transparent; user-select: none; text-align: center; }
+.revealed { text-align: left; }
 
 .global-lock {
     position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px;
-    background: rgba(234, 230, 215, 0.4);
-    backdrop-filter: blur(6px);
-    display: flex; justify-content: center; align-items: center; z-index: 50;
+    background: rgba(244, 241, 234, 0.7); backdrop-filter: blur(5px);
+    display: flex; justify-content: center; align-items: center; z-index: 50; border-radius: 8px;
 }
-
-.start-round-btn {
-    background-color: var(--ink-color); color: var(--paper-bg);
-    border: 2px solid var(--ink-color); padding: 15px 40px;
-    font-family: inherit; font-weight: bold; font-size: 20px;
-    cursor: pointer; transition: transform 0.2s; 
-    box-shadow: 5px 5px 0px rgba(0,0,0,1);
-}
-.start-round-btn:active { transform: scale(0.95); box-shadow: 2px 2px 0px rgba(0,0,0,1); }
-
-.revealed { text-align: left; }
 
 .footer-stamp {
-    text-align: right; color: var(--stamp-red); font-weight: bold; font-size: 18px;
-    border: 3px solid var(--stamp-red); padding: 10px; transform: rotate(-5deg);
-    display: inline-block; margin-top: 20px; float: right;
+    text-align: right; color: var(--accent-red); font-weight: bold; font-size: 20px;
+    border: 3px solid var(--accent-red); padding: 10px 15px; transform: rotate(-3deg);
+    display: inline-block; margin-top: 25px; float: right; border-radius: 4px;
 }
+.hidden { display: none !important; }
 
-.hidden { display: none; }
-
-#character-sheet.hidden {
-    display: none !important;
-}
-
-@media (min-width: 800px) {
-    .app-wrapper {
-        max-width: 900px; 
-    }
-
-    .sheet-container {
-        display: flex;
-        flex-direction: row;
-        border-radius: 15px;
-        padding: 30px;
-        min-height: 500px;
-        align-items: stretch;
-    }
-
-    .header-container {
-        flex-direction: column;
-        width: 250px;
-        border-bottom: none;
-        border-right: 3px double var(--ink-color);
-        margin-bottom: 0;
-        padding-bottom: 0;
-        margin-right: 30px;
-        padding-right: 20px;
-        justify-content: center;
-    }
-
-    .photo-box {
-        width: 140px;
-        height: 180px;
-        margin-right: 0;
-        margin-bottom: 20px;
-    }
-
-    .header-text h1 {
-        font-size: 26px;
-    }
-
-    #character-sheet {
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-
-    .generate-btn {
-        max-width: 350px;
-        border-radius: 8px;
-        margin-top: 20px;
-        align-self: center;
-    }
-    
-    .footer-stamp {
-        align-self: flex-end;
-        margin-right: 10px;
-    }
-}
-/* Ефект використаної картки Стоп Бункер */
-.used-special {
-    opacity: 0.5;
-    color: var(--stamp-red);
-}
+/* Штамп "Використано" */
+.used-special { opacity: 0.5; }
 .used-special::after {
-    content: "ВИКОРИСТАНО";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) rotate(-10deg);
-    color: var(--stamp-red);
-    font-size: 20px;
-    font-weight: bold;
-    border: 3px solid var(--stamp-red);
-    padding: 5px 10px;
-    background: rgba(234, 230, 215, 0.95);
-    text-decoration: none;
-    pointer-events: none;
-    z-index: 10;
-    box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
-    white-space: nowrap;
+    content: "ВИКОРИСТАНО"; position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%) rotate(-10deg); color: var(--accent-red);
+    font-size: 22px; font-weight: bold; border: 4px solid var(--accent-red);
+    padding: 5px 15px; background: rgba(255, 255, 255, 0.9);
+    pointer-events: none; z-index: 10; box-shadow: 2px 2px 10px rgba(0,0,0,0.2);
 }
 
-/* Кнопка "Використати" */
-.action-special {
-    color: var(--stamp-red);
+/* --- АНІМАЦІЯ ПІДСВІЧУВАННЯ --- */
+@keyframes pulseHighlight {
+    0% { transform: scale(1); box-shadow: var(--shadow); border-color: var(--border-color); }
+    20% { transform: scale(1.02); box-shadow: 0px 0px 25px rgba(26, 26, 26, 0.7); border-color: var(--text-color); }
+    100% { transform: scale(1); box-shadow: var(--shadow); border-color: var(--border-color); }
 }
-.action-special:hover {
-    transform: scale(1.2);
+
+.highlight-active {
+    animation: pulseHighlight 1.2s ease-out;
+    z-index: 10;
+}
+
+/* --- АДАПТАЦІЯ ПІД ПК --- */
+@media (min-width: 800px) {
+    .cards-grid { padding-right: 0; }
+    .sidebar-nav { right: 30px; }
 }

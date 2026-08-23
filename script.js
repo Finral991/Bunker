@@ -13,8 +13,29 @@ const db = {
     specials: [] 
 };
 
+/* --- ФУНКЦІЯ ПЛАВНОГО СКРОЛУ ТА ПІДСВІЧУВАННЯ --- */
+function scrollToCard(cardId) {
+    const el = document.getElementById(cardId);
+    if (el) {
+        // М'яко прокручуємо до картки, вирівнюючи її по центру екрана
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // Спочатку знімаємо підсвічування з усіх інших карток
+        document.querySelectorAll('.trait-card').forEach(card => {
+            card.classList.remove('highlight-active');
+        });
+
+        // Додаємо клас анімації для вибраної картки
+        el.classList.add('highlight-active');
+
+        // Прибираємо клас після завершення анімації (щоб можна було підсвітити її знову)
+        setTimeout(() => {
+            el.classList.remove('highlight-active');
+        }, 1200);
+    }
+}
+
 async function loadDatabase() {
-    // Всі текстові бази, окрім локальних
     const categories = ['health_base', 'professions', 'health_diseases', 'hobbies', 'additional_info', 'inventory', 'phobias', 'specials'];
     
     try {
@@ -50,7 +71,7 @@ typingAudio.loop = true;
 typingAudio.preload = 'auto';
 
 let isTypingGlobal = false; 
-let currentEditField = ""; // Відслідковує, яке поле зараз редагується
+let currentEditField = ""; 
 
 const getRandomItem = (array) => {
     if (!array || array.length === 0) return "Дані відсутні";
@@ -95,8 +116,6 @@ function generateCharacter() {
     document.getElementById('global-lock').style.display = 'flex';
 
     const gender = getRandomItem(db.genders);
-    const age = getRandomItem(db.ages);
-    const body = getRandomItem(db.bodies);
 
     let sp1 = getRandomItem(db.specials);
     let sp2 = getRandomItem(db.specials);
@@ -106,8 +125,8 @@ function generateCharacter() {
 
     const charData = {
         gender: gender,
-        age: age,
-        body: body,
+        age: getRandomItem(db.ages),
+        body: getRandomItem(db.bodies),
         profession: `${getRandomItem(db.professions)}\nДосвід: ${getExperienceD6()}`,
         health: generateHealth(),
         phobia: getRandomItem(db.phobias),
@@ -126,7 +145,7 @@ function generateCharacter() {
         if(container) {
             container.dataset.value = value;
             container.classList.remove('revealed');
-            container.classList.remove('used-special'); // Очищуємо штамп "Використано" при новій генерації
+            container.classList.remove('used-special');
             container.textContent = ""; 
         }
     }
@@ -154,7 +173,6 @@ async function unlockSheet() {
         if (playPromise !== undefined) await playPromise;
     } catch(e) {}
 
-    // Оновлений список полів
     const fields = ['gender', 'age', 'body', 'profession', 'health', 'phobia', 'hobby', 'inventory', 'info', 'special1', 'special2'];
     
     const promises = fields.map(id => {
@@ -169,57 +187,69 @@ async function unlockSheet() {
     isTypingGlobal = false;
 }
 
-// Функція "Використати картку"
 function useSpecial(fieldId) {
     if (isTypingGlobal) return;
     const container = document.getElementById(fieldId);
     if (!container.classList.contains('revealed')) return;
-    
-    // Вмикаємо/вимикаємо штамп
     container.classList.toggle('used-special');
 }
 
-// Модалка вибору характеристик
+/* --- РОБОТА З МОДАЛКОЮ ПОШУКУ ТА ВИБОРУ --- */
 function openEditModal(fieldId, dbKey) {
     if (isTypingGlobal) return;
     if (!document.getElementById(fieldId).classList.contains('revealed')) return;
     
     currentEditField = fieldId;
-    const select = document.getElementById('editSelect');
-    select.innerHTML = '';
+    const list = document.getElementById('optionsList');
+    list.innerHTML = '';
+    document.getElementById('searchInput').value = ''; 
     
     let options = [];
     if (dbKey === 'health') {
-        options = [...db.health_base, ...db.health_diseases]; // Об'єднуємо обидві бази здоров'я
+        options = [...db.health_base, ...db.health_diseases]; 
     } else {
-        options = [...db[dbKey]]; // Клонуємо, щоб не змінити оригінал
+        options = [...db[dbKey]]; 
     }
 
-    // Алфавітне сортування (числове для віку) для зручного пошуку
     options.sort((a, b) => a.localeCompare(b, undefined, {numeric: true}));
 
     options.forEach(opt => {
-        const el = document.createElement('option');
-        el.value = opt;
+        const el = document.createElement('div');
+        el.className = 'option-item';
         el.textContent = opt;
-        select.appendChild(el);
+        // Коли користувач натискає на пункт, одразу застосовуємо вибір
+        el.onclick = () => saveEditField(opt); 
+        list.appendChild(el);
     });
 
     document.getElementById('edit-modal').style.display = 'flex';
+    document.getElementById('searchInput').focus(); // Одразу ставимо курсор у пошук
 }
 
 function closeEditModal() {
     document.getElementById('edit-modal').style.display = 'none';
 }
 
-async function saveEditField() {
-    const select = document.getElementById('editSelect');
-    let newValue = select.value;
+function filterOptions() {
+    const filter = document.getElementById('searchInput').value.toLowerCase();
+    const items = document.getElementById('optionsList').getElementsByClassName('option-item');
+    
+    for (let i = 0; i < items.length; i++) {
+        const txtValue = items[i].textContent || items[i].innerText;
+        if (txtValue.toLowerCase().indexOf(filter) > -1) {
+            items[i].style.display = "";
+        } else {
+            items[i].style.display = "none";
+        }
+    }
+}
+
+async function saveEditField(selectedValue) {
+    let newValue = selectedValue;
     const fieldId = currentEditField;
 
     document.getElementById('edit-modal').style.display = 'none';
 
-    // Додаємо випадковий досвід/стадію, якщо це необхідно
     if (fieldId === 'profession' || fieldId === 'hobby') {
         newValue += `\nДосвід: ${getExperienceD6()}`;
     } else if (fieldId === 'health' && db.health_diseases.includes(newValue)) {
@@ -227,20 +257,18 @@ async function saveEditField() {
             newValue += ` (ступінь: ${getRandomItem(db.health_stages)})`;
         }
     } else if (fieldId === 'special1' || fieldId === 'special2') {
-        // Перевірка на дублікат Стоп Бункера
         const otherId = fieldId === 'special1' ? 'special2' : 'special1';
         const otherValue = document.getElementById(otherId).dataset.value;
         if (newValue === otherValue) {
             alert("Ця картка вже є в іншому слоті! Виберіть іншу.");
-            return; // Не зберігаємо дублікат
+            return; 
         }
     }
 
     const container = document.getElementById(fieldId);
     container.dataset.value = newValue;
-    container.classList.remove('used-special'); // Знімаємо мітку використання, якщо картка оновилась
+    container.classList.remove('used-special'); 
     
-    // Якщо змінили стать — оновлюємо фото
     if (fieldId === 'gender') {
         document.getElementById('profile-photo').innerHTML = newValue === "Чоловік" ? imgMale : imgFemale;
     }
@@ -263,7 +291,7 @@ async function resetField(elementId, dbKey) {
     const container = document.getElementById(elementId);
     if (!container.classList.contains('revealed')) return; 
     
-    container.classList.remove('used-special'); // Знімаємо мітку використання
+    container.classList.remove('used-special'); 
     let newItem = "";
 
     if (elementId === 'age' || elementId === 'gender' || elementId === 'body') {
