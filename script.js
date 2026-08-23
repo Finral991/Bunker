@@ -13,28 +13,6 @@ const db = {
     specials: [] 
 };
 
-/* --- ФУНКЦІЯ ПЛАВНОГО СКРОЛУ ТА ПІДСВІЧУВАННЯ --- */
-function scrollToCard(cardId) {
-    const el = document.getElementById(cardId);
-    if (el) {
-        // М'яко прокручуємо до картки, вирівнюючи її по центру екрана
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-        // Спочатку знімаємо підсвічування з усіх інших карток
-        document.querySelectorAll('.trait-card').forEach(card => {
-            card.classList.remove('highlight-active');
-        });
-
-        // Додаємо клас анімації для вибраної картки
-        el.classList.add('highlight-active');
-
-        // Прибираємо клас після завершення анімації (щоб можна було підсвітити її знову)
-        setTimeout(() => {
-            el.classList.remove('highlight-active');
-        }, 1200);
-    }
-}
-
 async function loadDatabase() {
     const categories = ['health_base', 'professions', 'health_diseases', 'hobbies', 'additional_info', 'inventory', 'phobias', 'specials'];
     
@@ -114,6 +92,7 @@ function startGame() {
 function generateCharacter() {
     document.getElementById('character-sheet').classList.add('hidden');
     document.getElementById('global-lock').style.display = 'flex';
+    document.getElementById('bottomNav').style.display = 'none';
 
     const gender = getRandomItem(db.genders);
 
@@ -217,13 +196,12 @@ function openEditModal(fieldId, dbKey) {
         const el = document.createElement('div');
         el.className = 'option-item';
         el.textContent = opt;
-        // Коли користувач натискає на пункт, одразу застосовуємо вибір
         el.onclick = () => saveEditField(opt); 
         list.appendChild(el);
     });
 
     document.getElementById('edit-modal').style.display = 'flex';
-    document.getElementById('searchInput').focus(); // Одразу ставимо курсор у пошук
+    document.getElementById('searchInput').focus(); 
 }
 
 function closeEditModal() {
@@ -327,4 +305,22 @@ async function resetField(elementId, dbKey) {
     typingAudio.pause(); 
     typingAudio.currentTime = 0; 
     isTypingGlobal = false;
+}
+
+/* --- ФУНКЦІЯ ПЛАВНОГО СКРОЛУ ТА ПІДСВІЧУВАННЯ --- */
+function scrollToCard(cardId) {
+    const el = document.getElementById(cardId);
+    if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        document.querySelectorAll('.trait-card').forEach(card => {
+            card.classList.remove('highlight-active');
+        });
+
+        el.classList.add('highlight-active');
+
+        setTimeout(() => {
+            el.classList.remove('highlight-active');
+        }, 1200);
+    }
 }

@@ -27,27 +27,36 @@
     <div id="edit-modal" class="modal-overlay" style="display: none; z-index: 200;">
         <div class="modal-content edit-dialog">
             <h2>ОБЕРІТЬ ВАРІАНТ</h2>
-            <!-- Поле для швидкого пошуку -->
             <input type="text" id="searchInput" placeholder="Пошук (введіть слово)..." onkeyup="filterOptions()">
-            
-            <!-- Контейнер для списку, який можна гортати -->
             <div id="optionsList" class="options-container">
                 <!-- Опції додаються через JS -->
             </div>
-            
             <button class="action-btn cancel-btn" onclick="closeEditModal()">СКАСУВАТИ</button>
         </div>
     </div>
 
-    <!-- Плаваюча бічна панель навігації -->
-    <div class="sidebar-nav" id="sidebarNav" style="display: none;">
-        <button class="side-btn" onclick="scrollToCard('card-gender')" title="Біографічні дані">👤</button>
-        <button class="side-btn" onclick="scrollToCard('card-profession')" title="Професія">💼</button>
-        <button class="side-btn" onclick="scrollToCard('card-health')" title="Здоров'я">⚕️</button>
-        <button class="side-btn" onclick="scrollToCard('card-hobby')" title="Хобі">🎨</button>
-        <button class="side-btn" onclick="scrollToCard('card-inventory')" title="Рюкзак">🎒</button>
-        <button class="side-btn" onclick="scrollToCard('card-info')" title="Дод. інформація">📝</button>
-        <button class="side-btn" onclick="scrollToCard('card-special1')" title="Стоп Бункер">🛑</button>
+    <!-- Нижня панель навігації (Bottom Bar) -->
+    <div class="bottom-nav" id="bottomNav" style="display: none;">
+        <button class="bottom-btn" onclick="scrollToCard('card-gender')" title="Біографічні дані">
+            <span class="nav-icon">👤</span>
+            <span class="nav-text">Біо</span>
+        </button>
+        <button class="bottom-btn" onclick="scrollToCard('card-profession')" title="Професія">
+            <span class="nav-icon">💼</span>
+            <span class="nav-text">Фах</span>
+        </button>
+        <button class="bottom-btn" onclick="scrollToCard('card-health')" title="Здоров'я та Фобії">
+            <span class="nav-icon">⚕️</span>
+            <span class="nav-text">Стан</span>
+        </button>
+        <button class="bottom-btn" onclick="scrollToCard('card-inventory')" title="Рюкзак та Хобі">
+            <span class="nav-icon">🎒</span>
+            <span class="nav-text">Багаж</span>
+        </button>
+        <button class="bottom-btn" onclick="scrollToCard('card-special1')" title="Стоп Бункер">
+            <span class="nav-icon">🛑</span>
+            <span class="nav-text">Дії</span>
+        </button>
     </div>
 
     <div class="app-wrapper">
@@ -202,12 +211,10 @@
     </div>
 
     <script src="script.js"></script>
-    
-    <!-- Невеликий скрипт для показу панелі після розблокування -->
     <script>
         function unlockSheetAndShowNav() {
             unlockSheet();
-            document.getElementById('sidebarNav').style.display = 'flex';
+            document.getElementById('bottomNav').style.display = 'flex';
         }
     </script>
 </body>
