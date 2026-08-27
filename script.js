@@ -50,7 +50,7 @@ typingAudio.preload = 'auto';
 
 let isTypingGlobal = false; 
 let currentEditField = ""; 
-let pendingAction = null; // Зберігає дію до підтвердження
+let pendingAction = null; 
 
 const getRandomItem = (array) => {
     if (!array || array.length === 0) return "Дані відсутні";
@@ -122,6 +122,35 @@ function cancelAction() {
     pendingAction = null;
 }
 
+/* --- ЛОГІКА ВКЛАДОК (MATERIAL YOU TABS) --- */
+function switchTab(tabId, navElement) {
+    if (isTypingGlobal) return; // Блокуємо перемикання під час друку тексту
+    
+    // Ховаємо всі вкладки
+    document.querySelectorAll('.tab-pane').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    // Знімаємо виділення з усіх кнопок навігації
+    document.querySelectorAll('.nav-item').forEach(nav => {
+        nav.classList.remove('active');
+    });
+
+    // Показуємо вибрану вкладку
+    const activeTab = document.getElementById(tabId);
+    activeTab.classList.add('active');
+    navElement.classList.add('active');
+
+    // Ефект підсвічування для ВСІХ карток у відкритій вкладці
+    const cards = activeTab.querySelectorAll('.trait-card');
+    cards.forEach(card => {
+        card.classList.remove('highlight-active');
+        void card.offsetWidth; // Магія CSS для перезапуску анімації
+        card.classList.add('highlight-active');
+    });
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 /* --- ОСНОВНА ЛОГІКА --- */
 function startGame() {
     const fName = document.getElementById('firstNameInput').value.trim();
@@ -140,7 +169,12 @@ function generateCharacter() {
     document.getElementById('character-sheet').classList.add('hidden');
     document.getElementById('global-lock').style.display = 'flex';
     document.getElementById('bottomNav').style.display = 'none';
-    document.getElementById('header-actions').style.display = 'flex'; // Показуємо дії в шапці
+    document.getElementById('fab-new').classList.add('hidden');
+    document.getElementById('header-actions').style.display = 'flex'; 
+
+    // При новій генерації завжди повертаємось на першу вкладку "Особа"
+    const firstTabBtn = document.querySelector('.nav-item');
+    switchTab('tab-bio', firstTabBtn);
 
     const gender = getRandomItem(db.genders);
 
@@ -272,7 +306,7 @@ function filterOptions() {
 
 async function saveEditField(selectedValue) {
     let newValue = selectedValue;
-    const fieldId = pendingAction.fieldId; // Беремо з кешу дії
+    const fieldId = pendingAction.fieldId; 
 
     if (fieldId === 'profession' || fieldId === 'hobby') {
         newValue += `\nДосвід: ${getExperienceD6()}`;
@@ -348,22 +382,4 @@ async function resetField(elementId, dbKey) {
     typingAudio.pause(); 
     typingAudio.currentTime = 0; 
     isTypingGlobal = false;
-}
-
-/* --- ФУНКЦІЯ ПЛАВНОГО СКРОЛУ ТА ПІДСВІЧУВАННЯ --- */
-function scrollToCard(cardId) {
-    const el = document.getElementById(cardId);
-    if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-        document.querySelectorAll('.trait-card').forEach(card => {
-            card.classList.remove('highlight-active');
-        });
-
-        el.classList.add('highlight-active');
-
-        setTimeout(() => {
-            el.classList.remove('highlight-active');
-        }, 1200);
-    }
 }
