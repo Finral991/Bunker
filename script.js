@@ -15,7 +15,6 @@ const db = {
 
 async function loadDatabase() {
     const categories = ['health_base', 'professions', 'health_diseases', 'hobbies', 'additional_info', 'inventory', 'phobias', 'specials'];
-    
     try {
         const fetchPromises = categories.map(cat => 
             fetch(`${cat}.txt?v=${Date.now()}`)
@@ -23,22 +22,14 @@ async function loadDatabase() {
                 if (!response.ok) throw new Error(`Файл ${cat}.txt не знайдено`);
                 return response.text();
             })
-            .then(text => {
-                db[cat] = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-            })
-            .catch(error => {
-                console.error(`Помилка завантаження ${cat}.txt:`, error);
-                db[cat] = ["Помилка: Файл не знайдено або пустий"];
-            })
+            .then(text => { db[cat] = text.split('\n').map(line => line.trim()).filter(line => line.length > 0); })
+            .catch(error => { db[cat] = ["Помилка: Файл не знайдено або пустий"]; })
         );
-
         await Promise.all(fetchPromises);
-        console.log("База даних успішно завантажена.");
     } catch (globalError) {
-        console.error("Критична помилка при завантаженні бази:", globalError);
+        console.error("Помилка:", globalError);
     }
 }
-
 window.addEventListener('DOMContentLoaded', loadDatabase);
 
 const imgMale = `<img src="man.jpg" alt="Чоловік" class="profile-photo-img">`;
@@ -58,30 +49,31 @@ const getRandomItem = (array) => {
 };
 
 const getExperienceD6 = () => {
-    const experiences = [
-        "Дилетант (до 1 місяця)", "Новачок (від 1 до 12 місяців)", 
-        "Любитель (від 1 до 2 років)", "Досвідчений (від 2 до 5 років)", 
-        "Експерт (від 5 до 10 років)", "Професіонал (понад 10 років)"
-    ];
+    const experiences = ["Дилетант (до 1 місяця)", "Новачок (1-12 місяців)", "Любитель (1-2 роки)", "Досвідчений (2-5 років)", "Експерт (5-10 років)", "Професіонал (10+ років)"];
     return experiences[Math.floor(Math.random() * experiences.length)];
 };
 
 const generateHealth = () => {
-    if (Math.random() > 0.4) {
-        return getRandomItem(db.health_base);
-    } else {
-        const disease = getRandomItem(db.health_diseases);
-        if (disease.toLowerCase().includes('здоров') || disease === "Дані відсутні") return disease;
-        return `${disease} (ступінь: ${getRandomItem(db.health_stages)})`;
-    }
+    if (Math.random() > 0.4) return getRandomItem(db.health_base);
+    const disease = getRandomItem(db.health_diseases);
+    if (disease.toLowerCase().includes('здоров') || disease === "Дані відсутні") return disease;
+    return `${disease} (ступінь: ${getRandomItem(db.health_stages)})`;
 };
 
-/* --- ПРАВИЛА ГРИ --- */
-function openRules() {
-    document.getElementById('rules-modal').style.display = 'flex';
-}
-function closeRules() {
-    document.getElementById('rules-modal').style.display = 'none';
+/* --- МЕНЮ ТА ПРАВИЛА --- */
+function openRules() { document.getElementById('rules-modal').style.display = 'flex'; }
+function closeRules() { document.getElementById('rules-modal').style.display = 'none'; }
+
+function toggleMoreMenu() {
+    const menu = document.getElementById('more-menu');
+    const overlay = document.getElementById('more-menu-overlay');
+    if (menu.classList.contains('open')) {
+        menu.classList.remove('open');
+        overlay.style.display = 'none';
+    } else {
+        menu.classList.add('open');
+        overlay.style.display = 'block';
+    }
 }
 
 /* --- СИСТЕМА ПІДТВЕРДЖЕННЯ ДІЙ --- */
@@ -106,62 +98,45 @@ function requestNewDossier() {
 function confirmAction() {
     document.getElementById('confirm-modal').style.display = 'none';
     if (!pendingAction) return;
-
-    if (pendingAction.type === 'random') {
-        resetField(pendingAction.fieldId, pendingAction.dbKey);
-    } else if (pendingAction.type === 'manual') {
-        saveEditField(pendingAction.value);
-    } else if (pendingAction.type === 'new_dossier') {
-        generateCharacter();
-    }
+    if (pendingAction.type === 'random') resetField(pendingAction.fieldId, pendingAction.dbKey);
+    else if (pendingAction.type === 'manual') saveEditField(pendingAction.value);
+    else if (pendingAction.type === 'new_dossier') generateCharacter();
     pendingAction = null;
 }
-
 function cancelAction() {
     document.getElementById('confirm-modal').style.display = 'none';
     pendingAction = null;
 }
 
-/* --- ЛОГІКА ВКЛАДОК (MATERIAL YOU TABS) --- */
+/* --- ЛОГІКА ВКЛАДОК (M3 TABS) --- */
 function switchTab(tabId, navElement) {
-    if (isTypingGlobal) return; // Блокуємо перемикання під час друку тексту
-    
-    // Ховаємо всі вкладки
-    document.querySelectorAll('.tab-pane').forEach(tab => {
-        tab.classList.remove('active');
-    });
-    // Знімаємо виділення з усіх кнопок навігації
-    document.querySelectorAll('.nav-item').forEach(nav => {
-        nav.classList.remove('active');
-    });
+    if (isTypingGlobal) return;
+    document.querySelectorAll('.tab-pane').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.m3-tab').forEach(nav => nav.classList.remove('active'));
 
-    // Показуємо вибрану вкладку
     const activeTab = document.getElementById(tabId);
     activeTab.classList.add('active');
     navElement.classList.add('active');
 
-    // Ефект підсвічування для ВСІХ карток у відкритій вкладці
-    const cards = activeTab.querySelectorAll('.trait-card');
+    const cards = activeTab.querySelectorAll('.m3-card');
     cards.forEach(card => {
         card.classList.remove('highlight-active');
-        void card.offsetWidth; // Магія CSS для перезапуску анімації
+        void card.offsetWidth; 
         card.classList.add('highlight-active');
     });
-    
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 /* --- ОСНОВНА ЛОГІКА --- */
 function startGame() {
     const fName = document.getElementById('firstNameInput').value.trim();
-    const lName = document.getElementById('lastNameInput').value.trim();
-    if (!fName) { alert("Будь ласка, введіть хоча б Ім'я!"); return; }
+    if (!fName) { alert("Введіть ім'я!"); return; }
     
-    document.getElementById('start-modal').style.display = 'none';
-    const nameDisplay = document.getElementById('candidate-name');
-    nameDisplay.textContent = `ПІБ: ${fName} ${lName}`.trim();
-    nameDisplay.style.display = 'block';
-
+    // Ховаємо новий стартовий екран
+    document.getElementById('start-screen').style.display = 'none';
+    
+    document.getElementById('candidate-name').textContent = fName;
+    document.getElementById('candidate-name').style.display = 'block';
     generateCharacter();
 }
 
@@ -169,33 +144,22 @@ function generateCharacter() {
     document.getElementById('character-sheet').classList.add('hidden');
     document.getElementById('global-lock').style.display = 'flex';
     document.getElementById('bottomNav').style.display = 'none';
-    document.getElementById('fab-new').classList.add('hidden');
-    document.getElementById('header-actions').style.display = 'flex'; 
+    document.getElementById('header-actions').style.display = 'flex'; // Показуємо анімований статус
 
-    // При новій генерації завжди повертаємось на першу вкладку "Особа"
-    const firstTabBtn = document.querySelector('.nav-item');
+    const firstTabBtn = document.querySelector('.m3-tab');
     switchTab('tab-bio', firstTabBtn);
 
     const gender = getRandomItem(db.genders);
-
-    let sp1 = getRandomItem(db.specials);
-    let sp2 = getRandomItem(db.specials);
-    while (sp1 === sp2 && db.specials.length > 1) {
-        sp2 = getRandomItem(db.specials);
-    }
+    let sp1 = getRandomItem(db.specials), sp2 = getRandomItem(db.specials);
+    while (sp1 === sp2 && db.specials.length > 1) sp2 = getRandomItem(db.specials);
 
     const charData = {
-        gender: gender,
-        age: getRandomItem(db.ages),
-        body: getRandomItem(db.bodies),
+        gender: gender, age: getRandomItem(db.ages), body: getRandomItem(db.bodies),
         profession: `${getRandomItem(db.professions)}\nДосвід: ${getExperienceD6()}`,
-        health: generateHealth(),
-        phobia: getRandomItem(db.phobias),
+        health: generateHealth(), phobia: getRandomItem(db.phobias),
         hobby: `${getRandomItem(db.hobbies)}\nРівень: ${getExperienceD6()}`,
-        inventory: getRandomItem(db.inventory),
-        info: getRandomItem(db.additional_info),
-        special1: sp1,
-        special2: sp2
+        inventory: getRandomItem(db.inventory), info: getRandomItem(db.additional_info),
+        special1: sp1, special2: sp2
     };
 
     document.getElementById('profile-photo').innerHTML = gender === "Чоловік" ? imgMale : imgFemale;
@@ -210,7 +174,6 @@ function generateCharacter() {
             container.textContent = ""; 
         }
     }
-    
     document.getElementById('character-sheet').classList.remove('hidden');
 }
 
@@ -226,16 +189,10 @@ async function printText(element, text) {
 async function unlockSheet() {
     if (isTypingGlobal) return;
     isTypingGlobal = true;
-    
     document.getElementById('global-lock').style.display = 'none';
-
-    try { 
-        const playPromise = typingAudio.play();
-        if (playPromise !== undefined) await playPromise;
-    } catch(e) {}
+    try { const playPromise = typingAudio.play(); if (playPromise !== undefined) await playPromise; } catch(e) {}
 
     const fields = ['gender', 'age', 'body', 'profession', 'health', 'phobia', 'hobby', 'inventory', 'info', 'special1', 'special2'];
-    
     const promises = fields.map(id => {
         const container = document.getElementById(id);
         container.classList.add('revealed');
@@ -243,9 +200,12 @@ async function unlockSheet() {
     });
 
     await Promise.all(promises); 
-    typingAudio.pause(); 
-    typingAudio.currentTime = 0; 
-    isTypingGlobal = false;
+    typingAudio.pause(); typingAudio.currentTime = 0; isTypingGlobal = false;
+}
+
+function unlockSheetAndShowNav() {
+    unlockSheet();
+    document.getElementById('bottomNav').style.display = 'flex';
 }
 
 function useSpecial(fieldId) {
@@ -255,93 +215,55 @@ function useSpecial(fieldId) {
     container.classList.toggle('used-special');
 }
 
-/* --- РОБОТА З МОДАЛКОЮ ПОШУКУ ТА ВИБОРУ --- */
+/* --- ПОШУК ТА РЕДАГУВАННЯ --- */
 function openEditModal(fieldId, dbKey) {
-    if (isTypingGlobal) return;
-    if (!document.getElementById(fieldId).classList.contains('revealed')) return;
-    
+    if (isTypingGlobal || !document.getElementById(fieldId).classList.contains('revealed')) return;
     currentEditField = fieldId;
     const list = document.getElementById('optionsList');
     list.innerHTML = '';
     document.getElementById('searchInput').value = ''; 
     
-    let options = [];
-    if (dbKey === 'health') {
-        options = [...db.health_base, ...db.health_diseases]; 
-    } else {
-        options = [...db[dbKey]]; 
-    }
-
+    let options = dbKey === 'health' ? [...db.health_base, ...db.health_diseases] : [...db[dbKey]]; 
     options.sort((a, b) => a.localeCompare(b, undefined, {numeric: true}));
 
     options.forEach(opt => {
         const el = document.createElement('div');
-        el.className = 'option-item';
-        el.textContent = opt;
+        el.className = 'option-item'; el.textContent = opt;
         el.onclick = () => requestSaveEditField(opt); 
         list.appendChild(el);
     });
-
     document.getElementById('edit-modal').style.display = 'flex';
-    document.getElementById('searchInput').focus(); 
 }
 
-function closeEditModal() {
-    document.getElementById('edit-modal').style.display = 'none';
-}
+function closeEditModal() { document.getElementById('edit-modal').style.display = 'none'; }
 
 function filterOptions() {
     const filter = document.getElementById('searchInput').value.toLowerCase();
     const items = document.getElementById('optionsList').getElementsByClassName('option-item');
-    
     for (let i = 0; i < items.length; i++) {
-        const txtValue = items[i].textContent || items[i].innerText;
-        if (txtValue.toLowerCase().indexOf(filter) > -1) {
-            items[i].style.display = "";
-        } else {
-            items[i].style.display = "none";
-        }
+        items[i].style.display = (items[i].innerText.toLowerCase().indexOf(filter) > -1) ? "" : "none";
     }
 }
 
-async function saveEditField(selectedValue) {
-    let newValue = selectedValue;
+async function saveEditField(newValue) {
     const fieldId = pendingAction.fieldId; 
-
-    if (fieldId === 'profession' || fieldId === 'hobby') {
-        newValue += `\nДосвід: ${getExperienceD6()}`;
-    } else if (fieldId === 'health' && db.health_diseases.includes(newValue)) {
-        if (!newValue.toLowerCase().includes('здоров') && newValue !== "Дані відсутні") {
-            newValue += ` (ступінь: ${getRandomItem(db.health_stages)})`;
-        }
+    if (fieldId === 'profession' || fieldId === 'hobby') newValue += `\nДосвід: ${getExperienceD6()}`;
+    else if (fieldId === 'health' && db.health_diseases.includes(newValue)) {
+        if (!newValue.toLowerCase().includes('здоров') && newValue !== "Дані відсутні") newValue += ` (ступінь: ${getRandomItem(db.health_stages)})`;
     } else if (fieldId === 'special1' || fieldId === 'special2') {
         const otherId = fieldId === 'special1' ? 'special2' : 'special1';
-        const otherValue = document.getElementById(otherId).dataset.value;
-        if (newValue === otherValue) {
-            alert("Ця картка вже є в іншому слоті! Виберіть іншу.");
-            return; 
-        }
+        if (newValue === document.getElementById(otherId).dataset.value) { alert("Ця картка вже є!"); return; }
     }
 
     const container = document.getElementById(fieldId);
     container.dataset.value = newValue;
     container.classList.remove('used-special'); 
-    
-    if (fieldId === 'gender') {
-        document.getElementById('profile-photo').innerHTML = newValue === "Чоловік" ? imgMale : imgFemale;
-    }
+    if (fieldId === 'gender') document.getElementById('profile-photo').innerHTML = newValue === "Чоловік" ? imgMale : imgFemale;
 
     isTypingGlobal = true;
-    try { 
-        const playPromise = typingAudio.play();
-        if (playPromise !== undefined) await playPromise;
-    } catch(e) {}
-    
+    try { const playPromise = typingAudio.play(); if (playPromise !== undefined) await playPromise; } catch(e) {}
     await printText(container, newValue);
-    
-    typingAudio.pause(); 
-    typingAudio.currentTime = 0; 
-    isTypingGlobal = false;
+    typingAudio.pause(); typingAudio.currentTime = 0; isTypingGlobal = false;
 }
 
 async function resetField(elementId, dbKey) {
@@ -351,35 +273,19 @@ async function resetField(elementId, dbKey) {
 
     if (elementId === 'age' || elementId === 'gender' || elementId === 'body') {
         newItem = getRandomItem(db[dbKey]);
-        if (elementId === 'gender') {
-            document.getElementById('profile-photo').innerHTML = newItem === "Чоловік" ? imgMale : imgFemale;
-        }
+        if (elementId === 'gender') document.getElementById('profile-photo').innerHTML = newItem === "Чоловік" ? imgMale : imgFemale;
     } else if (elementId === 'profession' || elementId === 'hobby') {
         newItem = `${getRandomItem(db[dbKey])}\nДосвід: ${getExperienceD6()}`;
-    } else if (elementId === 'health') {
-        newItem = generateHealth();
+    } else if (elementId === 'health') { newItem = generateHealth();
     } else if (elementId === 'special1' || elementId === 'special2') {
         const otherId = elementId === 'special1' ? 'special2' : 'special1';
-        const otherCardValue = document.getElementById(otherId).dataset.value;
         newItem = getRandomItem(db.specials);
-        while (newItem === otherCardValue && db.specials.length > 1) {
-            newItem = getRandomItem(db.specials);
-        }
-    } else {
-        newItem = getRandomItem(db[dbKey]);
-    }
+        while (newItem === document.getElementById(otherId).dataset.value && db.specials.length > 1) newItem = getRandomItem(db.specials);
+    } else { newItem = getRandomItem(db[dbKey]); }
 
     container.dataset.value = newItem;
-
     isTypingGlobal = true;
-    try { 
-        const playPromise = typingAudio.play();
-        if (playPromise !== undefined) await playPromise;
-    } catch(e) {}
-    
+    try { const playPromise = typingAudio.play(); if (playPromise !== undefined) await playPromise; } catch(e) {}
     await printText(container, newItem);
-    
-    typingAudio.pause(); 
-    typingAudio.currentTime = 0; 
-    isTypingGlobal = false;
+    typingAudio.pause(); typingAudio.currentTime = 0; isTypingGlobal = false;
 }

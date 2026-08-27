@@ -4,154 +4,192 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Досьє Бункера</title>
+    <!-- Підключення шрифту та іконок Material You -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" rel="stylesheet" />
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Модалка ідентифікації -->
-    <div id="start-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h2>ІДЕНТИФІКАЦІЯ</h2>
+    <!-- НОВИЙ ЕКРАН ІДЕНТИФІКАЦІЇ (Welcome Screen) -->
+    <div id="start-screen" class="start-screen">
+        <div class="start-card">
+            <span class="material-symbols-outlined hero-icon">fingerprint</span>
+            <h1 class="start-title">Досьє Бункера</h1>
+            <p class="start-subtitle">Пройдіть ідентифікацію для доступу до секретних даних</p>
+            
             <div class="input-group">
-                <label>Ім'я (обов'язково)</label>
-                <input type="text" id="firstNameInput" placeholder="Введіть ім'я" onkeydown="if(event.key === 'Enter') startGame()">
+                <input type="text" id="firstNameInput" placeholder="Ім'я (обов'язково)" onkeydown="if(event.key === 'Enter') startGame()">
             </div>
             <div class="input-group">
-                <label>Прізвище (за бажанням)</label>
-                <input type="text" id="lastNameInput" placeholder="Введіть прізвище" onkeydown="if(event.key === 'Enter') startGame()">
+                <input type="text" id="lastNameInput" placeholder="Прізвище (за бажанням)" onkeydown="if(event.key === 'Enter') startGame()">
             </div>
-            <button class="action-btn primary-btn" style="width: 100%; margin-bottom: 10px;" onclick="startGame()">РОЗПОЧАТИ</button>
-            <button class="action-btn secondary-btn" style="width: 100%;" onclick="openRules()">ПРАВИЛА ГРИ</button>
+            
+            <div class="start-actions">
+                <button class="m3-btn filled large" onclick="startGame()">Розпочати симуляцію</button>
+                <button class="m3-btn text-btn large" onclick="openRules()">
+                    <span class="material-symbols-outlined">menu_book</span> Правила гри
+                </button>
+            </div>
         </div>
     </div>
 
     <!-- Модальне вікно ПРАВИЛ -->
     <div id="rules-modal" class="modal-overlay" style="display: none; z-index: 300;">
-        <div class="modal-content rules-dialog">
-            <h2>📜 ПРАВИЛА ГРИ</h2>
+        <div class="m3-dialog">
+            <h2 class="dialog-title">Правила гри</h2>
             <div class="rules-content">
-                <p><strong>МЕТА:</strong> Довести, що саме ви найкорисніші для виживання та відродження людства після глобальної катастрофи, і потрапити до Бункера.</p>
-                <p><strong>ХІД ГРИ:</strong></p>
-                <ul>
-                    <li>Кожен гравець отримує випадкове досьє. Характеристики приховані.</li>
-                    <li>Гравці по колу відкривають по одній або кілька характеристик і пояснюють, чому це робить їх корисними.</li>
-                    <li>Обговорення та суперечки вітаються! Брехати про свої закриті картки не можна, але можна недоговорювати.</li>
-                </ul>
-                <p><strong>ГОЛОСУВАННЯ:</strong> Після кількох кіл відбувається голосування. Гравець, який набрав найбільше голосів проти себе, виганяється з Бункера.</p>
-                <p><strong>СТОП БУНКЕР:</strong> Це спеціальні картки, які можуть змінити хід гри. Їх можна використати лише один раз за гру.</p>
+                <p><strong>Мета:</strong> Довести, що саме ви найкорисніші для виживання людства, і потрапити до Бункера.</p>
+                <p><strong>Хід гри:</strong> Гравці по колу відкривають по кілька характеристик і пояснюють свою корисність. Брехати не можна, але можна недоговорювати.</p>
+                <p><strong>Голосування:</strong> Гравець, який набрав найбільше голосів проти себе, виганяється з Бункера.</p>
+                <p><strong>Стоп Бункер:</strong> Спеціальні картки для зміни ходу гри. Використовуються 1 раз.</p>
             </div>
-            <button class="action-btn primary-btn" style="width: 100%;" onclick="closeRules()">ЗРОЗУМІЛО</button>
+            <div class="dialog-actions">
+                <button class="m3-btn filled" onclick="closeRules()">Зрозуміло</button>
+            </div>
         </div>
     </div>
 
-    <!-- Модальне вікно ПІДТВЕРДЖЕННЯ ЗМІН -->
+    <!-- Модальне вікно ПІДТВЕРДЖЕННЯ -->
     <div id="confirm-modal" class="modal-overlay" style="display: none; z-index: 250;">
-        <div class="modal-content confirm-dialog">
-            <h2>УВАГА!</h2>
+        <div class="m3-dialog">
+            <h2 class="dialog-title">Увага</h2>
             <p>Ви впевнені, що хочете виконати цю дію? Повернути попереднє значення буде неможливо.</p>
-            <div style="display: flex; gap: 10px; margin-top: 20px;">
-                <button class="action-btn primary-btn" style="flex: 1;" onclick="confirmAction()">ТАК</button>
-                <button class="action-btn cancel-btn" style="flex: 1; margin: 0;" onclick="cancelAction()">НІ</button>
+            <div class="dialog-actions">
+                <button class="m3-btn text-btn" onclick="cancelAction()">Скасувати</button>
+                <button class="m3-btn filled" onclick="confirmAction()">Підтвердити</button>
             </div>
         </div>
     </div>
 
     <!-- Модальне вікно з ПОШУКОМ -->
     <div id="edit-modal" class="modal-overlay" style="display: none; z-index: 200;">
-        <div class="modal-content edit-dialog">
-            <h2>ОБЕРІТЬ ВАРІАНТ</h2>
-            <input type="text" id="searchInput" placeholder="Пошук (введіть слово)..." onkeyup="filterOptions()">
+        <div class="m3-dialog full-height">
+            <h2 class="dialog-title">Оберіть варіант</h2>
+            <div class="input-group search-bar">
+                <span class="material-symbols-outlined search-icon">search</span>
+                <input type="text" id="searchInput" placeholder="Пошук..." onkeyup="filterOptions()">
+            </div>
             <div id="optionsList" class="options-container">
                 <!-- Опції додаються через JS -->
             </div>
-            <button class="action-btn cancel-btn" onclick="closeEditModal()">СКАСУВАТИ</button>
+            <div class="dialog-actions">
+                <button class="m3-btn text-btn" onclick="closeEditModal()">Скасувати</button>
+            </div>
         </div>
     </div>
 
-    <!-- Плаваюча кнопка (FAB) для генерації нового досьє (Стиль Material You) -->
-    <button id="fab-new" class="fab hidden" onclick="requestNewDossier()" title="Нове досьє">🔄</button>
+    <!-- MATERIAL YOU БОТОМ БАР (З меню "Ще") -->
+    <div class="m3-bottom-container" id="bottomNav" style="display: none;">
+        <!-- Основна пігулка з вкладками -->
+        <div class="m3-tabs-pill">
+            <div class="m3-tab active" onclick="switchTab('tab-bio', this)">
+                <span class="material-symbols-outlined">person</span>
+                <span class="text">Особа</span>
+            </div>
+            <div class="m3-tab" onclick="switchTab('tab-health', this)">
+                <span class="material-symbols-outlined">ecg_heart</span>
+                <span class="text">Стан</span>
+            </div>
+            <div class="m3-tab" onclick="switchTab('tab-inventory', this)">
+                <span class="material-symbols-outlined">backpack</span>
+                <span class="text">Багаж</span>
+            </div>
+            <div class="m3-tab" onclick="switchTab('tab-actions', this)">
+                <span class="material-symbols-outlined">front_hand</span>
+                <span class="text">Дії</span>
+            </div>
+        </div>
+        <!-- Кругла кнопка для меню "Ще" -->
+        <button class="m3-fab-circle" onclick="toggleMoreMenu()">
+            <span class="material-symbols-outlined">more_horiz</span>
+        </button>
+    </div>
 
-    <!-- Нижня панель навігації (Material You Bottom Nav) -->
-    <div class="bottom-nav" id="bottomNav" style="display: none;">
-        <div class="nav-item active" onclick="switchTab('tab-bio', this)">
-            <div class="nav-icon-wrapper">👤</div>
-            <span class="nav-text">Особа</span>
-        </div>
-        <div class="nav-item" onclick="switchTab('tab-health', this)">
-            <div class="nav-icon-wrapper">⚕️</div>
-            <span class="nav-text">Стан</span>
-        </div>
-        <div class="nav-item" onclick="switchTab('tab-inventory', this)">
-            <div class="nav-icon-wrapper">🎒</div>
-            <span class="nav-text">Багаж</span>
-        </div>
-        <div class="nav-item" onclick="switchTab('tab-actions', this)">
-            <div class="nav-icon-wrapper">🛑</div>
-            <span class="nav-text">Дії</span>
-        </div>
+    <!-- МЕНЮ "ЩЕ" (Bottom Sheet) -->
+    <div class="modal-overlay" id="more-menu-overlay" style="display: none; z-index: 150;" onclick="toggleMoreMenu()"></div>
+    <div id="more-menu" class="m3-bottom-sheet">
+        <div class="sheet-handle"></div>
+        <button class="sheet-item" onclick="requestNewDossier(); toggleMoreMenu();">
+            <span class="material-symbols-outlined">autorenew</span>
+            Згенерувати нове досьє
+        </button>
+        <button class="sheet-item" onclick="openRules(); toggleMoreMenu();">
+            <span class="material-symbols-outlined">menu_book</span>
+            Правила гри
+        </button>
+        <button class="sheet-item" onclick="toggleMoreMenu();">
+            <span class="material-symbols-outlined">settings</span>
+            Налаштування (в розробці)
+        </button>
     </div>
 
     <div class="app-wrapper">
         <div class="sheet-container">
-            <div class="header-container">
-                <div class="header-info">
+            <!-- Шапка Material You -->
+            <div class="m3-header">
+                <div class="m3-profile-row">
                     <div class="photo-box" id="profile-photo"></div>
                     <div class="header-text">
-                        <h1>ОСОБОВА СПРАВА</h1>
+                        <h1 id="candidate-name" style="display:none;">Ім'я</h1>
                         <p class="sub-header">ОБ'ЄКТ № <span id="candidate-id">0000</span></p>
-                        <p class="sub-header" id="candidate-name" style="display:none;"></p>
                     </div>
                 </div>
-                <div class="header-actions" id="header-actions" style="display: none;">
-                    <div class="status-stamp">ОЧІКУЄ РІШЕННЯ</div>
+                <!-- Анімований статус Progress Ring -->
+                <div class="status-pill animated-progress" id="header-actions" style="display: none;">
+                    <span class="material-symbols-outlined progress-icon">sync</span>
+                    <span class="status-text">Очікує рішення...</span>
                 </div>
             </div>
 
             <div id="character-sheet" class="hidden">
                 <div id="global-lock" class="global-lock">
-                    <button class="action-btn primary-btn large-btn" onclick="unlockSheetAndShowNav()">РОЗСЕКРЕТИТИ ДАНІ</button>
+                    <button class="m3-btn filled large" onclick="unlockSheetAndShowNav()">
+                        <span class="material-symbols-outlined">lock_open</span>
+                        Розсекретити дані
+                    </button>
                 </div>
 
                 <!-- Вкладка 1: ОСОБА -->
                 <div id="tab-bio" class="cards-grid tab-pane active">
-                    <div class="trait-card" id="card-gender">
+                    <div class="m3-card" id="card-gender">
                         <div class="card-header">
-                            <span class="label">СТАТЬ</span>
+                            <span class="label">Стать</span>
                             <div class="action-btns">
-                                <button class="icon-btn" onclick="openEditModal('gender', 'genders')" title="Вибрати вручну">✏️</button>
-                                <button class="icon-btn" onclick="requestResetField('gender', 'genders')" title="Випадково">🎲</button>
+                                <button class="m3-icon-btn" onclick="openEditModal('gender', 'genders')"><span class="material-symbols-outlined">edit</span></button>
+                                <button class="m3-icon-btn" onclick="requestResetField('gender', 'genders')"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
                         </div>
                         <div class="field-content" id="gender"></div>
                     </div>
 
-                    <div class="trait-card" id="card-age">
+                    <div class="m3-card" id="card-age">
                         <div class="card-header">
-                            <span class="label">ВІК</span>
+                            <span class="label">Вік</span>
                             <div class="action-btns">
-                                <button class="icon-btn" onclick="openEditModal('age', 'ages')" title="Вибрати вручну">✏️</button>
-                                <button class="icon-btn" onclick="requestResetField('age', 'ages')" title="Випадково">🎲</button>
+                                <button class="m3-icon-btn" onclick="openEditModal('age', 'ages')"><span class="material-symbols-outlined">edit</span></button>
+                                <button class="m3-icon-btn" onclick="requestResetField('age', 'ages')"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
                         </div>
                         <div class="field-content" id="age"></div>
                     </div>
 
-                    <div class="trait-card" id="card-body">
+                    <div class="m3-card" id="card-body">
                         <div class="card-header">
-                            <span class="label">СТАТУРА</span>
+                            <span class="label">Статура</span>
                             <div class="action-btns">
-                                <button class="icon-btn" onclick="openEditModal('body', 'bodies')" title="Вибрати вручну">✏️</button>
-                                <button class="icon-btn" onclick="requestResetField('body', 'bodies')" title="Випадково">🎲</button>
+                                <button class="m3-icon-btn" onclick="openEditModal('body', 'bodies')"><span class="material-symbols-outlined">edit</span></button>
+                                <button class="m3-icon-btn" onclick="requestResetField('body', 'bodies')"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
                         </div>
                         <div class="field-content" id="body"></div>
                     </div>
 
-                    <div class="trait-card" id="card-profession">
+                    <div class="m3-card" id="card-profession">
                         <div class="card-header">
-                            <span class="label">ПРОФЕСІЯ</span>
+                            <span class="label">Професія</span>
                             <div class="action-btns">
-                                <button class="icon-btn" onclick="openEditModal('profession', 'professions')" title="Вибрати вручну">✏️</button>
-                                <button class="icon-btn" onclick="requestResetField('profession', 'professions')" title="Випадково">🎲</button>
+                                <button class="m3-icon-btn" onclick="openEditModal('profession', 'professions')"><span class="material-symbols-outlined">edit</span></button>
+                                <button class="m3-icon-btn" onclick="requestResetField('profession', 'professions')"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
                         </div>
                         <div class="field-content" id="profession"></div>
@@ -160,23 +198,23 @@
 
                 <!-- Вкладка 2: СТАН -->
                 <div id="tab-health" class="cards-grid tab-pane">
-                    <div class="trait-card wide-card" id="card-health">
+                    <div class="m3-card wide-card" id="card-health">
                         <div class="card-header">
-                            <span class="label">ЗДОРОВ'Я</span>
+                            <span class="label">Здоров'я</span>
                             <div class="action-btns">
-                                <button class="icon-btn" onclick="openEditModal('health', 'health')" title="Вибрати вручну">✏️</button>
-                                <button class="icon-btn" onclick="requestResetField('health', 'health')" title="Випадково">🎲</button>
+                                <button class="m3-icon-btn" onclick="openEditModal('health', 'health')"><span class="material-symbols-outlined">edit</span></button>
+                                <button class="m3-icon-btn" onclick="requestResetField('health', 'health')"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
                         </div>
                         <div class="field-content" id="health"></div>
                     </div>
 
-                    <div class="trait-card wide-card" id="card-phobia">
+                    <div class="m3-card wide-card" id="card-phobia">
                         <div class="card-header">
-                            <span class="label">ФОБІЯ</span>
+                            <span class="label">Фобія</span>
                             <div class="action-btns">
-                                <button class="icon-btn" onclick="openEditModal('phobia', 'phobias')" title="Вибрати вручну">✏️</button>
-                                <button class="icon-btn" onclick="requestResetField('phobia', 'phobias')" title="Випадково">🎲</button>
+                                <button class="m3-icon-btn" onclick="openEditModal('phobia', 'phobias')"><span class="material-symbols-outlined">edit</span></button>
+                                <button class="m3-icon-btn" onclick="requestResetField('phobia', 'phobias')"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
                         </div>
                         <div class="field-content" id="phobia"></div>
@@ -185,34 +223,34 @@
 
                 <!-- Вкладка 3: БАГАЖ -->
                 <div id="tab-inventory" class="cards-grid tab-pane">
-                    <div class="trait-card wide-card" id="card-hobby">
+                    <div class="m3-card wide-card" id="card-hobby">
                         <div class="card-header">
-                            <span class="label">ХОБІ</span>
+                            <span class="label">Хобі / Навички</span>
                             <div class="action-btns">
-                                <button class="icon-btn" onclick="openEditModal('hobby', 'hobbies')" title="Вибрати вручну">✏️</button>
-                                <button class="icon-btn" onclick="requestResetField('hobby', 'hobbies')" title="Випадково">🎲</button>
+                                <button class="m3-icon-btn" onclick="openEditModal('hobby', 'hobbies')"><span class="material-symbols-outlined">edit</span></button>
+                                <button class="m3-icon-btn" onclick="requestResetField('hobby', 'hobbies')"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
                         </div>
                         <div class="field-content" id="hobby"></div>
                     </div>
 
-                    <div class="trait-card wide-card" id="card-inventory">
+                    <div class="m3-card wide-card" id="card-inventory">
                         <div class="card-header">
-                            <span class="label">РЮКЗАК</span>
+                            <span class="label">Рюкзак</span>
                             <div class="action-btns">
-                                <button class="icon-btn" onclick="openEditModal('inventory', 'inventory')" title="Вибрати вручну">✏️</button>
-                                <button class="icon-btn" onclick="requestResetField('inventory', 'inventory')" title="Випадково">🎲</button>
+                                <button class="m3-icon-btn" onclick="openEditModal('inventory', 'inventory')"><span class="material-symbols-outlined">edit</span></button>
+                                <button class="m3-icon-btn" onclick="requestResetField('inventory', 'inventory')"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
                         </div>
                         <div class="field-content" id="inventory"></div>
                     </div>
 
-                    <div class="trait-card wide-card" id="card-info">
+                    <div class="m3-card wide-card" id="card-info">
                         <div class="card-header">
-                            <span class="label">ДОДАТКОВА ІНФОРМАЦІЯ</span>
+                            <span class="label">Дод. інформація</span>
                             <div class="action-btns">
-                                <button class="icon-btn" onclick="openEditModal('info', 'additional_info')" title="Вибрати вручну">✏️</button>
-                                <button class="icon-btn" onclick="requestResetField('info', 'additional_info')" title="Випадково">🎲</button>
+                                <button class="m3-icon-btn" onclick="openEditModal('info', 'additional_info')"><span class="material-symbols-outlined">edit</span></button>
+                                <button class="m3-icon-btn" onclick="requestResetField('info', 'additional_info')"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
                         </div>
                         <div class="field-content" id="info"></div>
@@ -221,25 +259,25 @@
 
                 <!-- Вкладка 4: ДІЇ -->
                 <div id="tab-actions" class="cards-grid tab-pane">
-                    <div class="trait-card special-card wide-card" id="card-special1">
+                    <div class="m3-card special-card wide-card" id="card-special1">
                         <div class="card-header">
-                            <span class="label">СТОП БУНКЕР 1</span>
+                            <span class="label">Стоп Бункер 1</span>
                             <div class="action-btns">
-                                <button class="icon-btn lightning-btn" onclick="useSpecial('special1')" title="Використати">⚡</button>
-                                <button class="icon-btn" onclick="openEditModal('special1', 'specials')" title="Вибрати вручну">✏️</button>
-                                <button class="icon-btn" onclick="requestResetField('special1', 'specials')" title="Випадково">🎲</button>
+                                <button class="m3-icon-btn highlight" onclick="useSpecial('special1')"><span class="material-symbols-outlined">bolt</span></button>
+                                <button class="m3-icon-btn" onclick="openEditModal('special1', 'specials')"><span class="material-symbols-outlined">edit</span></button>
+                                <button class="m3-icon-btn" onclick="requestResetField('special1', 'specials')"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
                         </div>
                         <div class="field-content" id="special1"></div>
                     </div>
 
-                    <div class="trait-card special-card wide-card" id="card-special2">
+                    <div class="m3-card special-card wide-card" id="card-special2">
                         <div class="card-header">
-                            <span class="label">СТОП БУНКЕР 2</span>
+                            <span class="label">Стоп Бункер 2</span>
                             <div class="action-btns">
-                                <button class="icon-btn lightning-btn" onclick="useSpecial('special2')" title="Використати">⚡</button>
-                                <button class="icon-btn" onclick="openEditModal('special2', 'specials')" title="Вибрати вручну">✏️</button>
-                                <button class="icon-btn" onclick="requestResetField('special2', 'specials')" title="Випадково">🎲</button>
+                                <button class="m3-icon-btn highlight" onclick="useSpecial('special2')"><span class="material-symbols-outlined">bolt</span></button>
+                                <button class="m3-icon-btn" onclick="openEditModal('special2', 'specials')"><span class="material-symbols-outlined">edit</span></button>
+                                <button class="m3-icon-btn" onclick="requestResetField('special2', 'specials')"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
                         </div>
                         <div class="field-content" id="special2"></div>
@@ -251,12 +289,5 @@
     </div>
 
     <script src="script.js"></script>
-    <script>
-        function unlockSheetAndShowNav() {
-            unlockSheet();
-            document.getElementById('bottomNav').style.display = 'flex';
-            document.getElementById('fab-new').classList.remove('hidden');
-        }
-    </script>
 </body>
 </html>
