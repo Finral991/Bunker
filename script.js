@@ -132,7 +132,6 @@ function startGame() {
     const fName = document.getElementById('firstNameInput').value.trim();
     if (!fName) { alert("Введіть ім'я!"); return; }
     
-    // Ховаємо новий стартовий екран
     document.getElementById('start-screen').style.display = 'none';
     
     document.getElementById('candidate-name').textContent = fName;
@@ -144,7 +143,7 @@ function generateCharacter() {
     document.getElementById('character-sheet').classList.add('hidden');
     document.getElementById('global-lock').style.display = 'flex';
     document.getElementById('bottomNav').style.display = 'none';
-    document.getElementById('header-actions').style.display = 'flex'; // Показуємо анімований статус
+    document.getElementById('header-actions').style.display = 'flex'; 
 
     const firstTabBtn = document.querySelector('.m3-tab');
     switchTab('tab-bio', firstTabBtn);

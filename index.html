@@ -10,7 +10,12 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- НОВИЙ ЕКРАН ІДЕНТИФІКАЦІЇ (Welcome Screen) -->
+    <!-- ФОНОВИЙ ПАТЕРН ЗІ СМАЙЛІВ -->
+    <div class="emoji-wallpaper">
+        <!-- Смайли генеруються через CSS -->
+    </div>
+
+    <!-- ЕКРАН ІДЕНТИФІКАЦІЇ (Welcome Screen) -->
     <div id="start-screen" class="start-screen">
         <div class="start-card">
             <span class="material-symbols-outlined hero-icon">fingerprint</span>
@@ -78,9 +83,8 @@
         </div>
     </div>
 
-    <!-- MATERIAL YOU БОТОМ БАР (З меню "Ще") -->
+    <!-- MATERIAL YOU БОТОМ БАР -->
     <div class="m3-bottom-container" id="bottomNav" style="display: none;">
-        <!-- Основна пігулка з вкладками -->
         <div class="m3-tabs-pill">
             <div class="m3-tab active" onclick="switchTab('tab-bio', this)">
                 <span class="material-symbols-outlined">person</span>
@@ -99,13 +103,12 @@
                 <span class="text">Дії</span>
             </div>
         </div>
-        <!-- Кругла кнопка для меню "Ще" -->
         <button class="m3-fab-circle" onclick="toggleMoreMenu()">
             <span class="material-symbols-outlined">more_horiz</span>
         </button>
     </div>
 
-    <!-- МЕНЮ "ЩЕ" (Bottom Sheet) -->
+    <!-- МЕНЮ "ЩЕ" -->
     <div class="modal-overlay" id="more-menu-overlay" style="display: none; z-index: 150;" onclick="toggleMoreMenu()"></div>
     <div id="more-menu" class="m3-bottom-sheet">
         <div class="sheet-handle"></div>
@@ -125,7 +128,7 @@
 
     <div class="app-wrapper">
         <div class="sheet-container">
-            <!-- Шапка Material You -->
+            <!-- Шапка -->
             <div class="m3-header">
                 <div class="m3-profile-row">
                     <div class="photo-box" id="profile-photo"></div>
