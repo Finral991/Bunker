@@ -32,26 +32,41 @@ body {
     min-height: 100vh;
 }
 
-/* --- ФОНОВИЙ ПАТЕРН (EMOJI WALLPAPER) --- */
+/* --- ФОНОВИЙ ПАТЕРН (ХАОТИЧНІ ІКОНКИ + НЕОН) --- */
 .emoji-wallpaper {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
     z-index: -10;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-around;
-    align-content: space-around;
-    overflow: hidden;
-    opacity: 1; /* Зроблено напівпрозорим, щоб не відволікати */
-    font-size: 40px;
-    user-select: none;
+    color: var(--md-primary); 
     pointer-events: none;
+    overflow: hidden;
 }
-.emoji-wallpaper span {
-    padding: 10px;
-    display: inline-block;
-    filter: grayscale(50%); /* Легке знебарвлення, щоб не були занадто яскравими */
+
+/* Клас для кожної окремої іконки на фоні */
+.bg-icon {
+    position: absolute; /* Дозволяє розкидати їх хаотично */
+    user-select: none;
+    transition: opacity 0.5s ease; /* Для плавних змін */
 }
+
+/* Анімація неонового спалаху */
+@keyframes icon-neon-glow {
+    0% { text-shadow: none; color: inherit; filter: brightness(1); }
+    50% { 
+        text-shadow: 0 0 10px var(--md-primary), 0 0 25px var(--md-primary); 
+        color: #ffffff; /* Серцевина спалаху стає білою */
+        filter: brightness(1.5); 
+        opacity: 0.6 !important; /* Робимо іконку яскравішою під час світіння */
+        transform: translate(-50%, -50%) scale(1.1); /* Трохи збільшується */
+    }
+    100% { text-shadow: none; color: inherit; filter: brightness(1); }
+}
+
+/* Цей клас JS додаватиме рандомним іконкам */
+.bg-icon.glowing {
+    animation: icon-neon-glow 3s ease-in-out;
+    z-index: -9; /* Виносимо трохи вище інших фонових іконок */
+}
+
 
 /* Typography */
 h1, h2, h3 { margin: 0; font-weight: 600; }
@@ -59,23 +74,30 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 
 /* --- ЕФЕКТ РІДКОГО СКЛА (GLASSMORPHISM) --- */
 .glass-panel {
-    background: var(--glass-bg) !important;
-    -webkit-backdrop-filter: blur(24px) saturate(120%);
-    backdrop-filter: blur(24px) saturate(120%);
+    position: relative;
     border: 1px solid var(--glass-border) !important;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    z-index: 1; 
+}
+
+.glass-panel::before {
+    content: ''; position: absolute; inset: 0; 
+    background: var(--glass-bg);
+    -webkit-backdrop-filter: blur(24px) saturate(120%);
+    backdrop-filter: blur(24px) saturate(120%);
+    z-index: -1; 
+    border-radius: inherit; 
 }
 
 /* --- ЕКРАН ІДЕНТИФІКАЦІЇ (WELCOME SCREEN) --- */
 .start-screen {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(20, 18, 24, 0.7); /* Темна вуаль поверх емодзі */
-    display: flex; justify-content: center; align-items: center; z-index: 500;
-    padding: 16px;
+    background: rgba(20, 18, 24, 0.7);
+    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    display: flex; justify-content: center; align-items: center; z-index: 500; padding: 16px;
 }
 .start-card {
-    padding: 32px 24px; border-radius: 32px;
-    width: 100%; max-width: 400px;
+    padding: 32px 24px; border-radius: 32px; width: 100%; max-width: 400px;
     display: flex; flex-direction: column; gap: 16px; text-align: center;
 }
 .hero-icon { font-size: 64px; color: var(--md-primary); margin-bottom: 8px; }
@@ -90,8 +112,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 }
 
 .m3-tabs-pill {
-    display: flex; border-radius: 100px;
-    padding: 8px; gap: 4px;
+    display: flex; border-radius: 100px; padding: 8px; gap: 4px;
 }
 
 .m3-tab {
@@ -113,17 +134,22 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
     width: 60px; height: 60px; border-radius: 50%; 
     display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     color: var(--md-on-surface); cursor: pointer; transition: 0.2s;
+    background: var(--glass-bg);
+    backdrop-filter: blur(24px) saturate(120%);
+    -webkit-backdrop-filter: blur(24px) saturate(120%);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
-.m3-fab-circle:active { transform: scale(0.9); background: var(--md-secondary-container) !important; }
+.m3-fab-circle:active { transform: scale(0.9); }
 
 /* --- BOTTOM SHEET MENU ("ЩЕ") --- */
 .m3-bottom-sheet {
     position: fixed; bottom: -100%; left: 0; width: 100%;
-    border-radius: 28px 28px 0 0;
-    padding: 16px 24px 32px 24px; z-index: 901;
+    border-radius: 28px 28px 0 0; padding: 16px 24px 32px 24px; z-index: 901;
     transition: bottom 0.3s cubic-bezier(0.2, 0, 0, 1);
 }
 .m3-bottom-sheet.open { bottom: 0; }
+.m3-bottom-sheet::before { border-radius: 28px 28px 0 0; }
 .sheet-handle { width: 32px; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px; margin: 0 auto 24px auto; }
 .sheet-item {
     display: flex; align-items: center; gap: 16px; width: 100%; padding: 16px 0;
@@ -145,6 +171,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
     width: 40px; height: 40px; border-radius: 50%; border: none;
     background: rgba(255,255,255,0.1); color: var(--md-on-surface);
     display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s;
+    position: relative; z-index: 2;
 }
 .m3-icon-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.2); }
 .m3-icon-btn.highlight { background: var(--md-primary); color: var(--md-on-primary); }
@@ -182,15 +209,16 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 .photo-box {
     width: 80px; height: 80px; border-radius: 24px; background: rgba(0,0,0,0.2);
     overflow: hidden; display: flex; justify-content: center; align-items: center;
+    position: relative; z-index: 2;
 }
 .profile-photo-img { width: 100%; height: 100%; object-fit: cover; }
 .sub-header { color: var(--md-on-surface-variant); font-size: 14px; margin-top: 4px; }
 
-/* --- АНІМОВАНИЙ СТАТУС (MATERIAL PROGRESS RING) --- */
+/* --- АНІМОВАНИЙ СТАТУС --- */
 .status-pill.animated-progress {
     position: relative; background: transparent; padding: 8px 16px 8px 12px;
     border-radius: 100px; display: flex; align-items: center; gap: 8px;
-    overflow: hidden; z-index: 1; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    overflow: hidden; z-index: 2; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 .status-pill.animated-progress::after {
     content: ''; position: absolute; inset: 2px; 
@@ -201,14 +229,8 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
     background: conic-gradient(from 0deg, transparent 70%, var(--md-primary) 100%);
     animation: border-spin 1.5s linear infinite; z-index: -2;
 }
-.progress-icon {
-    font-size: 18px; color: var(--md-primary);
-    animation: icon-spin 3s linear infinite reverse;
-}
-.status-text {
-    color: var(--md-on-surface); font-size: 13px; font-weight: 700;
-    letter-spacing: 0.5px; text-transform: uppercase;
-}
+.progress-icon { font-size: 18px; color: var(--md-primary); animation: icon-spin 3s linear infinite reverse; }
+.status-text { color: var(--md-on-surface); font-size: 13px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
 @keyframes border-spin { to { transform: rotate(360deg); } }
 @keyframes icon-spin { to { transform: rotate(360deg); } }
 
@@ -218,14 +240,15 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 .m3-card {
     border-radius: 24px; padding: 20px;
     display: flex; flex-direction: column; position: relative; 
+    transition: transform 0.2s ease-out; 
 }
 .wide-card { grid-column: 1 / -1; }
 
-.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; position: relative; z-index: 2; }
 .label { color: var(--md-on-surface-variant); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
 .action-btns { display: flex; gap: 8px; }
 
-.field-content { font-size: 18px; font-weight: 500; line-height: 1.5; color: var(--md-on-surface); min-height: 40px; }
+.field-content { font-size: 18px; font-weight: 500; line-height: 1.5; color: var(--md-on-surface); min-height: 40px; position: relative; z-index: 2; }
 .blurred-text { filter: blur(6px); color: transparent; user-select: none; }
 .revealed { text-align: left; }
 
@@ -250,8 +273,14 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 
 /* Card Highlight Animation */
 @keyframes m3Highlight {
-    0% { transform: scale(1); background: var(--glass-bg); }
-    30% { transform: scale(1.02); background: rgba(208, 188, 255, 0.2); border-color: var(--md-primary); box-shadow: 0 0 20px rgba(208,188,255,0.2); }
-    100% { transform: scale(1); background: var(--glass-bg); }
+    0% { transform: scale(1); }
+    30% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+@keyframes m3HighlightBorder {
+    0% { border-color: var(--glass-border); }
+    30% { border-color: var(--md-primary); box-shadow: 0 0 20px rgba(208,188,255,0.2); }
+    100% { border-color: var(--glass-border); }
 }
 .highlight-active { animation: m3Highlight 0.8s ease-out; }
+.highlight-active::before { animation: m3HighlightBorder 0.8s ease-out; }

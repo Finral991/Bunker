@@ -13,20 +13,59 @@ const db = {
     specials: [] 
 };
 
-// Генерація фону зі смайлів
-function createEmojiWallpaper() {
+// Генерація ХАОТИЧНОГО фону та запуск пульсації
+function createMaterialWallpaper() {
     const bg = document.getElementById('emojiWallpaper');
     if (!bg) return;
-    const emojis = ['☢️', '☣️', '💀', '🎒', '💊', '🥫', '🔦', '⛺', '📡', '🪓', '🧻', '🧟', '😷', '🩸', '🔥', '🥾'];
+    
+    const icons = [
+        'science', 'skull', 'backpack', 'medication', 
+        'flashlight_on', 'camping', 'hardware', 'water_drop', 
+        'public', 'bug_report', 'warning', 'shield', 
+        'radar', 'map', 'key', 'restaurant', 'bolt', 'explore'
+    ];
     let content = '';
-    // Створюємо багато смайлів для заповнення фону
-    for (let i = 0; i < 150; i++) {
-        const e = emojis[Math.floor(Math.random() * emojis.length)];
-        const rot = Math.floor(Math.random() * 60) - 30; // Нахил від -30 до 30 градусів
-        const op = (Math.random() * 0.15) + 0.05; // Прозорість
-        content += `<span style="transform: rotate(${rot}deg); opacity: ${op};">${e}</span>`;
+    
+    // Створюємо 80 іконок і розкидаємо їх абсолютно хаотично
+    for (let i = 0; i < 80; i++) {
+        const icon = icons[Math.floor(Math.random() * icons.length)];
+        const rot = Math.floor(Math.random() * 360); // Нахил 0-360 градусів
+        const op = (Math.random() * 0.08) + 0.04; // Непрозорість
+        const size = Math.floor(Math.random() * 24) + 24; // Розмір від 24px до 48px
+        
+        // Випадкова позиція на екрані (в межах 100vw та 100vh)
+        const left = Math.random() * 100; 
+        const top = Math.random() * 100; 
+        
+        // Використовуємо інлайн-стилі для абсолютної позиції кожної іконки
+        content += `<span class="bg-icon material-symbols-outlined" style="left: ${left}vw; top: ${top}vh; transform: translate(-50%, -50%) rotate(${rot}deg); opacity: ${op}; font-size: ${size}px;">${icon}</span>`;
     }
     bg.innerHTML = content;
+    
+    // Запускаємо логіку неонового світіння
+    startRandomGlow();
+}
+
+// Функція, яка постійно "запалює" рандомні іконки
+function startRandomGlow() {
+    const icons = document.querySelectorAll('.bg-icon');
+    if (icons.length === 0) return;
+    
+    setInterval(() => {
+        // Одночасно підсвічуємо від 1 до 4 іконок
+        const numToGlow = Math.floor(Math.random() * 4) + 1;
+        for(let i=0; i < numToGlow; i++) {
+            const randomIcon = icons[Math.floor(Math.random() * icons.length)];
+            // Додаємо клас світіння, якщо іконка ще не світиться
+            if(!randomIcon.classList.contains('glowing')) {
+                randomIcon.classList.add('glowing');
+                // Вимикаємо світіння через 3 секунди (тривалість анімації)
+                setTimeout(() => {
+                    randomIcon.classList.remove('glowing');
+                }, 3000); 
+            }
+        }
+    }, 800); // Кожні 800мс запалюється нова група
 }
 
 async function loadDatabase() {
@@ -46,9 +85,10 @@ async function loadDatabase() {
         console.error("Помилка:", globalError);
     }
 }
+
 window.addEventListener('DOMContentLoaded', () => {
     loadDatabase();
-    createEmojiWallpaper();
+    createMaterialWallpaper(); // Запускаємо магію з фоном
 });
 
 const imgMale = `<img src="man.jpg" alt="Чоловік" class="profile-photo-img">`;
@@ -251,6 +291,7 @@ function openEditModal(fieldId, dbKey) {
         list.appendChild(el);
     });
     document.getElementById('edit-modal').style.display = 'flex';
+    document.getElementById('searchInput').focus();
 }
 
 function closeEditModal() { document.getElementById('edit-modal').style.display = 'none'; }
