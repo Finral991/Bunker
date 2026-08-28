@@ -4,20 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Досьє Бункера</title>
-    <!-- Підключення шрифту та іконок Material You -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" rel="stylesheet" />
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- ФОНОВИЙ ПАТЕРН ЗІ СМАЙЛІВ -->
-    <div class="emoji-wallpaper">
-        <!-- Смайли генеруються через CSS -->
-    </div>
+    <!-- ФОНОВИЙ ПАТЕРН ЗІ СМАЙЛІВ (Генерується через JS) -->
+    <div class="emoji-wallpaper" id="emojiWallpaper"></div>
 
-    <!-- ЕКРАН ІДЕНТИФІКАЦІЇ (Welcome Screen) -->
+    <!-- ЕКРАН ІДЕНТИФІКАЦІЇ -->
     <div id="start-screen" class="start-screen">
-        <div class="start-card">
+        <div class="start-card glass-panel">
             <span class="material-symbols-outlined hero-icon">fingerprint</span>
             <h1 class="start-title">Досьє Бункера</h1>
             <p class="start-subtitle">Пройдіть ідентифікацію для доступу до секретних даних</p>
@@ -38,9 +35,9 @@
         </div>
     </div>
 
-    <!-- Модальне вікно ПРАВИЛ -->
-    <div id="rules-modal" class="modal-overlay" style="display: none; z-index: 300;">
-        <div class="m3-dialog">
+    <!-- Модальне вікно ПРАВИЛ (Виправлено z-index) -->
+    <div id="rules-modal" class="modal-overlay" style="display: none; z-index: 1000;">
+        <div class="m3-dialog glass-panel">
             <h2 class="dialog-title">Правила гри</h2>
             <div class="rules-content">
                 <p><strong>Мета:</strong> Довести, що саме ви найкорисніші для виживання людства, і потрапити до Бункера.</p>
@@ -55,8 +52,8 @@
     </div>
 
     <!-- Модальне вікно ПІДТВЕРДЖЕННЯ -->
-    <div id="confirm-modal" class="modal-overlay" style="display: none; z-index: 250;">
-        <div class="m3-dialog">
+    <div id="confirm-modal" class="modal-overlay" style="display: none; z-index: 1000;">
+        <div class="m3-dialog glass-panel confirm-dialog">
             <h2 class="dialog-title">Увага</h2>
             <p>Ви впевнені, що хочете виконати цю дію? Повернути попереднє значення буде неможливо.</p>
             <div class="dialog-actions">
@@ -67,8 +64,8 @@
     </div>
 
     <!-- Модальне вікно з ПОШУКОМ -->
-    <div id="edit-modal" class="modal-overlay" style="display: none; z-index: 200;">
-        <div class="m3-dialog full-height">
+    <div id="edit-modal" class="modal-overlay" style="display: none; z-index: 1000;">
+        <div class="m3-dialog glass-panel full-height">
             <h2 class="dialog-title">Оберіть варіант</h2>
             <div class="input-group search-bar">
                 <span class="material-symbols-outlined search-icon">search</span>
@@ -85,7 +82,7 @@
 
     <!-- MATERIAL YOU БОТОМ БАР -->
     <div class="m3-bottom-container" id="bottomNav" style="display: none;">
-        <div class="m3-tabs-pill">
+        <div class="m3-tabs-pill glass-panel">
             <div class="m3-tab active" onclick="switchTab('tab-bio', this)">
                 <span class="material-symbols-outlined">person</span>
                 <span class="text">Особа</span>
@@ -103,14 +100,14 @@
                 <span class="text">Дії</span>
             </div>
         </div>
-        <button class="m3-fab-circle" onclick="toggleMoreMenu()">
+        <button class="m3-fab-circle glass-panel" onclick="toggleMoreMenu()">
             <span class="material-symbols-outlined">more_horiz</span>
         </button>
     </div>
 
     <!-- МЕНЮ "ЩЕ" -->
-    <div class="modal-overlay" id="more-menu-overlay" style="display: none; z-index: 150;" onclick="toggleMoreMenu()"></div>
-    <div id="more-menu" class="m3-bottom-sheet">
+    <div class="modal-overlay" id="more-menu-overlay" style="display: none; z-index: 900;" onclick="toggleMoreMenu()"></div>
+    <div id="more-menu" class="m3-bottom-sheet glass-panel">
         <div class="sheet-handle"></div>
         <button class="sheet-item" onclick="requestNewDossier(); toggleMoreMenu();">
             <span class="material-symbols-outlined">autorenew</span>
@@ -129,7 +126,7 @@
     <div class="app-wrapper">
         <div class="sheet-container">
             <!-- Шапка -->
-            <div class="m3-header">
+            <div class="m3-header glass-panel">
                 <div class="m3-profile-row">
                     <div class="photo-box" id="profile-photo"></div>
                     <div class="header-text">
@@ -145,8 +142,8 @@
             </div>
 
             <div id="character-sheet" class="hidden">
-                <div id="global-lock" class="global-lock">
-                    <button class="m3-btn filled large" onclick="unlockSheetAndShowNav()">
+                <div id="global-lock" class="global-lock glass-panel">
+                    <button class="m3-btn filled large" onclick="unlockSheetAndShowNav()" style="max-width: 90%; white-space: normal; text-align: center;">
                         <span class="material-symbols-outlined">lock_open</span>
                         Розсекретити дані
                     </button>
@@ -154,7 +151,7 @@
 
                 <!-- Вкладка 1: ОСОБА -->
                 <div id="tab-bio" class="cards-grid tab-pane active">
-                    <div class="m3-card" id="card-gender">
+                    <div class="m3-card glass-panel" id="card-gender">
                         <div class="card-header">
                             <span class="label">Стать</span>
                             <div class="action-btns">
@@ -165,7 +162,7 @@
                         <div class="field-content" id="gender"></div>
                     </div>
 
-                    <div class="m3-card" id="card-age">
+                    <div class="m3-card glass-panel" id="card-age">
                         <div class="card-header">
                             <span class="label">Вік</span>
                             <div class="action-btns">
@@ -176,7 +173,7 @@
                         <div class="field-content" id="age"></div>
                     </div>
 
-                    <div class="m3-card" id="card-body">
+                    <div class="m3-card glass-panel" id="card-body">
                         <div class="card-header">
                             <span class="label">Статура</span>
                             <div class="action-btns">
@@ -187,7 +184,7 @@
                         <div class="field-content" id="body"></div>
                     </div>
 
-                    <div class="m3-card" id="card-profession">
+                    <div class="m3-card glass-panel" id="card-profession">
                         <div class="card-header">
                             <span class="label">Професія</span>
                             <div class="action-btns">
@@ -201,7 +198,7 @@
 
                 <!-- Вкладка 2: СТАН -->
                 <div id="tab-health" class="cards-grid tab-pane">
-                    <div class="m3-card wide-card" id="card-health">
+                    <div class="m3-card glass-panel wide-card" id="card-health">
                         <div class="card-header">
                             <span class="label">Здоров'я</span>
                             <div class="action-btns">
@@ -212,7 +209,7 @@
                         <div class="field-content" id="health"></div>
                     </div>
 
-                    <div class="m3-card wide-card" id="card-phobia">
+                    <div class="m3-card glass-panel wide-card" id="card-phobia">
                         <div class="card-header">
                             <span class="label">Фобія</span>
                             <div class="action-btns">
@@ -226,7 +223,7 @@
 
                 <!-- Вкладка 3: БАГАЖ -->
                 <div id="tab-inventory" class="cards-grid tab-pane">
-                    <div class="m3-card wide-card" id="card-hobby">
+                    <div class="m3-card glass-panel wide-card" id="card-hobby">
                         <div class="card-header">
                             <span class="label">Хобі / Навички</span>
                             <div class="action-btns">
@@ -237,7 +234,7 @@
                         <div class="field-content" id="hobby"></div>
                     </div>
 
-                    <div class="m3-card wide-card" id="card-inventory">
+                    <div class="m3-card glass-panel wide-card" id="card-inventory">
                         <div class="card-header">
                             <span class="label">Рюкзак</span>
                             <div class="action-btns">
@@ -248,7 +245,7 @@
                         <div class="field-content" id="inventory"></div>
                     </div>
 
-                    <div class="m3-card wide-card" id="card-info">
+                    <div class="m3-card glass-panel wide-card" id="card-info">
                         <div class="card-header">
                             <span class="label">Дод. інформація</span>
                             <div class="action-btns">
@@ -262,7 +259,7 @@
 
                 <!-- Вкладка 4: ДІЇ -->
                 <div id="tab-actions" class="cards-grid tab-pane">
-                    <div class="m3-card special-card wide-card" id="card-special1">
+                    <div class="m3-card glass-panel special-card wide-card" id="card-special1">
                         <div class="card-header">
                             <span class="label">Стоп Бункер 1</span>
                             <div class="action-btns">
@@ -274,7 +271,7 @@
                         <div class="field-content" id="special1"></div>
                     </div>
 
-                    <div class="m3-card special-card wide-card" id="card-special2">
+                    <div class="m3-card glass-panel special-card wide-card" id="card-special2">
                         <div class="card-header">
                             <span class="label">Стоп Бункер 2</span>
                             <div class="action-btns">

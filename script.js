@@ -13,6 +13,22 @@ const db = {
     specials: [] 
 };
 
+// Генерація фону зі смайлів
+function createEmojiWallpaper() {
+    const bg = document.getElementById('emojiWallpaper');
+    if (!bg) return;
+    const emojis = ['☢️', '☣️', '💀', '🎒', '💊', '🥫', '🔦', '⛺', '📡', '🪓', '🧻', '🧟', '😷', '🩸', '🔥', '🥾'];
+    let content = '';
+    // Створюємо багато смайлів для заповнення фону
+    for (let i = 0; i < 150; i++) {
+        const e = emojis[Math.floor(Math.random() * emojis.length)];
+        const rot = Math.floor(Math.random() * 60) - 30; // Нахил від -30 до 30 градусів
+        const op = (Math.random() * 0.15) + 0.05; // Прозорість
+        content += `<span style="transform: rotate(${rot}deg); opacity: ${op};">${e}</span>`;
+    }
+    bg.innerHTML = content;
+}
+
 async function loadDatabase() {
     const categories = ['health_base', 'professions', 'health_diseases', 'hobbies', 'additional_info', 'inventory', 'phobias', 'specials'];
     try {
@@ -30,7 +46,10 @@ async function loadDatabase() {
         console.error("Помилка:", globalError);
     }
 }
-window.addEventListener('DOMContentLoaded', loadDatabase);
+window.addEventListener('DOMContentLoaded', () => {
+    loadDatabase();
+    createEmojiWallpaper();
+});
 
 const imgMale = `<img src="man.jpg" alt="Чоловік" class="profile-photo-img">`;
 const imgFemale = `<img src="woman.jpg" alt="Жінка" class="profile-photo-img">`;
