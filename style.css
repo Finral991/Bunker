@@ -13,8 +13,8 @@
     --md-outline: #49454F;
     
     /* Кольори для скла */
-    --glass-bg: rgba(29, 25, 43, 0.45);
-    --glass-border: rgba(208, 188, 255, 0.15);
+    --glass-bg: rgba(29, 25, 43, 0.15);
+    --glass-border: rgba(208, 188, 255, 0.20);
 }
 
 /* Прибираємо синє підсвічування при тапі на мобільних пристроях */
@@ -32,7 +32,7 @@ body {
     min-height: 100vh;
 }
 
-/* --- ФОНОВИЙ ПАТЕРН (ХАОТИЧНІ ІКОНКИ + НЕОН) --- */
+/* --- ФОНОВИЙ ПАТЕРН (ХАОТИЧНІ ІКОНКИ + ВОДА + НЕОН) --- */
 .emoji-wallpaper {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
     z-index: -10;
@@ -41,32 +41,50 @@ body {
     overflow: hidden;
 }
 
-/* Клас для кожної окремої іконки на фоні */
-.bg-icon {
-    position: absolute; /* Дозволяє розкидати їх хаотично */
+/* Обгортка іконки використовує CSS-змінні для збереження своїх унікальних налаштувань */
+.bg-icon-wrapper {
+    position: absolute;
     user-select: none;
-    transition: opacity 0.5s ease; /* Для плавних змін */
+    /* Базові значення підтягуються з JS */
+    transform: translate(-50%, -50%) rotate(var(--base-rot)) scale(1);
+    opacity: var(--base-op);
 }
 
-/* Анімація неонового спалаху */
+.bg-icon-inner {
+    display: inline-block;
+    animation: float-on-water 20s ease-in-out infinite alternate;
+}
+
+/* ПЛАВНА АНІМАЦІЯ НЕОНОВОГО СПАЛАХУ */
+/* Тепер вона ідеально плавно витікає з базових CSS-змінних іконки */
 @keyframes icon-neon-glow {
-    0% { text-shadow: none; color: inherit; filter: brightness(1); }
-    50% { 
-        text-shadow: 0 0 10px var(--md-primary), 0 0 25px var(--md-primary); 
-        color: #ffffff; /* Серцевина спалаху стає білою */
-        filter: brightness(1.5); 
-        opacity: 0.6 !important; /* Робимо іконку яскравішою під час світіння */
-        transform: translate(-50%, -50%) scale(1.1); /* Трохи збільшується */
+    0%, 100% { 
+        transform: translate(-50%, -50%) rotate(var(--base-rot)) scale(1);
+        opacity: var(--base-op);
+        text-shadow: 0 0 0 transparent;
+        color: var(--md-primary);
     }
-    100% { text-shadow: none; color: inherit; filter: brightness(1); }
+    50% { 
+        transform: translate(-50%, -50%) rotate(var(--base-rot)) scale(1.2); /* Плавне збільшення */
+        opacity: 0.9; /* Яскравість */
+        /* Використовуємо text-shadow замість filter, воно анімується набагато м'якше */
+        text-shadow: 0 0 15px var(--md-primary), 0 0 30px var(--md-primary);
+        color: #ffffff; /* Сама іконка стає білою в пік спалаху */
+    }
 }
 
-/* Цей клас JS додаватиме рандомним іконкам */
-.bg-icon.glowing {
-    animation: icon-neon-glow 3s ease-in-out;
-    z-index: -9; /* Виносимо трохи вище інших фонових іконок */
+@keyframes float-on-water {
+    0%, 100% { transform: translate(0px, 0px) rotate(0deg); }
+    25% { transform: translate(15px, -20px) rotate(8deg); }
+    50% { transform: translate(-10px, 15px) rotate(-5deg); }
+    75% { transform: translate(20px, 10px) rotate(5deg); }
 }
 
+.bg-icon-wrapper.glowing {
+    /* 12 секунд дуже м'якої анімації */
+    animation: icon-neon-glow 12s ease-in-out forwards;
+    z-index: -8; 
+}
 
 /* Typography */
 h1, h2, h3 { margin: 0; font-weight: 600; }
@@ -83,8 +101,8 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 .glass-panel::before {
     content: ''; position: absolute; inset: 0; 
     background: var(--glass-bg);
-    -webkit-backdrop-filter: blur(24px) saturate(120%);
-    backdrop-filter: blur(24px) saturate(120%);
+    -webkit-backdrop-filter: blur(12px) saturate(120%);
+    backdrop-filter: blur(12px) saturate(120%);
     z-index: -1; 
     border-radius: inherit; 
 }
@@ -92,8 +110,8 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 /* --- ЕКРАН ІДЕНТИФІКАЦІЇ (WELCOME SCREEN) --- */
 .start-screen {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(20, 18, 24, 0.7);
-    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    background: rgba(20, 18, 24, 0.6);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
     display: flex; justify-content: center; align-items: center; z-index: 500; padding: 16px;
 }
 .start-card {
@@ -113,6 +131,9 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 
 .m3-tabs-pill {
     display: flex; border-radius: 100px; padding: 8px; gap: 4px;
+    background: rgba(29, 25, 43, 0.55); 
+    backdrop-filter: blur(12px); 
+    -webkit-backdrop-filter: blur(12px);
 }
 
 .m3-tab {
@@ -134,9 +155,9 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
     width: 60px; height: 60px; border-radius: 50%; 
     display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     color: var(--md-on-surface); cursor: pointer; transition: 0.2s;
-    background: var(--glass-bg);
-    backdrop-filter: blur(24px) saturate(120%);
-    -webkit-backdrop-filter: blur(24px) saturate(120%);
+    background: rgba(29, 25, 43, 0.55);
+    backdrop-filter: blur(12px) saturate(120%);
+    -webkit-backdrop-filter: blur(12px) saturate(120%);
     border: 1px solid var(--glass-border);
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
@@ -166,6 +187,10 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 .m3-btn.filled:active { opacity: 0.8; transform: scale(0.98); }
 .m3-btn.text-btn { background: transparent; color: var(--md-primary); }
 .m3-btn.large { padding: 16px 32px; font-size: 16px; width: 100%; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.m3-btn:disabled {
+    opacity: 0.5; cursor: not-allowed; pointer-events: none;
+    background: var(--md-secondary-container); color: var(--md-on-surface-variant);
+}
 
 .m3-icon-btn {
     width: 40px; height: 40px; border-radius: 50%; border: none;
@@ -200,7 +225,15 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 .options-container { max-height: 40vh; overflow-y: auto; background: rgba(0,0,0,0.1); border-radius: 16px; padding: 8px; }
 .option-item { padding: 16px; cursor: pointer; border-radius: 8px; transition: 0.2s; }
 .option-item:active { background: rgba(255,255,255,0.1); }
+.option-item.selected { background: var(--md-primary); color: var(--md-on-primary); font-weight: 600; }
 .rules-content { max-height: 50vh; overflow-y: auto; font-size: 15px; line-height: 1.5; color: var(--md-on-surface-variant); }
+
+/* --- СТИЛІЗАЦІЯ ПОВЗУНКА (SCROLLBAR) --- */
+.options-container { scrollbar-width: thin; scrollbar-color: var(--md-outline) transparent; }
+.options-container::-webkit-scrollbar { width: 6px; }
+.options-container::-webkit-scrollbar-track { background: transparent; }
+.options-container::-webkit-scrollbar-thumb { background: var(--md-outline); border-radius: 8px; }
+.options-container::-webkit-scrollbar-thumb:hover { background: var(--md-primary); }
 
 /* --- MAIN LAYOUT & CARDS --- */
 .app-wrapper { width: 100%; max-width: 600px; margin: 0 auto; position: relative; z-index: 10; }

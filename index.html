@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- ФОНОВИЙ ПАТЕРН ЗІ СМАЙЛІВ (Генерується через JS) -->
+    <!-- ФОНОВИЙ ПАТЕРН -->
     <div class="emoji-wallpaper" id="emojiWallpaper"></div>
 
     <!-- ЕКРАН ІДЕНТИФІКАЦІЇ -->
@@ -35,7 +35,7 @@
         </div>
     </div>
 
-    <!-- Модальне вікно ПРАВИЛ (Виправлено z-index) -->
+    <!-- Модальне вікно ПРАВИЛ -->
     <div id="rules-modal" class="modal-overlay" style="display: none; z-index: 1000;">
         <div class="m3-dialog glass-panel">
             <h2 class="dialog-title">Правила гри</h2>
@@ -76,6 +76,8 @@
             </div>
             <div class="dialog-actions">
                 <button class="m3-btn text-btn" onclick="closeEditModal()">Скасувати</button>
+                <!-- Додано кнопку підтвердження (спочатку вимкнена) -->
+                <button class="m3-btn filled" id="confirmEditBtn" onclick="confirmEditSelection()" disabled>Підтвердити</button>
             </div>
         </div>
     </div>
@@ -100,7 +102,7 @@
                 <span class="text">Дії</span>
             </div>
         </div>
-        <button class="m3-fab-circle" onclick="toggleMoreMenu()">
+        <button class="m3-fab-circle glass-panel" onclick="toggleMoreMenu()">
             <span class="material-symbols-outlined">more_horiz</span>
         </button>
     </div>
@@ -134,7 +136,6 @@
                         <p class="sub-header">ОБ'ЄКТ № <span id="candidate-id">0000</span></p>
                     </div>
                 </div>
-                <!-- Анімований статус Progress Ring -->
                 <div class="status-pill animated-progress" id="header-actions" style="display: none;">
                     <span class="material-symbols-outlined progress-icon">sync</span>
                     <span class="status-text">Очікує рішення...</span>
@@ -288,6 +289,9 @@
         </div>
     </div>
 
+    <!-- Підключаємо всі три скрипти в правильному порядку -->
+    <script src="background.js"></script>
+    <script src="data.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

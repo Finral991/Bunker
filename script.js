@@ -1,99 +1,3 @@
-const db = {
-    genders: ["Чоловік", "Жінка"],
-    ages: Array.from({length: 65 - 18 + 1}, (_, i) => `${i + 18} років`),
-    bodies: ["1 (Худорлява)", "2 (Струнка)", "3 (Середня)", "4 (Щільна)", "5 (З надмірною вагою)"],
-    health_base: [],
-    health_stages: ["легкий", "середній", "важкий", "критичний"], 
-    professions: [],
-    health_diseases: [],
-    hobbies: [],
-    additional_info: [],
-    inventory: [],
-    phobias: [],
-    specials: [] 
-};
-
-// Генерація ХАОТИЧНОГО фону та запуск пульсації
-function createMaterialWallpaper() {
-    const bg = document.getElementById('emojiWallpaper');
-    if (!bg) return;
-    
-    const icons = [
-        'science', 'skull', 'backpack', 'medication', 
-        'flashlight_on', 'camping', 'hardware', 'water_drop', 
-        'public', 'bug_report', 'warning', 'shield', 
-        'radar', 'map', 'key', 'restaurant', 'bolt', 'explore'
-    ];
-    let content = '';
-    
-    // Створюємо 80 іконок і розкидаємо їх абсолютно хаотично
-    for (let i = 0; i < 80; i++) {
-        const icon = icons[Math.floor(Math.random() * icons.length)];
-        const rot = Math.floor(Math.random() * 360); // Нахил 0-360 градусів
-        const op = (Math.random() * 0.08) + 0.04; // Непрозорість
-        const size = Math.floor(Math.random() * 24) + 24; // Розмір від 24px до 48px
-        
-        // Випадкова позиція на екрані (в межах 100vw та 100vh)
-        const left = Math.random() * 100; 
-        const top = Math.random() * 100; 
-        
-        // Використовуємо інлайн-стилі для абсолютної позиції кожної іконки
-        content += `<span class="bg-icon material-symbols-outlined" style="left: ${left}vw; top: ${top}vh; transform: translate(-50%, -50%) rotate(${rot}deg); opacity: ${op}; font-size: ${size}px;">${icon}</span>`;
-    }
-    bg.innerHTML = content;
-    
-    // Запускаємо логіку неонового світіння
-    startRandomGlow();
-}
-
-// Функція, яка постійно "запалює" рандомні іконки
-function startRandomGlow() {
-    const icons = document.querySelectorAll('.bg-icon');
-    if (icons.length === 0) return;
-    
-    setInterval(() => {
-        // Одночасно підсвічуємо від 1 до 4 іконок
-        const numToGlow = Math.floor(Math.random() * 4) + 1;
-        for(let i=0; i < numToGlow; i++) {
-            const randomIcon = icons[Math.floor(Math.random() * icons.length)];
-            // Додаємо клас світіння, якщо іконка ще не світиться
-            if(!randomIcon.classList.contains('glowing')) {
-                randomIcon.classList.add('glowing');
-                // Вимикаємо світіння через 3 секунди (тривалість анімації)
-                setTimeout(() => {
-                    randomIcon.classList.remove('glowing');
-                }, 3000); 
-            }
-        }
-    }, 800); // Кожні 800мс запалюється нова група
-}
-
-async function loadDatabase() {
-    const categories = ['health_base', 'professions', 'health_diseases', 'hobbies', 'additional_info', 'inventory', 'phobias', 'specials'];
-    try {
-        const fetchPromises = categories.map(cat => 
-            fetch(`${cat}.txt?v=${Date.now()}`)
-            .then(response => {
-                if (!response.ok) throw new Error(`Файл ${cat}.txt не знайдено`);
-                return response.text();
-            })
-            .then(text => { db[cat] = text.split('\n').map(line => line.trim()).filter(line => line.length > 0); })
-            .catch(error => { db[cat] = ["Помилка: Файл не знайдено або пустий"]; })
-        );
-        await Promise.all(fetchPromises);
-    } catch (globalError) {
-        console.error("Помилка:", globalError);
-    }
-}
-
-window.addEventListener('DOMContentLoaded', () => {
-    loadDatabase();
-    createMaterialWallpaper(); // Запускаємо магію з фоном
-});
-
-const imgMale = `<img src="man.jpg" alt="Чоловік" class="profile-photo-img">`;
-const imgFemale = `<img src="woman.jpg" alt="Жінка" class="profile-photo-img">`;
-
 const typingAudio = new Audio('typewriter.mp3');
 typingAudio.loop = true; 
 typingAudio.preload = 'auto';
@@ -101,23 +5,6 @@ typingAudio.preload = 'auto';
 let isTypingGlobal = false; 
 let currentEditField = ""; 
 let pendingAction = null; 
-
-const getRandomItem = (array) => {
-    if (!array || array.length === 0) return "Дані відсутні";
-    return array[Math.floor(Math.random() * array.length)];
-};
-
-const getExperienceD6 = () => {
-    const experiences = ["Дилетант (до 1 місяця)", "Новачок (1-12 місяців)", "Любитель (1-2 роки)", "Досвідчений (2-5 років)", "Експерт (5-10 років)", "Професіонал (10+ років)"];
-    return experiences[Math.floor(Math.random() * experiences.length)];
-};
-
-const generateHealth = () => {
-    if (Math.random() > 0.4) return getRandomItem(db.health_base);
-    const disease = getRandomItem(db.health_diseases);
-    if (disease.toLowerCase().includes('здоров') || disease === "Дані відсутні") return disease;
-    return `${disease} (ступінь: ${getRandomItem(db.health_stages)})`;
-};
 
 /* --- МЕНЮ ТА ПРАВИЛА --- */
 function openRules() { document.getElementById('rules-modal').style.display = 'flex'; }
@@ -192,7 +79,6 @@ function startGame() {
     if (!fName) { alert("Введіть ім'я!"); return; }
     
     document.getElementById('start-screen').style.display = 'none';
-    
     document.getElementById('candidate-name').textContent = fName;
     document.getElementById('candidate-name').style.display = 'block';
     generateCharacter();
@@ -274,24 +160,59 @@ function useSpecial(fieldId) {
 }
 
 /* --- ПОШУК ТА РЕДАГУВАННЯ --- */
+let temporarySelectedValue = null; // Змінна для зберігання тимчасового вибору
+
 function openEditModal(fieldId, dbKey) {
     if (isTypingGlobal || !document.getElementById(fieldId).classList.contains('revealed')) return;
+    
     currentEditField = fieldId;
+    temporarySelectedValue = null; // Скидаємо попередній вибір
+    
     const list = document.getElementById('optionsList');
     list.innerHTML = '';
     document.getElementById('searchInput').value = ''; 
+    
+    // Блокуємо кнопку "Підтвердити" при відкритті
+    const confirmBtn = document.getElementById('confirmEditBtn');
+    if(confirmBtn) confirmBtn.disabled = true;
     
     let options = dbKey === 'health' ? [...db.health_base, ...db.health_diseases] : [...db[dbKey]]; 
     options.sort((a, b) => a.localeCompare(b, undefined, {numeric: true}));
 
     options.forEach(opt => {
         const el = document.createElement('div');
-        el.className = 'option-item'; el.textContent = opt;
-        el.onclick = () => requestSaveEditField(opt); 
+        el.className = 'option-item'; 
+        el.textContent = opt;
+        // ЗМІНЕНО: Тепер клік викликає функцію виділення, а не відразу збереження
+        el.onclick = () => selectOptionItem(el, opt); 
         list.appendChild(el);
     });
     document.getElementById('edit-modal').style.display = 'flex';
     document.getElementById('searchInput').focus();
+}
+
+// Нова функція для виділення варіанту
+function selectOptionItem(element, value) {
+    // Знімаємо клас 'selected' з усіх елементів списку
+    const items = document.getElementById('optionsList').getElementsByClassName('option-item');
+    for(let i = 0; i < items.length; i++) {
+        items[i].classList.remove('selected');
+    }
+    
+    // Додаємо 'selected' до того, на який клікнули
+    element.classList.add('selected');
+    temporarySelectedValue = value; // Запам'ятовуємо вибір
+    
+    // Розблоковуємо кнопку "Підтвердити"
+    const confirmBtn = document.getElementById('confirmEditBtn');
+    if(confirmBtn) confirmBtn.disabled = false;
+}
+
+// Нова функція, яка спрацьовує по кнопці "Підтвердити"
+function confirmEditSelection() {
+    if (temporarySelectedValue) {
+        requestSaveEditField(temporarySelectedValue); // Передаємо вибір у стандартний потік
+    }
 }
 
 function closeEditModal() { document.getElementById('edit-modal').style.display = 'none'; }
