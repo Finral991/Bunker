@@ -4,22 +4,87 @@ typingAudio.preload = 'auto';
 
 let isTypingGlobal = false; 
 let currentEditField = ""; 
+let currentEditDbKey = ""; 
 let pendingAction = null; 
+let temporarySelectedValue = null; 
+let extraCardCounter = 0; 
+
+/* --- СИСТЕМА ТЕМ --- */
+// Завантаження збереженої теми при старті
+window.addEventListener('DOMContentLoaded', () => {
+    const savedTheme = localStorage.getItem('bunkerTheme');
+    if (savedTheme) {
+        document.body.setAttribute('data-theme', savedTheme);
+    }
+});
+
+function openThemeModal() { document.getElementById('theme-modal').style.display = 'flex'; }
+function closeThemeModal() { document.getElementById('theme-modal').style.display = 'none'; }
+
+function setTheme(themeName) {
+    document.body.setAttribute('data-theme', themeName);
+    localStorage.setItem('bunkerTheme', themeName); // Зберігаємо вибір
+    closeThemeModal();
+}
 
 /* --- МЕНЮ ТА ПРАВИЛА --- */
 function openRules() { document.getElementById('rules-modal').style.display = 'flex'; }
 function closeRules() { document.getElementById('rules-modal').style.display = 'none'; }
 
-function toggleMoreMenu() {
-    const menu = document.getElementById('more-menu');
-    const overlay = document.getElementById('more-menu-overlay');
-    if (menu.classList.contains('open')) {
-        menu.classList.remove('open');
-        overlay.style.display = 'none';
+function openMoreMenu() { document.getElementById('more-menu-modal').style.display = 'flex'; }
+function closeMoreMenu() { document.getElementById('more-menu-modal').style.display = 'none'; }
+
+function openAddCardModal() { document.getElementById('add-card-modal').style.display = 'flex'; }
+function closeAddCardModal() { document.getElementById('add-card-modal').style.display = 'none'; }
+
+/* --- ДОДАВАННЯ НОВОЇ ХАРАКТЕРИСТИКИ --- */
+async function addNewCard(dbKey, labelText, fieldPrefix, tabId) {
+    closeAddCardModal();
+    if (isTypingGlobal) return;
+    
+    extraCardCounter++;
+    const newFieldId = `${fieldPrefix}-extra-${extraCardCounter}`;
+    const newCardId = `card-${newFieldId}`;
+    
+    let newValue = "";
+    if (dbKey === 'professions' || dbKey === 'hobbies') {
+        newValue = `${getRandomItem(db[dbKey])}\nДосвід: ${getExperienceD6()}`;
+    } else if (dbKey === 'health') {
+        newValue = generateHealth();
     } else {
-        menu.classList.add('open');
-        overlay.style.display = 'block';
+        newValue = getRandomItem(db[dbKey]);
     }
+
+    let extraClasses = "wide-card";
+    if (dbKey === 'specials') extraClasses += " special-card";
+
+    const newCardHTML = `
+        <div class="m3-card glass-panel ${extraClasses}" id="${newCardId}">
+            <div class="card-header">
+                <span class="label">${labelText} (Дод.)</span>
+                <div class="action-btns">
+                    ${dbKey === 'specials' ? `<button class="m3-icon-btn highlight" onclick="useSpecial('${newFieldId}')"><span class="material-symbols-outlined">bolt</span></button>` : ''}
+                    <button class="m3-icon-btn" onclick="openEditModal('${newFieldId}', '${dbKey}')"><span class="material-symbols-outlined">edit</span></button>
+                    <button class="m3-icon-btn" onclick="requestResetField('${newFieldId}', '${dbKey}')"><span class="material-symbols-outlined">shuffle</span></button>
+                </div>
+            </div>
+            <div class="field-content revealed" id="${newFieldId}" data-value="${newValue}"></div>
+        </div>
+    `;
+    
+    const tabElement = document.getElementById(tabId);
+    tabElement.insertAdjacentHTML('beforeend', newCardHTML);
+    
+    const targetTabNavBtn = document.querySelector(`.m3-tab[onclick*="${tabId}"]`);
+    if(targetTabNavBtn) switchTab(tabId, targetTabNavBtn);
+    
+    const container = document.getElementById(newFieldId);
+    isTypingGlobal = true;
+    try { const playPromise = typingAudio.play(); if (playPromise !== undefined) await playPromise; } catch(e) {}
+    await printText(container, newValue);
+    typingAudio.pause(); typingAudio.currentTime = 0; isTypingGlobal = false;
+    
+    document.getElementById(newCardId).scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 /* --- СИСТЕМА ПІДТВЕРДЖЕННЯ ДІЙ --- */
@@ -31,7 +96,7 @@ function requestResetField(elementId, dbKey) {
 }
 
 function requestSaveEditField(selectedValue) {
-    pendingAction = { type: 'manual', fieldId: currentEditField, value: selectedValue };
+    pendingAction = { type: 'manual', fieldId: currentEditField, dbKey: currentEditDbKey, value: selectedValue };
     document.getElementById('edit-modal').style.display = 'none';
     document.getElementById('confirm-modal').style.display = 'flex';
 }
@@ -89,6 +154,9 @@ function generateCharacter() {
     document.getElementById('global-lock').style.display = 'flex';
     document.getElementById('bottomNav').style.display = 'none';
     document.getElementById('header-actions').style.display = 'flex'; 
+
+    document.querySelectorAll('.m3-card[id*="-extra-"]').forEach(card => card.remove());
+    extraCardCounter = 0;
 
     const firstTabBtn = document.querySelector('.m3-tab');
     switchTab('tab-bio', firstTabBtn);
@@ -160,19 +228,17 @@ function useSpecial(fieldId) {
 }
 
 /* --- ПОШУК ТА РЕДАГУВАННЯ --- */
-let temporarySelectedValue = null; // Змінна для зберігання тимчасового вибору
-
 function openEditModal(fieldId, dbKey) {
     if (isTypingGlobal || !document.getElementById(fieldId).classList.contains('revealed')) return;
     
     currentEditField = fieldId;
-    temporarySelectedValue = null; // Скидаємо попередній вибір
+    currentEditDbKey = dbKey; 
+    temporarySelectedValue = null; 
     
     const list = document.getElementById('optionsList');
     list.innerHTML = '';
     document.getElementById('searchInput').value = ''; 
     
-    // Блокуємо кнопку "Підтвердити" при відкритті
     const confirmBtn = document.getElementById('confirmEditBtn');
     if(confirmBtn) confirmBtn.disabled = true;
     
@@ -183,7 +249,6 @@ function openEditModal(fieldId, dbKey) {
         const el = document.createElement('div');
         el.className = 'option-item'; 
         el.textContent = opt;
-        // ЗМІНЕНО: Тепер клік викликає функцію виділення, а не відразу збереження
         el.onclick = () => selectOptionItem(el, opt); 
         list.appendChild(el);
     });
@@ -191,27 +256,22 @@ function openEditModal(fieldId, dbKey) {
     document.getElementById('searchInput').focus();
 }
 
-// Нова функція для виділення варіанту
 function selectOptionItem(element, value) {
-    // Знімаємо клас 'selected' з усіх елементів списку
     const items = document.getElementById('optionsList').getElementsByClassName('option-item');
     for(let i = 0; i < items.length; i++) {
         items[i].classList.remove('selected');
     }
     
-    // Додаємо 'selected' до того, на який клікнули
     element.classList.add('selected');
-    temporarySelectedValue = value; // Запам'ятовуємо вибір
+    temporarySelectedValue = value; 
     
-    // Розблоковуємо кнопку "Підтвердити"
     const confirmBtn = document.getElementById('confirmEditBtn');
     if(confirmBtn) confirmBtn.disabled = false;
 }
 
-// Нова функція, яка спрацьовує по кнопці "Підтвердити"
 function confirmEditSelection() {
     if (temporarySelectedValue) {
-        requestSaveEditField(temporarySelectedValue); // Передаємо вибір у стандартний потік
+        requestSaveEditField(temporarySelectedValue); 
     }
 }
 
@@ -227,18 +287,17 @@ function filterOptions() {
 
 async function saveEditField(newValue) {
     const fieldId = pendingAction.fieldId; 
-    if (fieldId === 'profession' || fieldId === 'hobby') newValue += `\nДосвід: ${getExperienceD6()}`;
-    else if (fieldId === 'health' && db.health_diseases.includes(newValue)) {
+    const dbKey = pendingAction.dbKey;
+    
+    if (dbKey === 'professions' || dbKey === 'hobbies') newValue += `\nДосвід: ${getExperienceD6()}`;
+    else if (dbKey === 'health' && db.health_diseases.includes(newValue)) {
         if (!newValue.toLowerCase().includes('здоров') && newValue !== "Дані відсутні") newValue += ` (ступінь: ${getRandomItem(db.health_stages)})`;
-    } else if (fieldId === 'special1' || fieldId === 'special2') {
-        const otherId = fieldId === 'special1' ? 'special2' : 'special1';
-        if (newValue === document.getElementById(otherId).dataset.value) { alert("Ця картка вже є!"); return; }
-    }
+    } 
 
     const container = document.getElementById(fieldId);
     container.dataset.value = newValue;
     container.classList.remove('used-special'); 
-    if (fieldId === 'gender') document.getElementById('profile-photo').innerHTML = newValue === "Чоловік" ? imgMale : imgFemale;
+    if (dbKey === 'genders') document.getElementById('profile-photo').innerHTML = newValue === "Чоловік" ? imgMale : imgFemale;
 
     isTypingGlobal = true;
     try { const playPromise = typingAudio.play(); if (playPromise !== undefined) await playPromise; } catch(e) {}
@@ -251,17 +310,24 @@ async function resetField(elementId, dbKey) {
     container.classList.remove('used-special'); 
     let newItem = "";
 
-    if (elementId === 'age' || elementId === 'gender' || elementId === 'body') {
+    if (dbKey === 'ages' || dbKey === 'genders' || dbKey === 'bodies') {
         newItem = getRandomItem(db[dbKey]);
-        if (elementId === 'gender') document.getElementById('profile-photo').innerHTML = newItem === "Чоловік" ? imgMale : imgFemale;
-    } else if (elementId === 'profession' || elementId === 'hobby') {
+        if (dbKey === 'genders') document.getElementById('profile-photo').innerHTML = newItem === "Чоловік" ? imgMale : imgFemale;
+    } else if (dbKey === 'professions' || dbKey === 'hobbies') {
         newItem = `${getRandomItem(db[dbKey])}\nДосвід: ${getExperienceD6()}`;
-    } else if (elementId === 'health') { newItem = generateHealth();
-    } else if (elementId === 'special1' || elementId === 'special2') {
-        const otherId = elementId === 'special1' ? 'special2' : 'special1';
+    } else if (dbKey === 'health') { 
+        newItem = generateHealth();
+    } else if (dbKey === 'specials') {
         newItem = getRandomItem(db.specials);
-        while (newItem === document.getElementById(otherId).dataset.value && db.specials.length > 1) newItem = getRandomItem(db.specials);
-    } else { newItem = getRandomItem(db[dbKey]); }
+        const otherId = elementId === 'special1' ? 'special2' : (elementId === 'special2' ? 'special1' : null);
+        if (otherId && document.getElementById(otherId)) {
+            while (newItem === document.getElementById(otherId).dataset.value && db.specials.length > 1) {
+                newItem = getRandomItem(db.specials);
+            }
+        }
+    } else { 
+        newItem = getRandomItem(db[dbKey]); 
+    }
 
     container.dataset.value = newItem;
     isTypingGlobal = true;

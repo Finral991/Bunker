@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" rel="stylesheet" />
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-theme="default">
     <!-- ФОНОВИЙ ПАТЕРН -->
     <div class="emoji-wallpaper" id="emojiWallpaper"></div>
 
@@ -27,8 +27,9 @@
             </div>
             
             <div class="start-actions">
+                <!-- Обидві кнопки тепер filled -->
                 <button class="m3-btn filled large" onclick="startGame()">Розпочати симуляцію</button>
-                <button class="m3-btn text-btn large" onclick="openRules()">
+                <button class="m3-btn filled large" onclick="openRules()">
                     <span class="material-symbols-outlined">menu_book</span> Правила гри
                 </button>
             </div>
@@ -76,11 +77,70 @@
             </div>
             <div class="dialog-actions">
                 <button class="m3-btn text-btn" onclick="closeEditModal()">Скасувати</button>
-                <!-- Додано кнопку підтвердження (спочатку вимкнена) -->
                 <button class="m3-btn filled" id="confirmEditBtn" onclick="confirmEditSelection()" disabled>Підтвердити</button>
             </div>
         </div>
-    </div>  
+    </div>
+
+    <!-- МЕНЮ "ЩЕ" -->
+    <div id="more-menu-modal" class="modal-overlay" style="display: none; z-index: 1000;">
+        <div class="m3-dialog glass-panel" style="text-align: center;">
+            <h2 class="dialog-title">Меню</h2>
+            <div class="menu-btn-group">
+                <!-- Усі кнопки тепер filled -->
+                <button class="m3-btn filled" onclick="requestNewDossier(); closeMoreMenu();">
+                    <span class="menu-icon-wrapper material-symbols-outlined">autorenew</span> Згенерувати нове досьє
+                </button>
+                <button class="m3-btn filled" onclick="openAddCardModal(); closeMoreMenu();">
+                    <span class="menu-icon-wrapper material-symbols-outlined">add_box</span> Додати картку (+)
+                </button>
+                <button class="m3-btn filled" onclick="openRules(); closeMoreMenu();">
+                    <span class="menu-icon-wrapper material-symbols-outlined">menu_book</span> Правила гри
+                </button>
+                <button class="m3-btn filled" onclick="openThemeModal(); closeMoreMenu();">
+                    <span class="menu-icon-wrapper material-symbols-outlined">palette</span> Кольорова тема
+                </button>
+                <button class="m3-btn text-btn" onclick="closeMoreMenu();">
+                    <span class="material-symbols-outlined">close</span> Закрити
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ВІКНО ВИБОРУ ТЕМИ -->
+    <div id="theme-modal" class="modal-overlay" style="display: none; z-index: 1000;">
+        <div class="m3-dialog glass-panel" style="text-align: center;">
+            <h2 class="dialog-title">Оберіть тему</h2>
+            <div class="themes-grid">
+                <div class="theme-swatch swatch-default" onclick="setTheme('default')" title="Фіолетова"></div>
+                <div class="theme-swatch swatch-blue" onclick="setTheme('blue')" title="Синя"></div>
+                <div class="theme-swatch swatch-green" onclick="setTheme('green')" title="Зелена"></div>
+                <div class="theme-swatch swatch-yellow" onclick="setTheme('yellow')" title="Жовта"></div>
+                <div class="theme-swatch swatch-pink" onclick="setTheme('pink')" title="Рожева"></div>
+            </div>
+            <div class="dialog-actions" style="justify-content: center; margin-top: 16px;">
+                <button class="m3-btn text-btn" onclick="closeThemeModal()">Готово</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальне вікно ДОДАВАННЯ ХАРАКТЕРИСТИКИ -->
+    <div id="add-card-modal" class="modal-overlay" style="display: none; z-index: 1000;">
+        <div class="m3-dialog glass-panel">
+            <h2 class="dialog-title">Що додати?</h2>
+            <div class="options-container" style="max-height: 50vh;">
+                <div class="option-item" onclick="addNewCard('health', 'Здоров\'я', 'health', 'tab-health')">⚕️ Здоров'я</div>
+                <div class="option-item" onclick="addNewCard('phobias', 'Фобія', 'phobia', 'tab-health')">😨 Фобія</div>
+                <div class="option-item" onclick="addNewCard('hobbies', 'Хобі / Навички', 'hobby', 'tab-inventory')">🎨 Хобі / Навички</div>
+                <div class="option-item" onclick="addNewCard('inventory', 'Рюкзак', 'inventory', 'tab-inventory')">🎒 Рюкзак</div>
+                <div class="option-item" onclick="addNewCard('additional_info', 'Дод. інформація', 'info', 'tab-inventory')">📝 Дод. інформація</div>
+                <div class="option-item" onclick="addNewCard('specials', 'Стоп Бункер', 'special', 'tab-actions')">🛑 Стоп Бункер</div>
+            </div>
+            <div class="dialog-actions">
+                <button class="m3-btn text-btn" onclick="closeAddCardModal()">Скасувати</button>
+            </div>
+        </div>
+    </div>
 
     <!-- MATERIAL YOU БОТОМ БАР -->
     <div class="m3-bottom-container" id="bottomNav" style="display: none;">
@@ -102,26 +162,8 @@
                 <span class="text">Дії</span>
             </div>
         </div>
-        <button class="m3-fab-circle glass-panel" onclick="toggleMoreMenu()">
+        <button class="m3-fab-circle glass-panel" onclick="openMoreMenu()">
             <span class="material-symbols-outlined">more_horiz</span>
-        </button>
-    </div>
-
-    <!-- МЕНЮ "ЩЕ" -->
-    <div class="modal-overlay" id="more-menu-overlay" style="display: none; z-index: 900;" onclick="toggleMoreMenu()"></div>
-    <div id="more-menu" class="m3-bottom-sheet glass-panel">
-        <div class="sheet-handle"></div>
-        <button class="sheet-item" onclick="requestNewDossier(); toggleMoreMenu();">
-            <span class="material-symbols-outlined">autorenew</span>
-            Згенерувати нове досьє
-        </button>
-        <button class="sheet-item" onclick="openRules(); toggleMoreMenu();">
-            <span class="material-symbols-outlined">menu_book</span>
-            Правила гри
-        </button>
-        <button class="sheet-item" onclick="toggleMoreMenu();">
-            <span class="material-symbols-outlined">settings</span>
-            Налаштування (в розробці)
         </button>
     </div>
 
@@ -289,7 +331,6 @@
         </div>
     </div>
 
-    <!-- Підключаємо всі три скрипти в правильному порядку -->
     <script src="background.js"></script>
     <script src="data.js"></script>
     <script src="script.js"></script>

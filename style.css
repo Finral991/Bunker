@@ -1,5 +1,5 @@
-:root {
-    /* M3 Dark Theme Colors (Purple based) */
+:root, [data-theme="default"] {
+    /* 1. СТАНДАРТНА (ФІОЛЕТОВА) */
     --md-bg: #141218;
     --md-surface: #1D192B; 
     --md-surface-container: #211F26;
@@ -11,13 +11,78 @@
     --md-on-surface-variant: #CAC4D0; 
     --md-error: #FFB4AB; 
     --md-outline: #49454F;
-    
-    /* Кольори для скла */
     --glass-bg: rgba(29, 25, 43, 0.15);
     --glass-border: rgba(208, 188, 255, 0.20);
 }
 
-/* Прибираємо синє підсвічування при тапі на мобільних пристроях */
+[data-theme="blue"] {
+    /* 2. СИНЯ (КІБЕР) */
+    --md-bg: #101418;
+    --md-surface: #1A2027; 
+    --md-surface-container: #1C2229;
+    --md-primary: #9ECAFF; 
+    --md-on-primary: #003258; 
+    --md-secondary-container: #354A5F; 
+    --md-on-secondary-container: #D1E4FF;
+    --md-on-surface: #DFE3E7; 
+    --md-on-surface-variant: #C3C7CF; 
+    --md-error: #FFB4AB; 
+    --md-outline: #49454F;
+    --glass-bg: rgba(26, 32, 39, 0.15);
+    --glass-border: rgba(158, 202, 255, 0.20);
+}
+
+[data-theme="green"] {
+    /* 3. ЗЕЛЕНА (РАДІАЦІЯ) */
+    --md-bg: #111410;
+    --md-surface: #1B211A; 
+    --md-surface-container: #1E241C;
+    --md-primary: #9CD69E; 
+    --md-on-primary: #003912; 
+    --md-secondary-container: #374B39; 
+    --md-on-secondary-container: #B8CCB5;
+    --md-on-surface: #E1E3DF; 
+    --md-on-surface-variant: #C2C8BE; 
+    --md-error: #FFB4AB; 
+    --md-outline: #49454F;
+    --glass-bg: rgba(27, 33, 26, 0.15);
+    --glass-border: rgba(156, 214, 158, 0.20);
+}
+
+[data-theme="pink"] {
+    /* 4. РОЖЕВА (НЕОН) */
+    --md-bg: #1A1114;
+    --md-surface: #2B1A20; 
+    --md-surface-container: #2E1D23;
+    --md-primary: #FFB1C8; 
+    --md-on-primary: #5E112A; 
+    --md-secondary-container: #5D3F47; 
+    --md-on-secondary-container: #FFD9E2;
+    --md-on-surface: #EFE0E3; 
+    --md-on-surface-variant: #D7C1C5; 
+    --md-error: #FFB4AB; 
+    --md-outline: #49454F;
+    --glass-bg: rgba(43, 26, 32, 0.15);
+    --glass-border: rgba(255, 177, 200, 0.20);
+}
+
+[data-theme="yellow"] {
+    /* 5. ЖОВТА (СИГНАЛЬНА) */
+    --md-bg: #171610;
+    --md-surface: #262315; 
+    --md-surface-container: #2A2617;
+    --md-primary: #E6C744; 
+    --md-on-primary: #3A3000; 
+    --md-secondary-container: #524A32; 
+    --md-on-secondary-container: #EAE2C6;
+    --md-on-surface: #E7E2D9; 
+    --md-on-surface-variant: #CCC6B5; 
+    --md-error: #FFB4AB; 
+    --md-outline: #49454F;
+    --glass-bg: rgba(38, 35, 21, 0.15);
+    --glass-border: rgba(230, 199, 68, 0.20);
+}
+
 * { 
     box-sizing: border-box; 
     font-family: 'Outfit', system-ui, -apple-system, sans-serif; 
@@ -28,48 +93,36 @@ body {
     background-color: var(--md-bg); color: var(--md-on-surface);
     display: flex; justify-content: center;
     padding: 16px; margin: 0; padding-bottom: 120px;
-    position: relative;
-    min-height: 100vh;
+    position: relative; min-height: 100vh;
+    transition: background-color 0.4s ease; /* Плавна зміна теми */
 }
 
-/* --- ФОНОВИЙ ПАТЕРН (ХАОТИЧНІ ІКОНКИ + ВОДА + НЕОН) --- */
+/* --- ФОНОВИЙ ПАТЕРН --- */
 .emoji-wallpaper {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    z-index: -10;
-    color: var(--md-primary); 
-    pointer-events: none;
-    overflow: hidden;
+    z-index: -10; color: var(--md-primary); 
+    pointer-events: none; overflow: hidden;
+    transition: color 0.4s ease;
 }
 
-/* Обгортка іконки використовує CSS-змінні для збереження своїх унікальних налаштувань */
 .bg-icon-wrapper {
-    position: absolute;
-    user-select: none;
-    /* Базові значення підтягуються з JS */
+    position: absolute; user-select: none;
     transform: translate(-50%, -50%) rotate(var(--base-rot)) scale(1);
     opacity: var(--base-op);
 }
 
-.bg-icon-inner {
-    display: inline-block;
-    animation: float-on-water 20s ease-in-out infinite alternate;
-}
+.bg-icon-inner { display: inline-block; animation: float-on-water 20s ease-in-out infinite alternate; }
 
-/* ПЛАВНА АНІМАЦІЯ НЕОНОВОГО СПАЛАХУ */
-/* Тепер вона ідеально плавно витікає з базових CSS-змінних іконки */
 @keyframes icon-neon-glow {
     0%, 100% { 
         transform: translate(-50%, -50%) rotate(var(--base-rot)) scale(1);
-        opacity: var(--base-op);
-        text-shadow: 0 0 0 transparent;
-        color: var(--md-primary);
+        opacity: var(--base-op); text-shadow: 0 0 0 transparent; color: var(--md-primary);
     }
     50% { 
-        transform: translate(-50%, -50%) rotate(var(--base-rot)) scale(1.2); /* Плавне збільшення */
-        opacity: 0.9; /* Яскравість */
-        /* Використовуємо text-shadow замість filter, воно анімується набагато м'якше */
+        transform: translate(-50%, -50%) rotate(var(--base-rot)) scale(1.2); 
+        opacity: 0.9; 
         text-shadow: 0 0 15px var(--md-primary), 0 0 30px var(--md-primary);
-        color: #ffffff; /* Сама іконка стає білою в пік спалаху */
+        color: #ffffff; 
     }
 }
 
@@ -80,11 +133,7 @@ body {
     75% { transform: translate(20px, 10px) rotate(5deg); }
 }
 
-.bg-icon-wrapper.glowing {
-    /* 12 секунд дуже м'якої анімації */
-    animation: icon-neon-glow 12s ease-in-out forwards;
-    z-index: -8; 
-}
+.bg-icon-wrapper.glowing { animation: icon-neon-glow 12s ease-in-out forwards; z-index: -8; }
 
 /* Typography */
 h1, h2, h3 { margin: 0; font-weight: 600; }
@@ -92,30 +141,22 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 
 /* --- ЕФЕКТ РІДКОГО СКЛА (GLASSMORPHISM) --- */
 .glass-panel {
-    position: relative;
-    border: 1px solid var(--glass-border) !important;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-    z-index: 1; 
-    /* ФІКС ДЛЯ БРАУЗЕРІВ: Примусове апаратне прискорення, щоб скло не блимало */
-    -webkit-transform: translate3d(0, 0, 0);
-    transform: translate3d(0, 0, 0);
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
+    position: relative; border: 1px solid var(--glass-border) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); z-index: 1; 
+    -webkit-transform: translate3d(0, 0, 0); transform: translate3d(0, 0, 0);
+    -webkit-backface-visibility: hidden; backface-visibility: hidden;
+    transition: border-color 0.4s ease;
 }
 
 .glass-panel::before {
-    content: ''; position: absolute; inset: 0; 
-    background: var(--glass-bg);
-    -webkit-backdrop-filter: blur(12px) saturate(120%);
-    backdrop-filter: blur(12px) saturate(120%);
-    z-index: -1; 
-    border-radius: inherit; 
-    /* ФІКС ДЛЯ БРАУЗЕРІВ */
-    -webkit-transform: translate3d(0, 0, 0);
-    transform: translate3d(0, 0, 0);
+    content: ''; position: absolute; inset: 0; background: var(--glass-bg);
+    -webkit-backdrop-filter: blur(12px) saturate(120%); backdrop-filter: blur(12px) saturate(120%);
+    z-index: -1; border-radius: inherit; 
+    -webkit-transform: translate3d(0, 0, 0); transform: translate3d(0, 0, 0);
+    transition: background-color 0.4s ease;
 }
 
-/* --- ЕКРАН ІДЕНТИФІКАЦІЇ (WELCOME SCREEN) --- */
+/* --- ЕКРАН ІДЕНТИФІКАЦІЇ --- */
 .start-screen {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(20, 18, 24, 0.6);
@@ -126,7 +167,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
     padding: 32px 24px; border-radius: 32px; width: 100%; max-width: 400px;
     display: flex; flex-direction: column; gap: 16px; text-align: center;
 }
-.hero-icon { font-size: 64px; color: var(--md-primary); margin-bottom: 8px; }
+.hero-icon { font-size: 64px; color: var(--md-primary); margin-bottom: 8px; transition: color 0.4s; }
 .start-title { font-size: 28px; color: var(--md-on-surface); margin: 0; }
 .start-subtitle { font-size: 14px; color: var(--md-on-surface-variant); margin-bottom: 16px; }
 .start-actions { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
@@ -139,9 +180,10 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 
 .m3-tabs-pill {
     display: flex; border-radius: 100px; padding: 8px; gap: 4px;
-    background: rgba(29, 25, 43, 0.55); 
-    backdrop-filter: blur(12px); 
-    -webkit-backdrop-filter: blur(12px);
+    background: var(--md-secondary-container); /* Використовуємо колір теми */
+    opacity: 0.9;
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    transition: background-color 0.4s;
 }
 
 .m3-tab {
@@ -163,41 +205,43 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
     width: 60px; height: 60px; border-radius: 50%; 
     display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     color: var(--md-on-surface); cursor: pointer; transition: 0.2s;
-    background: rgba(29, 25, 43, 0.55);
-    backdrop-filter: blur(12px) saturate(120%);
-    -webkit-backdrop-filter: blur(12px) saturate(120%);
-    border: 1px solid var(--glass-border);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    background: var(--md-secondary-container); opacity: 0.9;
+    backdrop-filter: blur(12px) saturate(120%); -webkit-backdrop-filter: blur(12px) saturate(120%);
+    border: 1px solid var(--glass-border); box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 .m3-fab-circle:active { transform: scale(0.9); }
 
-/* --- BOTTOM SHEET MENU ("ЩЕ") --- */
-.m3-bottom-sheet {
-    position: fixed; bottom: -100%; left: 0; width: 100%;
-    border-radius: 28px 28px 0 0; padding: 16px 24px 32px 24px; z-index: 901;
-    transition: bottom 0.3s cubic-bezier(0.2, 0, 0, 1);
-}
-.m3-bottom-sheet.open { bottom: 0; }
-.m3-bottom-sheet::before { border-radius: 28px 28px 0 0; }
-.sheet-handle { width: 32px; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px; margin: 0 auto 24px auto; }
-.sheet-item {
-    display: flex; align-items: center; gap: 16px; width: 100%; padding: 16px 0;
-    background: none; border: none; color: var(--md-on-surface);
-    font-size: 16px; font-weight: 500; cursor: pointer; text-align: left;
-}
-
-/* --- BUTTONS --- */
+/* --- BUTTONS & MENU --- */
 .m3-btn {
     padding: 12px 24px; border-radius: 100px; font-size: 15px; font-weight: 600;
     border: none; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px;
 }
-.m3-btn.filled { background: var(--md-primary); color: var(--md-on-primary); }
+.m3-btn.filled { background: var(--md-primary); color: var(--md-on-primary); transition: background 0.4s, color 0.4s; }
 .m3-btn.filled:active { opacity: 0.8; transform: scale(0.98); }
-.m3-btn.text-btn { background: transparent; color: var(--md-primary); }
+
+/* ДРУГОРЯДНІ КНОПКИ (У меню) */
+.m3-btn.secondary { 
+    background: var(--md-secondary-container); 
+    color: var(--md-on-secondary-container); 
+    transition: background 0.4s, color 0.4s;
+}
+.m3-btn.secondary:active { opacity: 0.8; transform: scale(0.98); }
+
+.m3-btn.text-btn { background: transparent; color: var(--md-primary); transition: color 0.4s; }
 .m3-btn.large { padding: 16px 32px; font-size: 16px; width: 100%; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .m3-btn:disabled {
     opacity: 0.5; cursor: not-allowed; pointer-events: none;
     background: var(--md-secondary-container); color: var(--md-on-surface-variant);
+}
+
+.menu-btn-group { display: flex; flex-direction: column; gap: 12px; margin-top: 24px; align-items: stretch; }
+
+/* ІКОНКИ В МЕНЮ */
+.menu-icon-wrapper {
+    display: flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: rgba(0, 0, 0, 0.15); /* Легке затемнення іконки */
+    margin-right: 4px; font-size: 18px;
 }
 
 .m3-icon-btn {
@@ -207,7 +251,26 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
     position: relative; z-index: 2;
 }
 .m3-icon-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.2); }
-.m3-icon-btn.highlight { background: var(--md-primary); color: var(--md-on-primary); }
+.m3-icon-btn.highlight { background: var(--md-primary); color: var(--md-on-primary); transition: background 0.4s; }
+
+/* --- ВИБІР ТЕМИ --- */
+.themes-grid {
+    display: flex; justify-content: center; gap: 16px; margin-top: 24px; flex-wrap: wrap;
+}
+.theme-swatch {
+    width: 48px; height: 48px; border-radius: 50%; cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 2px solid transparent;
+    transition: transform 0.2s, border 0.2s;
+}
+.theme-swatch:active { transform: scale(0.9); }
+.theme-swatch:hover { border-color: #fff; }
+
+.swatch-default { background: #D0BCFF; } /* Фіолетова */
+.swatch-blue { background: #9ECAFF; } /* Синя */
+.swatch-green { background: #9CD69E; } /* Зелена */
+.swatch-yellow { background: #E6C744; } /* Жовта */
+.swatch-pink { background: #FFB1C8; } /* Рожева */
+
 
 /* --- DIALOGS --- */
 .modal-overlay {
@@ -223,6 +286,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 .input-group input { 
     width: 100%; padding: 16px; border-radius: 16px; border: 1px solid var(--md-outline);
     background: rgba(0,0,0,0.2); color: var(--md-on-surface); font-size: 16px; outline: none;
+    transition: border-color 0.4s;
 }
 .input-group input:focus { border-color: var(--md-primary); }
 .search-bar { position: relative; }
@@ -233,10 +297,10 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 .options-container { max-height: 40vh; overflow-y: auto; background: rgba(0,0,0,0.1); border-radius: 16px; padding: 8px; }
 .option-item { padding: 16px; cursor: pointer; border-radius: 8px; transition: 0.2s; }
 .option-item:active { background: rgba(255,255,255,0.1); }
-.option-item.selected { background: var(--md-primary); color: var(--md-on-primary); font-weight: 600; }
+.option-item.selected { background: var(--md-primary); color: var(--md-on-primary); font-weight: 600; transition: background 0.4s; }
 .rules-content { max-height: 50vh; overflow-y: auto; font-size: 15px; line-height: 1.5; color: var(--md-on-surface-variant); }
 
-/* --- СТИЛІЗАЦІЯ ПОВЗУНКА (SCROLLBAR) --- */
+/* Scrollbar */
 .options-container { scrollbar-width: thin; scrollbar-color: var(--md-outline) transparent; }
 .options-container::-webkit-scrollbar { width: 6px; }
 .options-container::-webkit-scrollbar-track { background: transparent; }
@@ -255,7 +319,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 .profile-photo-img { width: 100%; height: 100%; object-fit: cover; }
 .sub-header { color: var(--md-on-surface-variant); font-size: 14px; margin-top: 4px; }
 
-/* --- АНІМОВАНИЙ СТАТУС --- */
+/* АНІМОВАНИЙ СТАТУС */
 .status-pill.animated-progress {
     position: relative; background: transparent; padding: 8px 16px 8px 12px;
     border-radius: 100px; display: flex; align-items: center; gap: 8px;
@@ -264,13 +328,14 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 .status-pill.animated-progress::after {
     content: ''; position: absolute; inset: 2px; 
     background: var(--md-surface-container); border-radius: 100px; z-index: -1;
+    transition: background 0.4s;
 }
 .status-pill.animated-progress::before {
     content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
     background: conic-gradient(from 0deg, transparent 70%, var(--md-primary) 100%);
     animation: border-spin 1.5s linear infinite; z-index: -2;
 }
-.progress-icon { font-size: 18px; color: var(--md-primary); animation: icon-spin 3s linear infinite reverse; }
+.progress-icon { font-size: 18px; color: var(--md-primary); animation: icon-spin 3s linear infinite reverse; transition: color 0.4s; }
 .status-text { color: var(--md-on-surface); font-size: 13px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
 @keyframes border-spin { to { transform: rotate(360deg); } }
 @keyframes icon-spin { to { transform: rotate(360deg); } }
@@ -281,7 +346,6 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 .m3-card {
     border-radius: 24px; padding: 20px;
     display: flex; flex-direction: column; position: relative; 
-    transition: transform 0.2s ease-out; 
 }
 .wide-card { grid-column: 1 / -1; }
 
@@ -299,13 +363,10 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 }
 .hidden { display: none !important; }
 
-/* Tabs Logic (Прибрано рух, залишено тільки плавне з'явлення) */
+/* Tabs Logic */
 .tab-pane { display: none; animation: m3FadeIn 0.3s ease-out; }
 .tab-pane.active { display: grid; }
-@keyframes m3FadeIn { 
-    from { opacity: 0; } 
-    to { opacity: 1; } 
-}
+@keyframes m3FadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 /* Used Stamp */
 .used-special { opacity: 0.4; }
@@ -315,17 +376,16 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
     padding: 8px 16px; border-radius: 12px; pointer-events: none; z-index: 10; background: rgba(20, 18, 24, 0.9);
 }
 
-/* Card Highlight Animation (Замість зміни розміру тепер плавна заливка) */
+/* Card Highlight Animation */
 @keyframes m3Highlight {
     0% { background: transparent; }
-    30% { background: rgba(208, 188, 255, 0.08); } /* Легке фіолетове світіння всередині */
+    30% { background: rgba(255, 255, 255, 0.05); } 
     100% { background: transparent; }
 }
 @keyframes m3HighlightBorder {
     0% { border-color: var(--glass-border); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); }
-    30% { border-color: var(--md-primary); box-shadow: 0 0 20px rgba(208,188,255,0.3); }
+    30% { border-color: var(--md-primary); box-shadow: 0 0 20px rgba(0,0,0,0.4); }
     100% { border-color: var(--glass-border); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); }
 }
-
 .highlight-active { animation: m3Highlight 0.8s ease-out; }
 .highlight-active::before { animation: m3HighlightBorder 0.8s ease-out; }
