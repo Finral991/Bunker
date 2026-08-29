@@ -96,6 +96,11 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
     border: 1px solid var(--glass-border) !important;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     z-index: 1; 
+    /* ФІКС ДЛЯ БРАУЗЕРІВ: Примусове апаратне прискорення, щоб скло не блимало */
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
 }
 
 .glass-panel::before {
@@ -105,6 +110,9 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
     backdrop-filter: blur(12px) saturate(120%);
     z-index: -1; 
     border-radius: inherit; 
+    /* ФІКС ДЛЯ БРАУЗЕРІВ */
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
 }
 
 /* --- ЕКРАН ІДЕНТИФІКАЦІЇ (WELCOME SCREEN) --- */
@@ -291,10 +299,13 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 }
 .hidden { display: none !important; }
 
-/* Tabs Logic */
-.tab-pane { display: none; animation: m3FadeIn 0.3s cubic-bezier(0.2, 0, 0, 1); }
+/* Tabs Logic (Прибрано рух, залишено тільки плавне з'явлення) */
+.tab-pane { display: none; animation: m3FadeIn 0.3s ease-out; }
 .tab-pane.active { display: grid; }
-@keyframes m3FadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes m3FadeIn { 
+    from { opacity: 0; } 
+    to { opacity: 1; } 
+}
 
 /* Used Stamp */
 .used-special { opacity: 0.4; }
@@ -304,16 +315,17 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
     padding: 8px 16px; border-radius: 12px; pointer-events: none; z-index: 10; background: rgba(20, 18, 24, 0.9);
 }
 
-/* Card Highlight Animation */
+/* Card Highlight Animation (Замість зміни розміру тепер плавна заливка) */
 @keyframes m3Highlight {
-    0% { transform: scale(1); }
-    30% { transform: scale(1.02); }
-    100% { transform: scale(1); }
+    0% { background: transparent; }
+    30% { background: rgba(208, 188, 255, 0.08); } /* Легке фіолетове світіння всередині */
+    100% { background: transparent; }
 }
 @keyframes m3HighlightBorder {
-    0% { border-color: var(--glass-border); }
-    30% { border-color: var(--md-primary); box-shadow: 0 0 20px rgba(208,188,255,0.2); }
-    100% { border-color: var(--glass-border); }
+    0% { border-color: var(--glass-border); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); }
+    30% { border-color: var(--md-primary); box-shadow: 0 0 20px rgba(208,188,255,0.3); }
+    100% { border-color: var(--glass-border); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2); }
 }
+
 .highlight-active { animation: m3Highlight 0.8s ease-out; }
 .highlight-active::before { animation: m3HighlightBorder 0.8s ease-out; }
