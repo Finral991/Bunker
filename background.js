@@ -1,67 +1,49 @@
 // background.js
 
-// Генерація ХАОТИЧНОГО фону
-function createMaterialWallpaper() {
+// Генерація СТАТИЧНОЇ сітки іконок (0% CPU/GPU)
+function createStaticWallpaper() {
     const bg = document.getElementById('emojiWallpaper');
     if (!bg) return;
     
-    // Надійні іконки, які не перетворюються на текст
     const icons = [
         'science', 'skull', 'backpack', 'medication', 
         'flashlight_on', 'camping', 'hardware', 'water_drop', 
         'public', 'bug_report', 'warning', 'shield', 
         'radar', 'map', 'key', 'restaurant', 'bolt', 'explore'
     ];
+    
+    // Створюємо величезне віртуальне полотно (наприклад, 2000x3000px), 
+    // щоб при скролінгі фон завжди був заповнений
+    const canvasWidth = 2000;
+    const canvasHeight = 3000;
+    const cellSize = 110; // Розмір "квадрата" сітки (іконки ніколи не перетнуться)
+    
+    const cols = Math.ceil(canvasWidth / cellSize);
+    const rows = Math.ceil(canvasHeight / cellSize);
+    
     let content = '';
     
-    // ОПТИМІЗАЦІЯ ДЛЯ МЕНШИХ ФРИЗІВ: зменшено кількість до 35
-    for (let i = 0; i < 35; i++) {
-        const icon = icons[Math.floor(Math.random() * icons.length)];
-        const rot = Math.floor(Math.random() * 60) - 30; // Легкий нахил
-        
-        // Базова прозорість
-        const op = (Math.random() * 0.15) + 0.10; 
-        
-        const left = Math.random() * 100; 
-        const top = Math.random() * 100; 
-        
-        // Випадкова швидкість дрейфу по "воді"
-        const floatDur = Math.floor(Math.random() * 10) + 15; // Від 15с до 25с
-        const floatDel = Math.floor(Math.random() * 10); 
-        
-        content += `
-            <div class="bg-icon-wrapper" style="left: ${left}vw; top: ${top}vh; --base-rot: ${rot}deg; --base-op: ${op};">
-                <span class="material-symbols-outlined bg-icon-inner" style="font-size: 48px; animation-duration: ${floatDur}s; animation-delay: -${floatDel}s;">${icon}</span>
-            </div>`;
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            // Спавнимо іконку лише у 60% квадратів, щоб був "хаос" і пусті місця
+            if (Math.random() > 0.6) continue;
+            
+            const icon = icons[Math.floor(Math.random() * icons.length)];
+            const rot = Math.floor(Math.random() * 360); 
+            const op = (Math.random() * 0.04) + 0.02; // Дуже тьмяні (2-6% непрозорості)
+            
+            // Базова позиція по центру клітинки
+            const baseX = c * cellSize + (cellSize / 2);
+            const baseY = r * cellSize + (cellSize / 2);
+            
+            // Легке зміщення (jitter) в межах клітинки, щоб не виглядало як армійський стрій
+            const jitterX = (Math.random() - 0.5) * 40; 
+            const jitterY = (Math.random() - 0.5) * 40; 
+            
+            content += `<span class="material-symbols-outlined" style="position: absolute; left: ${baseX + jitterX}px; top: ${baseY + jitterY}px; transform: translate(-50%, -50%) rotate(${rot}deg); opacity: ${op}; font-size: 38px; user-select: none;">${icon}</span>`;
+        }
     }
     bg.innerHTML = content;
-    
-    // Запускаємо логіку неонового світіння
-    startRandomGlow();
 }
 
-// Функція, яка постійно "запалює" рандомні іконки дуже ПОВІЛЬНО
-function startRandomGlow() {
-    const wrappers = document.querySelectorAll('.bg-icon-wrapper');
-    if (wrappers.length === 0) return;
-    
-    setInterval(() => {
-        // ОПТИМІЗАЦІЯ ДЛЯ МЕНШИХ ФРИЗІВ: запалюється 1-2 іконки
-        const numToGlow = Math.floor(Math.random() * 2) + 1;
-        
-        for(let i = 0; i < numToGlow; i++) {
-            const randomWrapper = wrappers[Math.floor(Math.random() * wrappers.length)];
-            
-            if(!randomWrapper.classList.contains('glowing')) {
-                randomWrapper.classList.add('glowing');
-                
-                setTimeout(() => {
-                    randomWrapper.classList.remove('glowing');
-                }, 12000); 
-            }
-        }
-    }, 3000); 
-}
-
-// Запускаємо генерацію фону
-window.addEventListener('DOMContentLoaded', createMaterialWallpaper);
+window.addEventListener('DOMContentLoaded', createStaticWallpaper);

@@ -10,12 +10,9 @@ let temporarySelectedValue = null;
 let extraCardCounter = 0; 
 
 /* --- СИСТЕМА ТЕМ --- */
-// Завантаження збереженої теми при старті
 window.addEventListener('DOMContentLoaded', () => {
     const savedTheme = localStorage.getItem('bunkerTheme');
-    if (savedTheme) {
-        document.body.setAttribute('data-theme', savedTheme);
-    }
+    if (savedTheme) document.body.setAttribute('data-theme', savedTheme);
 });
 
 function openThemeModal() { document.getElementById('theme-modal').style.display = 'flex'; }
@@ -23,7 +20,7 @@ function closeThemeModal() { document.getElementById('theme-modal').style.displa
 
 function setTheme(themeName) {
     document.body.setAttribute('data-theme', themeName);
-    localStorage.setItem('bunkerTheme', themeName); // Зберігаємо вибір
+    localStorage.setItem('bunkerTheme', themeName);
     closeThemeModal();
 }
 
@@ -59,7 +56,7 @@ async function addNewCard(dbKey, labelText, fieldPrefix, tabId) {
     if (dbKey === 'specials') extraClasses += " special-card";
 
     const newCardHTML = `
-        <div class="m3-card glass-panel ${extraClasses}" id="${newCardId}">
+        <div class="m3-card solid-panel ${extraClasses}" id="${newCardId}">
             <div class="card-header">
                 <span class="label">${labelText} (Дод.)</span>
                 <div class="action-btns">
@@ -128,13 +125,6 @@ function switchTab(tabId, navElement) {
     const activeTab = document.getElementById(tabId);
     activeTab.classList.add('active');
     navElement.classList.add('active');
-
-    const cards = activeTab.querySelectorAll('.m3-card');
-    cards.forEach(card => {
-        card.classList.remove('highlight-active');
-        void card.offsetWidth; 
-        card.classList.add('highlight-active');
-    });
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
