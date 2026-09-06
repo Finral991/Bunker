@@ -14,7 +14,8 @@ function createMaterialWallpaper() {
     ];
     let content = '';
     
-    for (let i = 0; i < 65; i++) {
+    // ОПТИМІЗАЦІЯ ДЛЯ МЕНШИХ ФРИЗІВ: зменшено кількість до 35
+    for (let i = 0; i < 35; i++) {
         const icon = icons[Math.floor(Math.random() * icons.length)];
         const rot = Math.floor(Math.random() * 60) - 30; // Легкий нахил
         
@@ -28,7 +29,6 @@ function createMaterialWallpaper() {
         const floatDur = Math.floor(Math.random() * 10) + 15; // Від 15с до 25с
         const floatDel = Math.floor(Math.random() * 10); 
         
-        // ЗМІНЕНО: Тепер ми передаємо CSS-змінні (--base-rot та --base-op), щоб анімація не збивала нахил
         content += `
             <div class="bg-icon-wrapper" style="left: ${left}vw; top: ${top}vh; --base-rot: ${rot}deg; --base-op: ${op};">
                 <span class="material-symbols-outlined bg-icon-inner" style="font-size: 48px; animation-duration: ${floatDur}s; animation-delay: -${floatDel}s;">${icon}</span>
@@ -40,24 +40,21 @@ function createMaterialWallpaper() {
     startRandomGlow();
 }
 
-// Функція, яка постійно "запалює" рандомні іконки
+// Функція, яка постійно "запалює" рандомні іконки дуже ПОВІЛЬНО
 function startRandomGlow() {
     const wrappers = document.querySelectorAll('.bg-icon-wrapper');
     if (wrappers.length === 0) return;
     
-    // Нові іконки запалюються раз на 3 секунди
     setInterval(() => {
-        // Одночасно підсвічуємо від 1 до 3 іконок
-        const numToGlow = Math.floor(Math.random() * 3) + 1;
+        // ОПТИМІЗАЦІЯ ДЛЯ МЕНШИХ ФРИЗІВ: запалюється 1-2 іконки
+        const numToGlow = Math.floor(Math.random() * 2) + 1;
         
         for(let i = 0; i < numToGlow; i++) {
             const randomWrapper = wrappers[Math.floor(Math.random() * wrappers.length)];
             
             if(!randomWrapper.classList.contains('glowing')) {
-                // Додаємо клас анімації
                 randomWrapper.classList.add('glowing');
                 
-                // Знімаємо клас точно після завершення анімації (12 секунд)
                 setTimeout(() => {
                     randomWrapper.classList.remove('glowing');
                 }, 12000); 
