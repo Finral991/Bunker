@@ -2,8 +2,8 @@
 
 const db = {
     names: [], 
-    genders: ["Чоловік", "Жінка"], // Залишаємо локально, бо тут всього 2 варіанти
-    ages: Array.from({length: 65 - 18 + 1}, (_, i) => `${i + 18} років`), // Генерується автоматично
+    genders: ["Чоловік", "Жінка"],
+    ages: Array.from({length: 65 - 18 + 1}, (_, i) => `${i + 18} років`),
     bodies: ["1 (Худорлява)", "2 (Струнка)", "3 (Середня)", "4 (Щільна)", "5 (З надмірною вагою)"],
     health_base: [],
     health_stages: ["легкий", "середній", "важкий", "критичний"], 
@@ -16,7 +16,7 @@ const db = {
     specials: [] 
 };
 
-// СЮДИ ВСТАВ СВОЇ ПОСИЛАННЯ З ТАБЛИЦІ (ТІЛЬКИ ТІ, ЩО ЗАКІНЧУЮТЬСЯ НА csv)
+// СЮДИ ВСТАВ СВОЇ СПРАВЖНІ ПОСИЛАННЯ З ТАБЛИЦІ
 const sheetUrls = {
     names: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTyQokwvg24mYfy4WHDvvF7oNWP6vJFTFCJp6jsxk2EgrG1rjykneazGmqSo4cvdKsk51k9EUGxkvZb/pub?gid=516861620&single=true&output=csv",
     health_base: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTyQokwvg24mYfy4WHDvvF7oNWP6vJFTFCJp6jsxk2EgrG1rjykneazGmqSo4cvdKsk51k9EUGxkvZb/pub?gid=1848535898&single=true&output=csv",
@@ -32,23 +32,21 @@ const sheetUrls = {
 const imgMale = `<img src="man.jpg" alt="Чоловік" class="profile-photo-img">`;
 const imgFemale = `<img src="woman.jpg" alt="Жінка" class="profile-photo-img">`;
 
-// ОНОВЛЕНА ФУНКЦІЯ ЗАВАНТАЖЕННЯ
+// ФУНКЦІЯ ЗАВАНТАЖЕННЯ З GOOGLE ТАБЛИЦЬ
 async function loadDatabase() {
     try {
         const fetchPromises = Object.entries(sheetUrls).map(async ([category, url]) => {
-            if (!url || url === "ПОСИЛАННЯ_НА_ВКЛАДКУ_" + category.toUpperCase()) {
+            if (!url || url.includes("ПОСИЛАННЯ_НА_ВКЛАДКУ_")) {
                 db[category] = ["Дані відсутні (немає посилання)"];
                 return;
             }
             
             try {
-                // Додаємо випадковий параметр ?t=..., щоб браузер завжди тягнув свіжі дані, а не кеш
                 const response = await fetch(`${url}&t=${Date.now()}`);
                 if (!response.ok) throw new Error(`Помилка HTTP: ${response.status}`);
                 
                 const csvText = await response.text();
                 
-                // Розбиваємо CSV на масив
                 db[category] = csvText.split('\n')
                     .map(line => line.trim())
                     .filter(line => line.length > 0);
@@ -67,6 +65,23 @@ async function loadDatabase() {
     }
 }
 
-// ... (решта функцій getRandomItem, getExperienceD6, generateHealth залишаються без змін)
+// --- ТІ САМІ ФУНКЦІЇ, ЯКІ ЗГУБИЛИСЯ ---
+
+const getRandomItem = (array) => {
+    if (!array || array.length === 0) return "Дані відсутні";
+    return array[Math.floor(Math.random() * array.length)];
+};
+
+const getExperienceD6 = () => {
+    const experiences = ["Дилетант (до 1 місяця)", "Новачок (1-12 місяців)", "Любитель (1-2 роки)", "Досвідчений (2-5 років)", "Експерт (5-10 років)", "Професіонал (10+ років)"];
+    return experiences[Math.floor(Math.random() * experiences.length)];
+};
+
+const generateHealth = () => {
+    if (Math.random() > 0.4) return getRandomItem(db.health_base);
+    const disease = getRandomItem(db.health_diseases);
+    if (disease.toLowerCase().includes('здоров') || disease === "Дані відсутні" || disease.includes("Помилка")) return disease;
+    return `${disease} (ступінь: ${getRandomItem(db.health_stages)})`;
+};
 
 window.addEventListener('DOMContentLoaded', loadDatabase);
