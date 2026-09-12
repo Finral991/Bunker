@@ -1,3 +1,5 @@
+// script.js
+
 const typingAudio = new Audio('typewriter.mp3');
 typingAudio.loop = true; 
 typingAudio.preload = 'auto';
@@ -12,7 +14,16 @@ let extraCardCounter = 0;
 /* --- СИСТЕМА ТЕМ --- */
 window.addEventListener('DOMContentLoaded', () => {
     const savedTheme = localStorage.getItem('bunkerTheme');
-    if (savedTheme) document.body.setAttribute('data-theme', savedTheme);
+    const savedHue = localStorage.getItem('bunkerCustomHue');
+    if (savedTheme) {
+        document.body.setAttribute('data-theme', savedTheme);
+        // Якщо збережена кастомна тема - відновлюємо повзунок
+        if (savedTheme === 'custom' && savedHue) {
+            document.body.style.setProperty('--hue', savedHue);
+            const slider = document.getElementById('customHueSlider');
+            if(slider) slider.value = savedHue;
+        }
+    }
 });
 
 function openThemeModal() { document.getElementById('theme-modal').style.display = 'flex'; }
@@ -21,7 +32,14 @@ function closeThemeModal() { document.getElementById('theme-modal').style.displa
 function setTheme(themeName) {
     document.body.setAttribute('data-theme', themeName);
     localStorage.setItem('bunkerTheme', themeName);
-    closeThemeModal();
+}
+
+// Функція для кастомного повзунка
+function setCustomTheme(hueValue) {
+    document.body.setAttribute('data-theme', 'custom');
+    document.body.style.setProperty('--hue', hueValue);
+    localStorage.setItem('bunkerTheme', 'custom');
+    localStorage.setItem('bunkerCustomHue', hueValue);
 }
 
 /* --- МЕНЮ ТА ПРАВИЛА --- */
@@ -33,6 +51,27 @@ function closeMoreMenu() { document.getElementById('more-menu-modal').style.disp
 
 function openAddCardModal() { document.getElementById('add-card-modal').style.display = 'flex'; }
 function closeAddCardModal() { document.getElementById('add-card-modal').style.display = 'none'; }
+
+// Функція повернення на екран ідентифікації
+function returnToStart() {
+    // Ховаємо ігровий інтерфейс
+    document.getElementById('character-sheet').classList.add('hidden');
+    document.getElementById('bottomNav').style.display = 'none';
+    document.getElementById('header-actions').style.display = 'none';
+    
+    // Скидаємо шапку (щоб ім'я не просвічувало)
+    document.getElementById('candidate-name').style.display = 'none';
+    document.getElementById('candidate-id').textContent = '0000';
+    document.getElementById('profile-photo').innerHTML = '';
+
+    // Безпечно очищаємо поля вводу (перевіряємо, чи існують вони)
+    if(document.getElementById('firstNameInput')) document.getElementById('firstNameInput').value = '';
+    if(document.getElementById('lastNameInput')) document.getElementById('lastNameInput').value = '';
+    if(document.getElementById('feedbackInput')) document.getElementById('feedbackInput').value = '';
+    
+    // Показуємо стартовий екран
+    document.getElementById('start-screen').style.display = 'flex';
+}
 
 /* --- ДОДАВАННЯ НОВОЇ ХАРАКТЕРИСТИКИ --- */
 async function addNewCard(dbKey, labelText, fieldPrefix, tabId) {
@@ -56,7 +95,7 @@ async function addNewCard(dbKey, labelText, fieldPrefix, tabId) {
     if (dbKey === 'specials') extraClasses += " special-card";
 
     const newCardHTML = `
-        <div class="m3-card solid-panel ${extraClasses}" id="${newCardId}">
+        <div class="m3-card glass-panel ${extraClasses}" id="${newCardId}">
             <div class="card-header">
                 <span class="label">${labelText} (Дод.)</span>
                 <div class="action-btns">
@@ -125,17 +164,39 @@ function switchTab(tabId, navElement) {
     const activeTab = document.getElementById(tabId);
     activeTab.classList.add('active');
     navElement.classList.add('active');
+
+    const cards = activeTab.querySelectorAll('.m3-card');
+    cards.forEach(card => {
+        card.classList.remove('highlight-active');
+        void card.offsetWidth; 
+        card.classList.add('highlight-active');
+    });
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-/* --- ОСНОВНА ЛОГІКА --- */
+/* --- ОСНОВНА ЛОГІКА СТАРТУ (ГЕНЕРАЦІЯ ІМЕН) --- */
 function startGame() {
-    const fName = document.getElementById('firstNameInput').value.trim();
-    if (!fName) { alert("Введіть ім'я!"); return; }
+    let fName = document.getElementById('firstNameInput').value.trim();
+    let lName = document.getElementById('lastNameInput').value.trim();
+    
+    // ЯКЩО ПОЛЕ ПУСТЕ - БЕРЕМО РАНДОМНЕ ІМ'Я З ФАЙЛУ names.txt
+    if (!fName) {
+        const randomFullName = getRandomItem(db.names);
+        if (randomFullName && randomFullName !== "Дані відсутні") {
+            const nameParts = randomFullName.split(' ');
+            fName = nameParts[0]; // Перше слово
+            lName = nameParts.slice(1).join(' '); // Усе решта (прізвище)
+        } else {
+            fName = "Анонім";
+        }
+    }
     
     document.getElementById('start-screen').style.display = 'none';
-    document.getElementById('candidate-name').textContent = fName;
+    
+    // Формуємо повне ім'я для відображення
+    document.getElementById('candidate-name').textContent = lName ? `${fName} ${lName}` : fName;
     document.getElementById('candidate-name').style.display = 'block';
+    
     generateCharacter();
 }
 
