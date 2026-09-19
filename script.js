@@ -544,7 +544,6 @@ function listenToPlayers() {
 function listenToGameStatus() {
     roomRef.child('status').on('value', (snapshot) => {
         if (snapshot.val() === 'started') {
-            // Гра почалася! Всі (і Хост, і Клієнти) завантажують свої дані з Firebase
             roomRef.child('gameData/' + myId).once('value', (dataSnap) => {
                 if(dataSnap.exists()) {
                     loadOnlineCharacter(dataSnap.val());
@@ -564,7 +563,6 @@ function startOnlineGame() {
 
     let gameData = {};
     
-    // Хост генерує картки для всіх гравців у кімнаті
     players.forEach(p => {
         const gender = getRandomItem(db.genders);
         let sp1 = getRandomItem(db.specials), sp2 = getRandomItem(db.specials);
@@ -580,7 +578,6 @@ function startOnlineGame() {
         };
     });
 
-    // Хост записує всі досьє у Firebase, а потім змінює статус кімнати
     roomRef.child('gameData').set(gameData).then(() => {
         roomRef.child('status').set('started');
     });
@@ -604,9 +601,8 @@ function loadOnlineCharacter(charData) {
     const firstTabBtn = document.querySelector('.m3-tab');
     if(firstTabBtn) switchTab('tab-bio', firstTabBtn);
 
-    // Заповнюємо інтерфейс згенерованими сервером даними
     document.getElementById('profile-photo').innerHTML = charData.gender === "Чоловік" ? imgMale : imgFemale;
-    document.getElementById('candidate-id').textContent = currentRoomId; // Використовуємо код кімнати як ID об'єкта
+    document.getElementById('candidate-id').textContent = currentRoomId; 
 
     for (const [key, value] of Object.entries(charData)) {
         const container = document.getElementById(key);
@@ -618,7 +614,6 @@ function loadOnlineCharacter(charData) {
         }
     }
     
-    // Встановлюємо ім'я гравця
     const myPlayer = players.find(p => p.id === myId);
     if (myPlayer) {
         document.getElementById('candidate-name').textContent = myPlayer.name;
