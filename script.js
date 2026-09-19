@@ -243,6 +243,138 @@ function startGame() {
     generateCharacter();
 }
 
+// --- МЕРЕЖЕВА ЛОГІКА (PEER.JS) ---
+let peer = null;
+let connections = []; // Масив для Хоста (зберігає зв'язки з усіма клієнтами)
+let hostConnection = null; // Для клієнта (зв'язок із Хостом)
+let myRole = 'offline'; // 'offline', 'host', 'client'
+let players = []; // Список гравців: [{ id: '...', name: '...' }]
+
+// 1. ЛОГІКА ХОСТА
+function hostGame() {
+    let fName = document.getElementById('firstNameInput').value.trim() || "Анонім (Хост)";
+    myRole = 'host';
+    document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('lobby-screen').style.display = 'flex';
+    document.getElementById('lobby-title').textContent = "Ваша кімната";
+    document.getElementById('lobby-status').textContent = "Генеруємо код...";
+    document.getElementById('players-list').innerHTML = '';
+
+    // Створюємо Peer (сервер видасть випадковий короткий ID)
+    peer = new Peer();
+
+    peer.on('open', function(id) {
+        document.getElementById('lobby-status').textContent = "Очікування гравців...";
+        const codeBox = document.getElementById('lobby-code-box');
+        codeBox.style.display = 'inline-flex';
+        codeBox.textContent = id;
+        
+        players = [{ id: id, name: fName }]; // Додаємо себе першим
+        updateLobbyUI();
+        document.getElementById('startGameOnlineBtn').style.display = 'block';
+    });
+
+    // Коли хтось підключається до Хоста
+    peer.on('connection', function(conn) {
+        connections.push(conn);
+        
+        // Слухаємо повідомлення від клієнта
+        conn.on('data', function(data) {
+            if(data.type === 'join') {
+                players.push({ id: conn.peer, name: data.name });
+                updateLobbyUI();
+                broadcastData({ type: 'players_update', players: players }); // Оновлюємо списки у всіх
+            }
+        });
+
+        // Якщо клієнт відключився (закрив браузер)
+        conn.on('close', function() {
+            players = players.filter(p => p.id !== conn.peer);
+            connections = connections.filter(c => c.peer !== conn.peer);
+            updateLobbyUI();
+            broadcastData({ type: 'players_update', players: players });
+        });
+    });
+}
+
+// 2. ЛОГІКА КЛІЄНТА (ГРАВЦЯ)
+function joinGame() {
+    const hostId = document.getElementById('joinIdInput').value.trim();
+    let fName = document.getElementById('firstNameInput').value.trim() || "Анонім";
+    if (!hostId) return alert("Введіть код кімнати!");
+
+    myRole = 'client';
+    document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('lobby-screen').style.display = 'flex';
+    document.getElementById('lobby-title').textContent = "Приєднання...";
+    document.getElementById('lobby-status').textContent = "Шукаємо кімнату: " + hostId;
+    document.getElementById('lobby-code-box').style.display = 'none';
+    document.getElementById('startGameOnlineBtn').style.display = 'none';
+    document.getElementById('players-list').innerHTML = '';
+
+    peer = new Peer();
+
+    peer.on('open', function(id) {
+        hostConnection = peer.connect(hostId);
+
+        hostConnection.on('open', function() {
+            document.getElementById('lobby-status').textContent = "Успішно підключено! Очікуємо Хоста...";
+            hostConnection.send({ type: 'join', name: fName }); // Кажемо Хосту своє ім'я
+        });
+
+        // Отримуємо команди від Хоста
+        hostConnection.on('data', function(data) {
+            if (data.type === 'players_update') {
+                players = data.players;
+                updateLobbyUI();
+            }
+            if (data.type === 'game_start') {
+                alert("Хост запустив гру! (Тут буде генерація)");
+                // Наступний етап: малювати картки
+            }
+        });
+        
+        hostConnection.on('close', function() {
+            alert("Зв'язок із Хостом втрачено!");
+            cancelOnline();
+        });
+    });
+}
+
+// 3. ДОПОМІЖНІ ФУНКЦІЇ ЛОБІ
+function updateLobbyUI() {
+    const list = document.getElementById('players-list');
+    list.innerHTML = '';
+    players.forEach(p => {
+        const li = document.createElement('li');
+        li.textContent = p.name + (p.id === peer.id ? " (Ти)" : "");
+        li.style.marginBottom = "4px";
+        list.appendChild(li);
+    });
+    document.getElementById('lobby-players').style.display = 'flex';
+}
+
+function broadcastData(data) {
+    connections.forEach(conn => {
+        if(conn.open) conn.send(data);
+    });
+}
+
+function cancelOnline() {
+    if (peer) { peer.destroy(); peer = null; }
+    connections = []; hostConnection = null; players = [];
+    document.getElementById('lobby-screen').style.display = 'none';
+    document.getElementById('start-screen').style.display = 'flex';
+}
+
+function startOnlineGame() {
+    if (players.length < 2) {
+        if (!confirm("Ви єдиний гравець у лобі. Почати гру?")) return;
+    }
+    broadcastData({ type: 'game_start' });
+    alert("Генерація даних для " + players.length + " гравців... (Далі буде)");
+}
+
 function generateCharacter() {
     totalChanges = 0;
     auditLog = [];
@@ -436,4 +568,24 @@ async function resetField(elementId, dbKey) {
     try { const playPromise = typingAudio.play(); if (playPromise !== undefined) await playPromise; } catch(e) {}
     await printText(container, newItem);
     typingAudio.pause(); typingAudio.currentTime = 0; isTypingGlobal = false;
+}
+
+function switchStartMode(mode) {
+    const tabs = document.querySelectorAll('.mode-tab');
+    tabs[0].classList.toggle('active', mode === 'offline');
+    tabs[1].classList.toggle('active', mode === 'online');
+    
+    document.getElementById('mode-offline').style.display = mode === 'offline' ? 'flex' : 'none';
+    document.getElementById('mode-online').style.display = mode === 'online' ? 'flex' : 'none';
+}
+
+// Заглушки для майбутнього онлайну
+function hostGame() {
+    alert("Тут буде створено P2P кімнату!");
+}
+
+function joinGame() {
+    const id = document.getElementById('joinIdInput').value;
+    if (!id) return alert("Введіть код гри!");
+    alert("Підключаємось до: " + id);
 }

@@ -53,9 +53,13 @@ async function loadDatabase() {
         
         // Бронебійний пошук кнопки: шукаємо за ID, а якщо його немає - за атрибутом onclick
         const startBtn = document.getElementById('startBtn') || document.querySelector('button[onclick="startGame()"]');
+        const hostBtn = document.getElementById('hostBtn');
+        const joinBtn = document.getElementById('joinBtn');
         if(startBtn) {
             startBtn.disabled = false;
             startBtn.textContent = "Розпочати симуляцію";
+            if(hostBtn) { hostBtn.disabled = false; }
+            if(joinBtn) { joinBtn.disabled = false; }
         }
         
     } catch (globalError) {

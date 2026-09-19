@@ -162,6 +162,21 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 .start-subtitle { font-size: 14px; color: var(--md-on-surface-variant); margin-bottom: 16px; }
 .start-actions { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
 
+/* --- ТАБИ РЕЖИМІВ НА СТАРТІ --- */
+.mode-tabs {
+    display: flex; background-color: rgba(0,0,0,0.2);
+    border-radius: 12px; padding: 4px; margin-bottom: 12px;
+}
+.mode-tab {
+    flex: 1; padding: 10px 0; text-align: center; font-size: 14px; font-weight: 600;
+    color: var(--md-on-surface-variant); cursor: pointer; border-radius: 8px; transition: 0.3s;
+}
+.mode-tab.active { background-color: var(--md-primary); color: var(--md-on-primary); }
+.mode-tab.beta::after {
+    content: "BETA"; font-size: 9px; background: var(--md-error); color: #fff;
+    padding: 2px 4px; border-radius: 4px; margin-left: 4px; vertical-align: top; letter-spacing: 0.5px;
+}
+
 /* --- TELEGRAM ПОСИЛАННЯ --- */
 .telegram-link {
     display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 16px; 
