@@ -466,16 +466,32 @@ function hostGame() {
     document.getElementById('lobby-status').textContent = "Генеруємо код...";
     document.getElementById('players-list').innerHTML = '';
 
-    peer = new Peer({
+   // Створюємо потужний конфіг з TURN-сервером для обходу строгих Wi-Fi
+    const peerConfig = {
         config: {
             'iceServers': [
                 { urls: 'stun:stun.l.google.com:19302' },
                 { urls: 'stun:stun1.l.google.com:19302' },
-                { urls: 'stun:stun2.l.google.com:19302' },
-                { urls: 'stun:stun3.l.google.com:19302' }
+                { 
+                    urls: "turn:openrelay.metered.ca:80", 
+                    username: "openrelayproject", 
+                    credential: "openrelayproject" 
+                },
+                { 
+                    urls: "turn:openrelay.metered.ca:443", 
+                    username: "openrelayproject", 
+                    credential: "openrelayproject" 
+                },
+                { 
+                    urls: "turn:openrelay.metered.ca:443?transport=tcp", 
+                    username: "openrelayproject", 
+                    credential: "openrelayproject" 
+                }
             ]
         }
-    });
+    };
+
+    peer = new Peer(peerConfig);
 
     peer.on('open', function(id) {
         document.getElementById('lobby-status').textContent = "Очікування гравців...";
@@ -523,16 +539,31 @@ function joinGame() {
     document.getElementById('startGameOnlineBtn').style.display = 'none';
     document.getElementById('players-list').innerHTML = '';
 
-    peer = new Peer({
+    const peerConfig = {
         config: {
             'iceServers': [
                 { urls: 'stun:stun.l.google.com:19302' },
                 { urls: 'stun:stun1.l.google.com:19302' },
-                { urls: 'stun:stun2.l.google.com:19302' },
-                { urls: 'stun:stun3.l.google.com:19302' }
+                { 
+                    urls: "turn:openrelay.metered.ca:80", 
+                    username: "openrelayproject", 
+                    credential: "openrelayproject" 
+                },
+                { 
+                    urls: "turn:openrelay.metered.ca:443", 
+                    username: "openrelayproject", 
+                    credential: "openrelayproject" 
+                },
+                { 
+                    urls: "turn:openrelay.metered.ca:443?transport=tcp", 
+                    username: "openrelayproject", 
+                    credential: "openrelayproject" 
+                }
             ]
         }
-    });
+    };
+
+    peer = new Peer(peerConfig);
 
     peer.on('open', function(id) {
         hostConnection = peer.connect(hostId);
