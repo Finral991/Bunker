@@ -265,7 +265,6 @@ function openEditModal(fieldId, dbKey) {
     });
     
     document.getElementById('edit-modal').style.display = 'flex';
-    // Без .focus(), щоб не вискакувала клавіатура на телефоні
 }
 
 function selectOptionItem(element, value) {
@@ -467,7 +466,16 @@ function hostGame() {
     document.getElementById('lobby-status').textContent = "Генеруємо код...";
     document.getElementById('players-list').innerHTML = '';
 
-    peer = new Peer();
+    peer = new Peer({
+        config: {
+            'iceServers': [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' },
+                { urls: 'stun:stun3.l.google.com:19302' }
+            ]
+        }
+    });
 
     peer.on('open', function(id) {
         document.getElementById('lobby-status').textContent = "Очікування гравців...";
@@ -515,7 +523,16 @@ function joinGame() {
     document.getElementById('startGameOnlineBtn').style.display = 'none';
     document.getElementById('players-list').innerHTML = '';
 
-    peer = new Peer();
+    peer = new Peer({
+        config: {
+            'iceServers': [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' },
+                { urls: 'stun:stun3.l.google.com:19302' }
+            ]
+        }
+    });
 
     peer.on('open', function(id) {
         hostConnection = peer.connect(hostId);
