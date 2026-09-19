@@ -96,13 +96,16 @@
                 <button class="m3-btn filled" onclick="openAddCardModal(); closeMoreMenu();">
                     <span class="menu-icon-wrapper material-symbols-outlined">add_box</span> Додати картку (+)
                 </button>
+                <!-- КНОПКА ЖУРНАЛУ АУДИТУ -->
+                <button class="m3-btn filled" onclick="openAuditModal();">
+                    <span class="menu-icon-wrapper material-symbols-outlined">policy</span> Журнал аудиту
+                </button>
                 <button class="m3-btn filled" onclick="openRules(); closeMoreMenu();">
                     <span class="menu-icon-wrapper material-symbols-outlined">menu_book</span> Правила гри
                 </button>
                 <button class="m3-btn filled" onclick="openThemeModal(); closeMoreMenu();">
                     <span class="menu-icon-wrapper material-symbols-outlined">palette</span> Кольорова тема
                 </button>
-                <!-- НОВА КНОПКА ПОВЕРНЕННЯ -->
                 <button class="m3-btn filled" onclick="returnToStart(); closeMoreMenu();">
                     <span class="menu-icon-wrapper material-symbols-outlined">logout</span> До верифікації
                 </button>
@@ -195,17 +198,37 @@
     <!-- ГОЛОВНИЙ ЕКРАН КАРТОК -->
     <div class="app-wrapper">
         <div class="sheet-container">
+            <!-- Шапка (оновлена з лічильником) -->
             <div class="m3-header glass-panel">
                 <div class="m3-profile-row">
                     <div class="photo-box" id="profile-photo"></div>
                     <div class="header-text">
                         <h1 id="candidate-name" style="display:none;">Ім'я</h1>
                         <p class="sub-header">ОБ'ЄКТ № <span id="candidate-id">0000</span></p>
+                        <!-- ЛІЧИЛЬНИК АНТИЧИТУ -->
+                        <!-- ЛІЧИЛЬНИК АНТИЧИТУ (Із Material іконкою) -->
+                        <div id="changes-counter" class="changes-badge" style="display: none;">
+                            <span class="material-symbols-outlined" style="font-size: 16px;">history</span> Змін: 0
+                        </div>
                     </div>
                 </div>
                 <div class="status-pill animated-progress" id="header-actions" style="display: none;">
                     <span class="material-symbols-outlined progress-icon">sync</span>
                     <span class="status-text">Очікує рішення...</span>
+                </div>
+            </div>
+
+        <!-- ДОДАЙ В КІНЕЦЬ СПИСКУ МОДАЛЬНИХ ВІКОН (під add-card-modal) -->
+            <!-- ВІКНО АУДИТУ (АНТИЧИТ) -->
+            <div id="audit-modal" class="modal-overlay" style="display: none; z-index: 1000;">
+                <div class="m3-dialog glass-panel full-height">
+                    <h2 class="dialog-title">Журнал аудиту</h2>
+                    <div id="audit-list" class="options-container" style="display: flex; flex-direction: column; gap: 8px;">
+                        <!-- Тут будуть записи -->
+                    </div>
+                    <div class="dialog-actions">
+                        <button class="m3-btn filled" onclick="closeAuditModal()">Закрити</button>
+                    </div>
                 </div>
             </div>
 

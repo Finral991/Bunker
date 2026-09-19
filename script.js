@@ -11,13 +11,16 @@ let pendingAction = null;
 let temporarySelectedValue = null; 
 let extraCardCounter = 0; 
 
+// --- ЗМІННІ ДЛЯ АНТИЧИТУ ---
+let totalChanges = 0;
+let auditLog = [];
+
 /* --- СИСТЕМА ТЕМ --- */
 window.addEventListener('DOMContentLoaded', () => {
     const savedTheme = localStorage.getItem('bunkerTheme');
     const savedHue = localStorage.getItem('bunkerCustomHue');
     if (savedTheme) {
         document.body.setAttribute('data-theme', savedTheme);
-        // Якщо збережена кастомна тема - відновлюємо повзунок
         if (savedTheme === 'custom' && savedHue) {
             document.body.style.setProperty('--hue', savedHue);
             const slider = document.getElementById('customHueSlider');
@@ -28,13 +31,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
 function openThemeModal() { document.getElementById('theme-modal').style.display = 'flex'; }
 function closeThemeModal() { document.getElementById('theme-modal').style.display = 'none'; }
-
 function setTheme(themeName) {
     document.body.setAttribute('data-theme', themeName);
     localStorage.setItem('bunkerTheme', themeName);
 }
-
-// Функція для кастомного повзунка
 function setCustomTheme(hueValue) {
     document.body.setAttribute('data-theme', 'custom');
     document.body.style.setProperty('--hue', hueValue);
@@ -45,32 +45,67 @@ function setCustomTheme(hueValue) {
 /* --- МЕНЮ ТА ПРАВИЛА --- */
 function openRules() { document.getElementById('rules-modal').style.display = 'flex'; }
 function closeRules() { document.getElementById('rules-modal').style.display = 'none'; }
-
 function openMoreMenu() { document.getElementById('more-menu-modal').style.display = 'flex'; }
 function closeMoreMenu() { document.getElementById('more-menu-modal').style.display = 'none'; }
-
 function openAddCardModal() { document.getElementById('add-card-modal').style.display = 'flex'; }
 function closeAddCardModal() { document.getElementById('add-card-modal').style.display = 'none'; }
 
-// Функція повернення на екран ідентифікації
+// --- ЛОГІКА АНТИЧИТУ (ЖУРНАЛ АУДИТУ) ---
+function logAction(type, label, oldVal, newVal) {
+    const time = new Date().toLocaleTimeString('uk-UA', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    auditLog.push({ time, type, label, oldVal, newVal });
+    totalChanges++;
+    const counterBadge = document.getElementById('changes-counter');
+    // Оновлено: тепер тут Material іконка замість емодзі
+    counterBadge.innerHTML = `<span class="material-symbols-outlined" style="font-size: 16px;">history</span> Змін: ${totalChanges}`;
+    counterBadge.style.display = 'inline-flex';
+}
+
+function openAuditModal() {
+    const list = document.getElementById('audit-list');
+    list.innerHTML = '';
+    if (auditLog.length === 0) {
+        list.innerHTML = '<div style="text-align: center; color: var(--md-on-surface-variant); padding: 20px;">Втручань у досьє не виявлено. Гравець чистий.</div>';
+    } else {
+        [...auditLog].reverse().forEach(log => {
+            list.innerHTML += `
+                <div class="audit-item glass-panel">
+                    <div class="audit-header">
+                        <span>${log.time}</span>
+                        <span>${log.type}</span>
+                    </div>
+                    <div class="audit-label">${log.label}</div>
+                    ${log.oldVal ? `<div class="audit-old">${log.oldVal.replace(/\n/g, ' | ')}</div>` : ''}
+                    <div class="audit-new">${log.newVal.replace(/\n/g, ' | ')}</div>
+                </div>
+            `;
+        });
+    }
+    closeMoreMenu();
+    document.getElementById('audit-modal').style.display = 'flex';
+}
+function closeAuditModal() { document.getElementById('audit-modal').style.display = 'none'; }
+
 function returnToStart() {
-    // Ховаємо ігровий інтерфейс
     document.getElementById('character-sheet').classList.add('hidden');
     document.getElementById('bottomNav').style.display = 'none';
     document.getElementById('header-actions').style.display = 'none';
-    
-    // Скидаємо шапку (щоб ім'я не просвічувало)
     document.getElementById('candidate-name').style.display = 'none';
     document.getElementById('candidate-id').textContent = '0000';
     document.getElementById('profile-photo').innerHTML = '';
 
-    // Безпечно очищаємо поля вводу (перевіряємо, чи існують вони)
     if(document.getElementById('firstNameInput')) document.getElementById('firstNameInput').value = '';
     if(document.getElementById('lastNameInput')) document.getElementById('lastNameInput').value = '';
     if(document.getElementById('feedbackInput')) document.getElementById('feedbackInput').value = '';
     
-    // Показуємо стартовий екран
     document.getElementById('start-screen').style.display = 'flex';
+}
+
+function getCardLabel(fieldId) {
+    const card = document.getElementById('card-' + fieldId);
+    if (!card) return fieldId;
+    const labelEl = card.querySelector('.label');
+    return labelEl ? labelEl.textContent.trim() : fieldId;
 }
 
 /* --- ДОДАВАННЯ НОВОЇ ХАРАКТЕРИСТИКИ --- */
@@ -83,13 +118,9 @@ async function addNewCard(dbKey, labelText, fieldPrefix, tabId) {
     const newCardId = `card-${newFieldId}`;
     
     let newValue = "";
-    if (dbKey === 'professions' || dbKey === 'hobbies') {
-        newValue = `${getRandomItem(db[dbKey])}\nДосвід: ${getExperienceD6()}`;
-    } else if (dbKey === 'health') {
-        newValue = generateHealth();
-    } else {
-        newValue = getRandomItem(db[dbKey]);
-    }
+    if (dbKey === 'professions' || dbKey === 'hobbies') newValue = `${getRandomItem(db[dbKey])}\nДосвід: ${getExperienceD6()}`;
+    else if (dbKey === 'health') newValue = generateHealth();
+    else newValue = getRandomItem(db[dbKey]);
 
     let extraClasses = "wide-card";
     if (dbKey === 'specials') extraClasses += " special-card";
@@ -111,6 +142,9 @@ async function addNewCard(dbKey, labelText, fieldPrefix, tabId) {
     const tabElement = document.getElementById(tabId);
     tabElement.insertAdjacentHTML('beforeend', newCardHTML);
     
+    // Запис в аудит
+    logAction('<span class="material-symbols-outlined icon-inline">add_circle</span> Додано', `${labelText} (Дод.)`, '', newValue);
+
     const targetTabNavBtn = document.querySelector(`.m3-tab[onclick*="${tabId}"]`);
     if(targetTabNavBtn) switchTab(tabId, targetTabNavBtn);
     
@@ -130,18 +164,15 @@ function requestResetField(elementId, dbKey) {
     pendingAction = { type: 'random', fieldId: elementId, dbKey: dbKey };
     document.getElementById('confirm-modal').style.display = 'flex';
 }
-
 function requestSaveEditField(selectedValue) {
     pendingAction = { type: 'manual', fieldId: currentEditField, dbKey: currentEditDbKey, value: selectedValue };
     document.getElementById('edit-modal').style.display = 'none';
     document.getElementById('confirm-modal').style.display = 'flex';
 }
-
 function requestNewDossier() {
     pendingAction = { type: 'new_dossier' };
     document.getElementById('confirm-modal').style.display = 'flex';
 }
-
 function confirmAction() {
     document.getElementById('confirm-modal').style.display = 'none';
     if (!pendingAction) return;
@@ -155,45 +186,56 @@ function cancelAction() {
     pendingAction = null;
 }
 
-/* --- ЛОГІКА ВКЛАДОК (M3 TABS) --- */
+/* --- ЛОГІКА ВКЛАДОК --- */
 function switchTab(tabId, navElement) {
     if (isTypingGlobal) return;
+    const activeTab = document.getElementById(tabId);
+    const cards = activeTab.querySelectorAll('.m3-card');
+
+    if (navElement.classList.contains('active')) {
+        navElement.classList.remove('tab-bump');
+        void navElement.offsetWidth; 
+        navElement.classList.add('tab-bump');
+        // НОВА АНІМАЦІЯ: Пульсація карток замість підсвітки
+        cards.forEach(card => {
+            card.classList.remove('card-pop-active');
+            void card.offsetWidth; 
+            card.classList.add('card-pop-active');
+        });
+        return; 
+    }
+
     document.querySelectorAll('.tab-pane').forEach(tab => tab.classList.remove('active'));
     document.querySelectorAll('.m3-tab').forEach(nav => nav.classList.remove('active'));
-
-    const activeTab = document.getElementById(tabId);
     activeTab.classList.add('active');
     navElement.classList.add('active');
 
-    const cards = activeTab.querySelectorAll('.m3-card');
+    // НОВА АНІМАЦІЯ при звичайному переході
     cards.forEach(card => {
-        card.classList.remove('highlight-active');
+        card.classList.remove('card-pop-active');
         void card.offsetWidth; 
-        card.classList.add('highlight-active');
+        card.classList.add('card-pop-active');
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-/* --- ОСНОВНА ЛОГІКА СТАРТУ (ГЕНЕРАЦІЯ ІМЕН) --- */
+/* --- ОСНОВНА ЛОГІКА СТАРТУ --- */
 function startGame() {
     let fName = document.getElementById('firstNameInput').value.trim();
     let lName = document.getElementById('lastNameInput').value.trim();
     
-    // ЯКЩО ПОЛЕ ПУСТЕ - БЕРЕМО РАНДОМНЕ ІМ'Я З ФАЙЛУ names.txt
     if (!fName) {
         const randomFullName = getRandomItem(db.names);
         if (randomFullName && randomFullName !== "Дані відсутні") {
             const nameParts = randomFullName.split(' ');
-            fName = nameParts[0]; // Перше слово
-            lName = nameParts.slice(1).join(' '); // Усе решта (прізвище)
+            fName = nameParts[0]; 
+            lName = nameParts.slice(1).join(' '); 
         } else {
             fName = "Анонім";
         }
     }
     
     document.getElementById('start-screen').style.display = 'none';
-    
-    // Формуємо повне ім'я для відображення
     document.getElementById('candidate-name').textContent = lName ? `${fName} ${lName}` : fName;
     document.getElementById('candidate-name').style.display = 'block';
     
@@ -201,6 +243,11 @@ function startGame() {
 }
 
 function generateCharacter() {
+    // Скидаємо античит при новій генерації
+    totalChanges = 0;
+    auditLog = [];
+    document.getElementById('changes-counter').style.display = 'none';
+
     document.getElementById('character-sheet').classList.add('hidden');
     document.getElementById('global-lock').style.display = 'flex';
     document.getElementById('bottomNav').style.display = 'none';
@@ -275,13 +322,17 @@ function useSpecial(fieldId) {
     if (isTypingGlobal) return;
     const container = document.getElementById(fieldId);
     if (!container.classList.contains('revealed')) return;
+    
+    // Запис в аудит використання Стоп Бункера
+    if (!container.classList.contains('used-special')) {
+        logAction('<span class="material-symbols-outlined icon-inline">bolt</span> Використано', getCardLabel(fieldId), '', container.dataset.value);
+    }
+    
     container.classList.toggle('used-special');
 }
 
-/* --- ПОШУК ТА РЕДАГУВАННЯ --- */
 function openEditModal(fieldId, dbKey) {
     if (isTypingGlobal || !document.getElementById(fieldId).classList.contains('revealed')) return;
-    
     currentEditField = fieldId;
     currentEditDbKey = dbKey; 
     temporarySelectedValue = null; 
@@ -289,11 +340,10 @@ function openEditModal(fieldId, dbKey) {
     const list = document.getElementById('optionsList');
     list.innerHTML = '';
     document.getElementById('searchInput').value = ''; 
-    
     const confirmBtn = document.getElementById('confirmEditBtn');
     if(confirmBtn) confirmBtn.disabled = true;
     
-    let options = dbKey === 'health' ? [...db.health_base, ...db.health_diseases] : [...db[dbKey]]; 
+    let options = db[dbKey] ? [...db[dbKey]] : []; 
     options.sort((a, b) => a.localeCompare(b, undefined, {numeric: true}));
 
     options.forEach(opt => {
@@ -309,23 +359,15 @@ function openEditModal(fieldId, dbKey) {
 
 function selectOptionItem(element, value) {
     const items = document.getElementById('optionsList').getElementsByClassName('option-item');
-    for(let i = 0; i < items.length; i++) {
-        items[i].classList.remove('selected');
-    }
-    
+    for(let i = 0; i < items.length; i++) items[i].classList.remove('selected');
     element.classList.add('selected');
     temporarySelectedValue = value; 
-    
     const confirmBtn = document.getElementById('confirmEditBtn');
     if(confirmBtn) confirmBtn.disabled = false;
 }
-
 function confirmEditSelection() {
-    if (temporarySelectedValue) {
-        requestSaveEditField(temporarySelectedValue); 
-    }
+    if (temporarySelectedValue) requestSaveEditField(temporarySelectedValue); 
 }
-
 function closeEditModal() { document.getElementById('edit-modal').style.display = 'none'; }
 
 function filterOptions() {
@@ -339,13 +381,17 @@ function filterOptions() {
 async function saveEditField(newValue) {
     const fieldId = pendingAction.fieldId; 
     const dbKey = pendingAction.dbKey;
+    const container = document.getElementById(fieldId);
+    const oldValue = container.dataset.value; // Зберігаємо старе значення для логу
     
     if (dbKey === 'professions' || dbKey === 'hobbies') newValue += `\nДосвід: ${getExperienceD6()}`;
-    else if (dbKey === 'health' && db.health_diseases.includes(newValue)) {
+    else if (dbKey === 'health_diseases' || dbKey === 'health') {
         if (!newValue.toLowerCase().includes('здоров') && newValue !== "Дані відсутні") newValue += ` (ступінь: ${getRandomItem(db.health_stages)})`;
     } 
 
-    const container = document.getElementById(fieldId);
+    // Запис в аудит
+    logAction('<span class="material-symbols-outlined icon-inline">edit</span> Вручну', getCardLabel(fieldId), oldValue, newValue);
+
     container.dataset.value = newValue;
     container.classList.remove('used-special'); 
     if (dbKey === 'genders') document.getElementById('profile-photo').innerHTML = newValue === "Чоловік" ? imgMale : imgFemale;
@@ -358,6 +404,7 @@ async function saveEditField(newValue) {
 
 async function resetField(elementId, dbKey) {
     const container = document.getElementById(elementId);
+    const oldValue = container.dataset.value; // Зберігаємо старе значення для логу
     container.classList.remove('used-special'); 
     let newItem = "";
 
@@ -366,7 +413,7 @@ async function resetField(elementId, dbKey) {
         if (dbKey === 'genders') document.getElementById('profile-photo').innerHTML = newItem === "Чоловік" ? imgMale : imgFemale;
     } else if (dbKey === 'professions' || dbKey === 'hobbies') {
         newItem = `${getRandomItem(db[dbKey])}\nДосвід: ${getExperienceD6()}`;
-    } else if (dbKey === 'health') { 
+    } else if (dbKey === 'health' || dbKey === 'health_diseases') { 
         newItem = generateHealth();
     } else if (dbKey === 'specials') {
         newItem = getRandomItem(db.specials);
@@ -379,6 +426,9 @@ async function resetField(elementId, dbKey) {
     } else { 
         newItem = getRandomItem(db[dbKey]); 
     }
+
+    // Запис в аудит
+    logAction('<span class="material-symbols-outlined icon-inline">casino</span> Рандом', getCardLabel(elementId), oldValue, newItem);
 
     container.dataset.value = newItem;
     isTypingGlobal = true;

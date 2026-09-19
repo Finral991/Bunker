@@ -5,7 +5,6 @@ const db = {
     genders: ["Чоловік", "Жінка"],
     ages: Array.from({length: 65 - 18 + 1}, (_, i) => `${i + 18} років`),
     bodies: ["1 (Худорлява)", "2 (Струнка)", "3 (Середня)", "4 (Щільна)", "5 (З надмірною вагою)"],
-    health_base: [],
     health_stages: ["легкий", "середній", "важкий", "критичний"], 
     professions: [],
     health_diseases: [],
@@ -19,7 +18,6 @@ const db = {
 // СЮДИ ВСТАВ СВОЇ СПРАВЖНІ ПОСИЛАННЯ З ТАБЛИЦІ
 const sheetUrls = {
     names: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTyQokwvg24mYfy4WHDvvF7oNWP6vJFTFCJp6jsxk2EgrG1rjykneazGmqSo4cvdKsk51k9EUGxkvZb/pub?gid=516861620&single=true&output=csv",
-    health_base: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTyQokwvg24mYfy4WHDvvF7oNWP6vJFTFCJp6jsxk2EgrG1rjykneazGmqSo4cvdKsk51k9EUGxkvZb/pub?gid=1848535898&single=true&output=csv",
     professions: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTyQokwvg24mYfy4WHDvvF7oNWP6vJFTFCJp6jsxk2EgrG1rjykneazGmqSo4cvdKsk51k9EUGxkvZb/pub?gid=1382198780&single=true&output=csv",
     health_diseases: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTyQokwvg24mYfy4WHDvvF7oNWP6vJFTFCJp6jsxk2EgrG1rjykneazGmqSo4cvdKsk51k9EUGxkvZb/pub?gid=609770703&single=true&output=csv",
     hobbies: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTyQokwvg24mYfy4WHDvvF7oNWP6vJFTFCJp6jsxk2EgrG1rjykneazGmqSo4cvdKsk51k9EUGxkvZb/pub?gid=1277297200&single=true&output=csv",
@@ -32,7 +30,6 @@ const sheetUrls = {
 const imgMale = `<img src="man.jpg" alt="Чоловік" class="profile-photo-img">`;
 const imgFemale = `<img src="woman.jpg" alt="Жінка" class="profile-photo-img">`;
 
-// ФУНКЦІЯ ЗАВАНТАЖЕННЯ З GOOGLE ТАБЛИЦЬ
 async function loadDatabase() {
     try {
         const fetchPromises = Object.entries(sheetUrls).map(async ([category, url]) => {
@@ -40,17 +37,11 @@ async function loadDatabase() {
                 db[category] = ["Дані відсутні (немає посилання)"];
                 return;
             }
-            
             try {
                 const response = await fetch(`${url}&t=${Date.now()}`);
                 if (!response.ok) throw new Error(`Помилка HTTP: ${response.status}`);
-                
                 const csvText = await response.text();
-                
-                db[category] = csvText.split('\n')
-                    .map(line => line.trim())
-                    .filter(line => line.length > 0);
-                    
+                db[category] = csvText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
             } catch (e) {
                 console.error(`Не вдалося завантажити ${category}:`, e);
                 db[category] = ["Помилка завантаження"];
@@ -59,13 +50,10 @@ async function loadDatabase() {
 
         await Promise.all(fetchPromises);
         console.log("Базу даних успішно завантажено з Google Таблиць!");
-        
     } catch (globalError) {
         console.error("Глобальна помилка завантаження бази:", globalError);
     }
 }
-
-// --- ТІ САМІ ФУНКЦІЇ, ЯКІ ЗГУБИЛИСЯ ---
 
 const getRandomItem = (array) => {
     if (!array || array.length === 0) return "Дані відсутні";
@@ -77,8 +65,8 @@ const getExperienceD6 = () => {
     return experiences[Math.floor(Math.random() * experiences.length)];
 };
 
+// Здоров'я тепер генерується лише на основі хвороб
 const generateHealth = () => {
-    if (Math.random() > 0.4) return getRandomItem(db.health_base);
     const disease = getRandomItem(db.health_diseases);
     if (disease.toLowerCase().includes('здоров') || disease === "Дані відсутні" || disease.includes("Помилка")) return disease;
     return `${disease} (ступінь: ${getRandomItem(db.health_stages)})`;
