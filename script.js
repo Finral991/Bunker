@@ -15,6 +15,13 @@ let extraCardCounter = 0;
 let totalChanges = 0;
 let auditLog = [];
 
+// --- МЕРЕЖЕВА ЛОГІКА (PEER.JS) ---
+let peer = null;
+let connections = []; 
+let hostConnection = null; 
+let myRole = 'offline'; 
+let players = []; 
+
 /* --- СИСТЕМА ТЕМ --- */
 window.addEventListener('DOMContentLoaded', () => {
     const savedTheme = localStorage.getItem('bunkerTheme');
@@ -50,7 +57,7 @@ function closeMoreMenu() { document.getElementById('more-menu-modal').style.disp
 function openAddCardModal() { document.getElementById('add-card-modal').style.display = 'flex'; }
 function closeAddCardModal() { document.getElementById('add-card-modal').style.display = 'none'; }
 
-// --- ЛОГІКА АНТИЧИТУ (ЖУРНАЛ АУДИТУ) ---
+/* --- ЛОГІКА АНТИЧИТУ (ЖУРНАЛ АУДИТУ) --- */
 function logAction(type, label, oldVal, newVal) {
     const time = new Date().toLocaleTimeString('uk-UA', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
     auditLog.push({ time, type, label, oldVal, newVal });
@@ -87,6 +94,24 @@ function openAuditModal() {
 }
 function closeAuditModal() { document.getElementById('audit-modal').style.display = 'none'; }
 
+function getCardLabel(fieldId) {
+    const card = document.getElementById('card-' + fieldId);
+    if (!card) return fieldId;
+    const labelEl = card.querySelector('.label');
+    return labelEl ? labelEl.textContent.trim() : fieldId;
+}
+
+/* --- СТАРТОВИЙ ЕКРАН ТА ПЕРЕМИКАННЯ РЕЖИМІВ --- */
+function switchStartMode(mode) {
+    const tabs = document.querySelectorAll('.mode-tab');
+    if(tabs.length >= 2) {
+        tabs[0].classList.toggle('active', mode === 'offline');
+        tabs[1].classList.toggle('active', mode === 'online');
+    }
+    document.getElementById('mode-offline').style.display = mode === 'offline' ? 'flex' : 'none';
+    document.getElementById('mode-online').style.display = mode === 'online' ? 'flex' : 'none';
+}
+
 function returnToStart() {
     document.getElementById('character-sheet').classList.add('hidden');
     document.getElementById('bottomNav').style.display = 'none';
@@ -102,11 +127,223 @@ function returnToStart() {
     document.getElementById('start-screen').style.display = 'flex';
 }
 
-function getCardLabel(fieldId) {
-    const card = document.getElementById('card-' + fieldId);
-    if (!card) return fieldId;
-    const labelEl = card.querySelector('.label');
-    return labelEl ? labelEl.textContent.trim() : fieldId;
+/* --- ОСНОВНА ЛОГІКА СТАРТУ (ОФЛАЙН) --- */
+function startGame() {
+    let fName = document.getElementById('firstNameInput').value.trim();
+    let lName = document.getElementById('lastNameInput').value.trim();
+    
+    if (!fName) {
+        const randomFullName = getRandomItem(db.names);
+        if (randomFullName && randomFullName !== "Дані відсутні") {
+            const nameParts = randomFullName.split(' ');
+            fName = nameParts[0]; 
+            lName = nameParts.slice(1).join(' '); 
+        } else {
+            fName = "Анонім";
+        }
+    }
+    
+    document.getElementById('start-screen').style.display = 'none';
+    document.getElementById('candidate-name').textContent = lName ? `${fName} ${lName}` : fName;
+    document.getElementById('candidate-name').style.display = 'block';
+    
+    generateCharacter();
+}
+
+function generateCharacter() {
+    totalChanges = 0;
+    auditLog = [];
+    const counterBadge = document.getElementById('changes-counter');
+    if(counterBadge) counterBadge.style.display = 'none';
+
+    document.getElementById('character-sheet').classList.add('hidden');
+    document.getElementById('global-lock').style.display = 'flex';
+    document.getElementById('bottomNav').style.display = 'none';
+    document.getElementById('header-actions').style.display = 'flex'; 
+
+    document.querySelectorAll('.m3-card[id*="-extra-"]').forEach(card => card.remove());
+    extraCardCounter = 0;
+
+    const firstTabBtn = document.querySelector('.m3-tab');
+    if(firstTabBtn) switchTab('tab-bio', firstTabBtn);
+
+    const gender = getRandomItem(db.genders);
+    let sp1 = getRandomItem(db.specials), sp2 = getRandomItem(db.specials);
+    while (sp1 === sp2 && db.specials.length > 1) sp2 = getRandomItem(db.specials);
+
+    const charData = {
+        gender: gender, age: getRandomItem(db.ages), body: getRandomItem(db.bodies),
+        profession: `${getRandomItem(db.professions)}\nДосвід: ${getExperienceD6()}`,
+        health: generateHealth(), phobia: getRandomItem(db.phobias),
+        hobby: `${getRandomItem(db.hobbies)}\nРівень: ${getExperienceD6()}`,
+        inventory: getRandomItem(db.inventory), info: getRandomItem(db.additional_info),
+        special1: sp1, special2: sp2
+    };
+
+    document.getElementById('profile-photo').innerHTML = gender === "Чоловік" ? imgMale : imgFemale;
+    document.getElementById('candidate-id').textContent = Math.floor(1000 + Math.random() * 9000);
+
+    for (const [key, value] of Object.entries(charData)) {
+        const container = document.getElementById(key);
+        if(container) {
+            container.dataset.value = value;
+            container.classList.remove('revealed');
+            container.classList.remove('used-special');
+            container.textContent = ""; 
+        }
+    }
+    document.getElementById('character-sheet').classList.remove('hidden');
+}
+
+/* --- АНІМАЦІЇ ТА ВІДКРИТТЯ --- */
+async function printText(element, text) {
+    let currentString = "";
+    for (let i = 0; i < text.length; i++) {
+        currentString += text.charAt(i);
+        element.textContent = currentString; 
+        await new Promise(r => setTimeout(r, 20)); 
+    }
+}
+
+async function unlockSheet() {
+    if (isTypingGlobal) return;
+    isTypingGlobal = true;
+    document.getElementById('global-lock').style.display = 'none';
+    try { const playPromise = typingAudio.play(); if (playPromise !== undefined) await playPromise; } catch(e) {}
+
+    const fields = ['gender', 'age', 'body', 'profession', 'health', 'phobia', 'hobby', 'inventory', 'info', 'special1', 'special2'];
+    const promises = fields.map(id => {
+        const container = document.getElementById(id);
+        if(container) {
+            container.classList.add('revealed');
+            return printText(container, container.dataset.value);
+        }
+    });
+
+    await Promise.all(promises); 
+    typingAudio.pause(); typingAudio.currentTime = 0; isTypingGlobal = false;
+}
+
+function unlockSheetAndShowNav() {
+    unlockSheet();
+    document.getElementById('bottomNav').style.display = 'flex';
+}
+
+function useSpecial(fieldId) {
+    if (isTypingGlobal) return;
+    const container = document.getElementById(fieldId);
+    if (!container.classList.contains('revealed')) return;
+    
+    if (!container.classList.contains('used-special')) {
+        logAction('<span class="material-symbols-outlined icon-inline">bolt</span> Використано', getCardLabel(fieldId), '', container.dataset.value);
+    }
+    container.classList.toggle('used-special');
+}
+
+/* --- РЕДАГУВАННЯ ХАРАКТЕРИСТИК --- */
+function openEditModal(fieldId, dbKey) {
+    if (isTypingGlobal || !document.getElementById(fieldId).classList.contains('revealed')) return;
+    currentEditField = fieldId;
+    currentEditDbKey = dbKey; 
+    temporarySelectedValue = null; 
+    
+    const list = document.getElementById('optionsList');
+    list.innerHTML = '';
+    document.getElementById('searchInput').value = ''; 
+    const confirmBtn = document.getElementById('confirmEditBtn');
+    if(confirmBtn) confirmBtn.disabled = true;
+    
+    let options = dbKey === 'health' ? [...db.health_diseases] : (db[dbKey] ? [...db[dbKey]] : []); 
+    options.sort((a, b) => a.localeCompare(b, undefined, {numeric: true}));
+
+    options.forEach(opt => {
+        const el = document.createElement('div');
+        el.className = 'option-item'; 
+        el.textContent = opt;
+        el.onclick = () => selectOptionItem(el, opt); 
+        list.appendChild(el);
+    });
+    
+    document.getElementById('edit-modal').style.display = 'flex';
+    // Без .focus(), щоб не вискакувала клавіатура на телефоні
+}
+
+function selectOptionItem(element, value) {
+    const items = document.getElementById('optionsList').getElementsByClassName('option-item');
+    for(let i = 0; i < items.length; i++) items[i].classList.remove('selected');
+    element.classList.add('selected');
+    temporarySelectedValue = value; 
+    const confirmBtn = document.getElementById('confirmEditBtn');
+    if(confirmBtn) confirmBtn.disabled = false;
+}
+
+function filterOptions() {
+    const filter = document.getElementById('searchInput').value.toLowerCase();
+    const items = document.getElementById('optionsList').getElementsByClassName('option-item');
+    for (let i = 0; i < items.length; i++) {
+        items[i].style.display = (items[i].innerText.toLowerCase().indexOf(filter) > -1) ? "" : "none";
+    }
+}
+function confirmEditSelection() {
+    if (temporarySelectedValue) requestSaveEditField(temporarySelectedValue); 
+}
+function closeEditModal() { document.getElementById('edit-modal').style.display = 'none'; }
+
+async function saveEditField(newValue) {
+    const fieldId = pendingAction.fieldId; 
+    const dbKey = pendingAction.dbKey;
+    const container = document.getElementById(fieldId);
+    const oldValue = container.dataset.value; 
+    
+    if (dbKey === 'professions' || dbKey === 'hobbies') newValue += `\nДосвід: ${getExperienceD6()}`;
+    else if (dbKey === 'health_diseases' || dbKey === 'health') {
+        if (!newValue.toLowerCase().includes('здоров') && newValue !== "Дані відсутні") newValue += ` (ступінь: ${getRandomItem(db.health_stages)})`;
+    } 
+
+    logAction('<span class="material-symbols-outlined icon-inline">edit</span> Вручну', getCardLabel(fieldId), oldValue, newValue);
+
+    container.dataset.value = newValue;
+    container.classList.remove('used-special'); 
+    if (dbKey === 'genders') document.getElementById('profile-photo').innerHTML = newValue === "Чоловік" ? imgMale : imgFemale;
+
+    isTypingGlobal = true;
+    try { const playPromise = typingAudio.play(); if (playPromise !== undefined) await playPromise; } catch(e) {}
+    await printText(container, newValue);
+    typingAudio.pause(); typingAudio.currentTime = 0; isTypingGlobal = false;
+}
+
+async function resetField(elementId, dbKey) {
+    const container = document.getElementById(elementId);
+    const oldValue = container.dataset.value; 
+    container.classList.remove('used-special'); 
+    let newItem = "";
+
+    if (dbKey === 'ages' || dbKey === 'genders' || dbKey === 'bodies') {
+        newItem = getRandomItem(db[dbKey]);
+        if (dbKey === 'genders') document.getElementById('profile-photo').innerHTML = newItem === "Чоловік" ? imgMale : imgFemale;
+    } else if (dbKey === 'professions' || dbKey === 'hobbies') {
+        newItem = `${getRandomItem(db[dbKey])}\nДосвід: ${getExperienceD6()}`;
+    } else if (dbKey === 'health' || dbKey === 'health_diseases') { 
+        newItem = generateHealth();
+    } else if (dbKey === 'specials') {
+        newItem = getRandomItem(db.specials);
+        const otherId = elementId === 'special1' ? 'special2' : (elementId === 'special2' ? 'special1' : null);
+        if (otherId && document.getElementById(otherId)) {
+            while (newItem === document.getElementById(otherId).dataset.value && db.specials.length > 1) {
+                newItem = getRandomItem(db.specials);
+            }
+        }
+    } else { 
+        newItem = getRandomItem(db[dbKey]); 
+    }
+
+    logAction('<span class="material-symbols-outlined icon-inline">casino</span> Рандом', getCardLabel(elementId), oldValue, newItem);
+
+    container.dataset.value = newItem;
+    isTypingGlobal = true;
+    try { const playPromise = typingAudio.play(); if (playPromise !== undefined) await playPromise; } catch(e) {}
+    await printText(container, newItem);
+    typingAudio.pause(); typingAudio.currentTime = 0; isTypingGlobal = false;
 }
 
 /* --- ДОДАВАННЯ НОВОЇ ХАРАКТЕРИСТИКИ --- */
@@ -220,37 +457,7 @@ function switchTab(tabId, navElement) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-/* --- ОСНОВНА ЛОГІКА СТАРТУ --- */
-function startGame() {
-    let fName = document.getElementById('firstNameInput').value.trim();
-    let lName = document.getElementById('lastNameInput').value.trim();
-    
-    if (!fName) {
-        const randomFullName = getRandomItem(db.names);
-        if (randomFullName && randomFullName !== "Дані відсутні") {
-            const nameParts = randomFullName.split(' ');
-            fName = nameParts[0]; 
-            lName = nameParts.slice(1).join(' '); 
-        } else {
-            fName = "Анонім";
-        }
-    }
-    
-    document.getElementById('start-screen').style.display = 'none';
-    document.getElementById('candidate-name').textContent = lName ? `${fName} ${lName}` : fName;
-    document.getElementById('candidate-name').style.display = 'block';
-    
-    generateCharacter();
-}
-
-// --- МЕРЕЖЕВА ЛОГІКА (PEER.JS) ---
-let peer = null;
-let connections = []; // Масив для Хоста (зберігає зв'язки з усіма клієнтами)
-let hostConnection = null; // Для клієнта (зв'язок із Хостом)
-let myRole = 'offline'; // 'offline', 'host', 'client'
-let players = []; // Список гравців: [{ id: '...', name: '...' }]
-
-// 1. ЛОГІКА ХОСТА
+/* --- ЛОГІКА МУЛЬТИПЛЕЄРА (ХОСТ) --- */
 function hostGame() {
     let fName = document.getElementById('firstNameInput').value.trim() || "Анонім (Хост)";
     myRole = 'host';
@@ -260,7 +467,6 @@ function hostGame() {
     document.getElementById('lobby-status').textContent = "Генеруємо код...";
     document.getElementById('players-list').innerHTML = '';
 
-    // Створюємо Peer (сервер видасть випадковий короткий ID)
     peer = new Peer();
 
     peer.on('open', function(id) {
@@ -269,25 +475,22 @@ function hostGame() {
         codeBox.style.display = 'inline-flex';
         codeBox.textContent = id;
         
-        players = [{ id: id, name: fName }]; // Додаємо себе першим
+        players = [{ id: id, name: fName }];
         updateLobbyUI();
         document.getElementById('startGameOnlineBtn').style.display = 'block';
     });
 
-    // Коли хтось підключається до Хоста
     peer.on('connection', function(conn) {
         connections.push(conn);
         
-        // Слухаємо повідомлення від клієнта
         conn.on('data', function(data) {
             if(data.type === 'join') {
                 players.push({ id: conn.peer, name: data.name });
                 updateLobbyUI();
-                broadcastData({ type: 'players_update', players: players }); // Оновлюємо списки у всіх
+                broadcastData({ type: 'players_update', players: players });
             }
         });
 
-        // Якщо клієнт відключився (закрив браузер)
         conn.on('close', function() {
             players = players.filter(p => p.id !== conn.peer);
             connections = connections.filter(c => c.peer !== conn.peer);
@@ -297,7 +500,7 @@ function hostGame() {
     });
 }
 
-// 2. ЛОГІКА КЛІЄНТА (ГРАВЦЯ)
+/* --- ЛОГІКА МУЛЬТИПЛЕЄРА (КЛІЄНТ) --- */
 function joinGame() {
     const hostId = document.getElementById('joinIdInput').value.trim();
     let fName = document.getElementById('firstNameInput').value.trim() || "Анонім";
@@ -319,10 +522,9 @@ function joinGame() {
 
         hostConnection.on('open', function() {
             document.getElementById('lobby-status').textContent = "Успішно підключено! Очікуємо Хоста...";
-            hostConnection.send({ type: 'join', name: fName }); // Кажемо Хосту своє ім'я
+            hostConnection.send({ type: 'join', name: fName });
         });
 
-        // Отримуємо команди від Хоста
         hostConnection.on('data', function(data) {
             if (data.type === 'players_update') {
                 players = data.players;
@@ -330,7 +532,7 @@ function joinGame() {
             }
             if (data.type === 'game_start') {
                 alert("Хост запустив гру! (Тут буде генерація)");
-                // Наступний етап: малювати картки
+                // Логіка старту гри для клієнта буде тут
             }
         });
         
@@ -341,13 +543,13 @@ function joinGame() {
     });
 }
 
-// 3. ДОПОМІЖНІ ФУНКЦІЇ ЛОБІ
+/* --- ДОПОМІЖНІ ФУНКЦІЇ ЛОБІ --- */
 function updateLobbyUI() {
     const list = document.getElementById('players-list');
     list.innerHTML = '';
     players.forEach(p => {
         const li = document.createElement('li');
-        li.textContent = p.name + (p.id === peer.id ? " (Ти)" : "");
+        li.textContent = p.name + (p.id === (peer ? peer.id : null) ? " (Ти)" : "");
         li.style.marginBottom = "4px";
         list.appendChild(li);
     });
@@ -373,219 +575,4 @@ function startOnlineGame() {
     }
     broadcastData({ type: 'game_start' });
     alert("Генерація даних для " + players.length + " гравців... (Далі буде)");
-}
-
-function generateCharacter() {
-    totalChanges = 0;
-    auditLog = [];
-    const counterBadge = document.getElementById('changes-counter');
-    if(counterBadge) counterBadge.style.display = 'none';
-
-    document.getElementById('character-sheet').classList.add('hidden');
-    document.getElementById('global-lock').style.display = 'flex';
-    document.getElementById('bottomNav').style.display = 'none';
-    document.getElementById('header-actions').style.display = 'flex'; 
-
-    document.querySelectorAll('.m3-card[id*="-extra-"]').forEach(card => card.remove());
-    extraCardCounter = 0;
-
-    const firstTabBtn = document.querySelector('.m3-tab');
-    switchTab('tab-bio', firstTabBtn);
-
-    const gender = getRandomItem(db.genders);
-    let sp1 = getRandomItem(db.specials), sp2 = getRandomItem(db.specials);
-    while (sp1 === sp2 && db.specials.length > 1) sp2 = getRandomItem(db.specials);
-
-    const charData = {
-        gender: gender, age: getRandomItem(db.ages), body: getRandomItem(db.bodies),
-        profession: `${getRandomItem(db.professions)}\nДосвід: ${getExperienceD6()}`,
-        health: generateHealth(), phobia: getRandomItem(db.phobias),
-        hobby: `${getRandomItem(db.hobbies)}\nРівень: ${getExperienceD6()}`,
-        inventory: getRandomItem(db.inventory), info: getRandomItem(db.additional_info),
-        special1: sp1, special2: sp2
-    };
-
-    document.getElementById('profile-photo').innerHTML = gender === "Чоловік" ? imgMale : imgFemale;
-    document.getElementById('candidate-id').textContent = Math.floor(1000 + Math.random() * 9000);
-
-    for (const [key, value] of Object.entries(charData)) {
-        const container = document.getElementById(key);
-        if(container) {
-            container.dataset.value = value;
-            container.classList.remove('revealed');
-            container.classList.remove('used-special');
-            container.textContent = ""; 
-        }
-    }
-    document.getElementById('character-sheet').classList.remove('hidden');
-}
-
-async function printText(element, text) {
-    let currentString = "";
-    for (let i = 0; i < text.length; i++) {
-        currentString += text.charAt(i);
-        element.textContent = currentString; 
-        await new Promise(r => setTimeout(r, 20)); 
-    }
-}
-
-async function unlockSheet() {
-    if (isTypingGlobal) return;
-    isTypingGlobal = true;
-    document.getElementById('global-lock').style.display = 'none';
-    try { const playPromise = typingAudio.play(); if (playPromise !== undefined) await playPromise; } catch(e) {}
-
-    const fields = ['gender', 'age', 'body', 'profession', 'health', 'phobia', 'hobby', 'inventory', 'info', 'special1', 'special2'];
-    const promises = fields.map(id => {
-        const container = document.getElementById(id);
-        if(container) {
-            container.classList.add('revealed');
-            return printText(container, container.dataset.value);
-        }
-    });
-
-    await Promise.all(promises); 
-    typingAudio.pause(); typingAudio.currentTime = 0; isTypingGlobal = false;
-}
-
-function unlockSheetAndShowNav() {
-    unlockSheet();
-    document.getElementById('bottomNav').style.display = 'flex';
-}
-
-function useSpecial(fieldId) {
-    if (isTypingGlobal) return;
-    const container = document.getElementById(fieldId);
-    if (!container.classList.contains('revealed')) return;
-    
-    if (!container.classList.contains('used-special')) {
-        logAction('<span class="material-symbols-outlined icon-inline">bolt</span> Використано', getCardLabel(fieldId), '', container.dataset.value);
-    }
-    container.classList.toggle('used-special');
-}
-
-/* --- ВІДКРИТТЯ ВІКНА РЕДАГУВАННЯ --- */
-function openEditModal(fieldId, dbKey) {
-    if (isTypingGlobal || !document.getElementById(fieldId).classList.contains('revealed')) return;
-    currentEditField = fieldId;
-    currentEditDbKey = dbKey; 
-    temporarySelectedValue = null; 
-    
-    const list = document.getElementById('optionsList');
-    list.innerHTML = '';
-    document.getElementById('searchInput').value = ''; 
-    const confirmBtn = document.getElementById('confirmEditBtn');
-    if(confirmBtn) confirmBtn.disabled = true;
-    
-    let options = dbKey === 'health' ? [...db.health_diseases] : (db[dbKey] ? [...db[dbKey]] : []); 
-    options.sort((a, b) => a.localeCompare(b, undefined, {numeric: true}));
-
-    options.forEach(opt => {
-        const el = document.createElement('div');
-        el.className = 'option-item'; 
-        el.textContent = opt;
-        el.onclick = () => selectOptionItem(el, opt); 
-        list.appendChild(el);
-    });
-    
-    document.getElementById('edit-modal').style.display = 'flex';
-    // Я повністю прибрав .focus() тут, тому клавіатура більше не вилітатиме автоматично!
-}
-
-function selectOptionItem(element, value) {
-    const items = document.getElementById('optionsList').getElementsByClassName('option-item');
-    for(let i = 0; i < items.length; i++) items[i].classList.remove('selected');
-    element.classList.add('selected');
-    temporarySelectedValue = value; 
-    const confirmBtn = document.getElementById('confirmEditBtn');
-    if(confirmBtn) confirmBtn.disabled = false;
-}
-function confirmEditSelection() {
-    if (temporarySelectedValue) requestSaveEditField(temporarySelectedValue); 
-}
-function closeEditModal() { document.getElementById('edit-modal').style.display = 'none'; }
-
-function filterOptions() {
-    const filter = document.getElementById('searchInput').value.toLowerCase();
-    const items = document.getElementById('optionsList').getElementsByClassName('option-item');
-    for (let i = 0; i < items.length; i++) {
-        items[i].style.display = (items[i].innerText.toLowerCase().indexOf(filter) > -1) ? "" : "none";
-    }
-}
-
-async function saveEditField(newValue) {
-    const fieldId = pendingAction.fieldId; 
-    const dbKey = pendingAction.dbKey;
-    const container = document.getElementById(fieldId);
-    const oldValue = container.dataset.value; 
-    
-    if (dbKey === 'professions' || dbKey === 'hobbies') newValue += `\nДосвід: ${getExperienceD6()}`;
-    else if (dbKey === 'health_diseases' || dbKey === 'health') {
-        if (!newValue.toLowerCase().includes('здоров') && newValue !== "Дані відсутні") newValue += ` (ступінь: ${getRandomItem(db.health_stages)})`;
-    } 
-
-    logAction('<span class="material-symbols-outlined icon-inline">edit</span> Вручну', getCardLabel(fieldId), oldValue, newValue);
-
-    container.dataset.value = newValue;
-    container.classList.remove('used-special'); 
-    if (dbKey === 'genders') document.getElementById('profile-photo').innerHTML = newValue === "Чоловік" ? imgMale : imgFemale;
-
-    isTypingGlobal = true;
-    try { const playPromise = typingAudio.play(); if (playPromise !== undefined) await playPromise; } catch(e) {}
-    await printText(container, newValue);
-    typingAudio.pause(); typingAudio.currentTime = 0; isTypingGlobal = false;
-}
-
-async function resetField(elementId, dbKey) {
-    const container = document.getElementById(elementId);
-    const oldValue = container.dataset.value; 
-    container.classList.remove('used-special'); 
-    let newItem = "";
-
-    if (dbKey === 'ages' || dbKey === 'genders' || dbKey === 'bodies') {
-        newItem = getRandomItem(db[dbKey]);
-        if (dbKey === 'genders') document.getElementById('profile-photo').innerHTML = newItem === "Чоловік" ? imgMale : imgFemale;
-    } else if (dbKey === 'professions' || dbKey === 'hobbies') {
-        newItem = `${getRandomItem(db[dbKey])}\nДосвід: ${getExperienceD6()}`;
-    } else if (dbKey === 'health' || dbKey === 'health_diseases') { 
-        newItem = generateHealth();
-    } else if (dbKey === 'specials') {
-        newItem = getRandomItem(db.specials);
-        const otherId = elementId === 'special1' ? 'special2' : (elementId === 'special2' ? 'special1' : null);
-        if (otherId && document.getElementById(otherId)) {
-            while (newItem === document.getElementById(otherId).dataset.value && db.specials.length > 1) {
-                newItem = getRandomItem(db.specials);
-            }
-        }
-    } else { 
-        newItem = getRandomItem(db[dbKey]); 
-    }
-
-    logAction('<span class="material-symbols-outlined icon-inline">casino</span> Рандом', getCardLabel(elementId), oldValue, newItem);
-
-    container.dataset.value = newItem;
-    isTypingGlobal = true;
-    try { const playPromise = typingAudio.play(); if (playPromise !== undefined) await playPromise; } catch(e) {}
-    await printText(container, newItem);
-    typingAudio.pause(); typingAudio.currentTime = 0; isTypingGlobal = false;
-}
-
-function switchStartMode(mode) {
-    const tabs = document.querySelectorAll('.mode-tab');
-    tabs[0].classList.toggle('active', mode === 'offline');
-    tabs[1].classList.toggle('active', mode === 'online');
-    
-    document.getElementById('mode-offline').style.display = mode === 'offline' ? 'flex' : 'none';
-    document.getElementById('mode-online').style.display = mode === 'online' ? 'flex' : 'none';
-}
-
-// Заглушки для майбутнього онлайну
-function hostGame() {
-    alert("Тут буде створено P2P кімнату!");
-}
-
-function joinGame() {
-    const id = document.getElementById('joinIdInput').value;
-    if (!id) return alert("Введіть код гри!");
-    alert("Підключаємось до: " + id);
 }
