@@ -15,11 +15,25 @@ let extraCardCounter = 0;
 let totalChanges = 0;
 let auditLog = [];
 
-// --- МЕРЕЖЕВА ЛОГІКА (PEER.JS) ---
-let peer = null;
-let connections = []; 
-let hostConnection = null; 
+// --- МЕРЕЖЕВА ЛОГІКА (FIREBASE) ---
+const firebaseConfig = {
+    apiKey: "AIzaSyCkJ93viSMFWMuoraJcIohakdsVNBsQE9E",
+    authDomain: "bunker-c9082.firebaseapp.com",
+    databaseURL: "https://bunker-c9082-default-rtdb.europe-west1.firebasedatabase.app", 
+    projectId: "bunker-c9082",
+    storageBucket: "bunker-c9082.firebasestorage.app",
+    messagingSenderId: "1069457346181",
+    appId: "1:1069457346181:web:bc6ef8fe3eda8eef49a3ec"
+};
+
+// Ініціалізуємо підключення
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
 let myRole = 'offline'; 
+let myId = Math.random().toString(36).substr(2, 9);
+let currentRoomId = null; 
+let roomRef = null; 
 let players = []; 
 
 /* --- СИСТЕМА ТЕМ --- */
@@ -456,138 +470,82 @@ function switchTab(tabId, navElement) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-/* --- ЛОГІКА МУЛЬТИПЛЕЄРА (ХОСТ) --- */
+/* --- ЛОГІКА МУЛЬТИПЛЕЄРА (FIREBASE ХОСТ) --- */
 function hostGame() {
     let fName = document.getElementById('firstNameInput').value.trim() || "Анонім (Хост)";
     myRole = 'host';
+    currentRoomId = Math.floor(1000 + Math.random() * 9000).toString();
+    
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('lobby-screen').style.display = 'flex';
     document.getElementById('lobby-title').textContent = "Ваша кімната";
-    document.getElementById('lobby-status').textContent = "Генеруємо код...";
-    document.getElementById('players-list').innerHTML = '';
+    document.getElementById('lobby-status').textContent = "Очікування гравців...";
+    
+    const codeBox = document.getElementById('lobby-code-box');
+    codeBox.style.display = 'inline-flex';
+    codeBox.textContent = currentRoomId;
+    document.getElementById('startGameOnlineBtn').style.display = 'block';
 
-   // Створюємо потужний конфіг з TURN-сервером для обходу строгих Wi-Fi
-    const peerConfig = {
-        config: {
-            'iceServers': [
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' },
-                { 
-                    urls: "turn:openrelay.metered.ca:80", 
-                    username: "openrelayproject", 
-                    credential: "openrelayproject" 
-                },
-                { 
-                    urls: "turn:openrelay.metered.ca:443", 
-                    username: "openrelayproject", 
-                    credential: "openrelayproject" 
-                },
-                { 
-                    urls: "turn:openrelay.metered.ca:443?transport=tcp", 
-                    username: "openrelayproject", 
-                    credential: "openrelayproject" 
-                }
-            ]
-        }
-    };
+    roomRef = database.ref('rooms/' + currentRoomId);
+    roomRef.child('players/' + myId).set({ name: fName, isHost: true });
+    roomRef.onDisconnect().remove();
 
-    peer = new Peer(peerConfig);
-
-    peer.on('open', function(id) {
-        document.getElementById('lobby-status').textContent = "Очікування гравців...";
-        const codeBox = document.getElementById('lobby-code-box');
-        codeBox.style.display = 'inline-flex';
-        codeBox.textContent = id;
-        
-        players = [{ id: id, name: fName }];
-        updateLobbyUI();
-        document.getElementById('startGameOnlineBtn').style.display = 'block';
-    });
-
-    peer.on('connection', function(conn) {
-        connections.push(conn);
-        
-        conn.on('data', function(data) {
-            if(data.type === 'join') {
-                players.push({ id: conn.peer, name: data.name });
-                updateLobbyUI();
-                broadcastData({ type: 'players_update', players: players });
-            }
-        });
-
-        conn.on('close', function() {
-            players = players.filter(p => p.id !== conn.peer);
-            connections = connections.filter(c => c.peer !== conn.peer);
-            updateLobbyUI();
-            broadcastData({ type: 'players_update', players: players });
-        });
-    });
+    listenToPlayers();
+    listenToGameStatus();
 }
 
-/* --- ЛОГІКА МУЛЬТИПЛЕЄРА (КЛІЄНТ) --- */
+/* --- ЛОГІКА МУЛЬТИПЛЕЄРА (FIREBASE КЛІЄНТ) --- */
 function joinGame() {
     const hostId = document.getElementById('joinIdInput').value.trim();
     let fName = document.getElementById('firstNameInput').value.trim() || "Анонім";
     if (!hostId) return alert("Введіть код кімнати!");
 
     myRole = 'client';
+    currentRoomId = hostId;
+    
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('lobby-screen').style.display = 'flex';
     document.getElementById('lobby-title').textContent = "Приєднання...";
-    document.getElementById('lobby-status').textContent = "Шукаємо кімнату: " + hostId;
+    document.getElementById('lobby-status').textContent = "Підключення до бази: " + currentRoomId;
     document.getElementById('lobby-code-box').style.display = 'none';
     document.getElementById('startGameOnlineBtn').style.display = 'none';
-    document.getElementById('players-list').innerHTML = '';
 
-    const peerConfig = {
-        config: {
-            'iceServers': [
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' },
-                { 
-                    urls: "turn:openrelay.metered.ca:80", 
-                    username: "openrelayproject", 
-                    credential: "openrelayproject" 
-                },
-                { 
-                    urls: "turn:openrelay.metered.ca:443", 
-                    username: "openrelayproject", 
-                    credential: "openrelayproject" 
-                },
-                { 
-                    urls: "turn:openrelay.metered.ca:443?transport=tcp", 
-                    username: "openrelayproject", 
-                    credential: "openrelayproject" 
-                }
-            ]
-        }
-    };
-
-    peer = new Peer(peerConfig);
-
-    peer.on('open', function(id) {
-        hostConnection = peer.connect(hostId);
-
-        hostConnection.on('open', function() {
+    roomRef = database.ref('rooms/' + currentRoomId);
+    
+    roomRef.child('players').once('value', (snapshot) => {
+        if (snapshot.exists()) {
             document.getElementById('lobby-status').textContent = "Успішно підключено! Очікуємо Хоста...";
-            hostConnection.send({ type: 'join', name: fName });
-        });
-
-        hostConnection.on('data', function(data) {
-            if (data.type === 'players_update') {
-                players = data.players;
-                updateLobbyUI();
-            }
-            if (data.type === 'game_start') {
-                alert("Хост запустив гру! (Тут буде генерація)");
-                // Логіка старту гри для клієнта буде тут
-            }
-        });
-        
-        hostConnection.on('close', function() {
-            alert("Зв'язок із Хостом втрачено!");
+            const myPlayerRef = roomRef.child('players/' + myId);
+            myPlayerRef.set({ name: fName, isHost: false });
+            myPlayerRef.onDisconnect().remove();
+            
+            listenToPlayers();
+            listenToGameStatus();
+        } else {
+            alert("Кімнату не знайдено! Перевірте код.");
             cancelOnline();
+        }
+    });
+}
+
+/* --- СИНХРОНІЗАЦІЯ ДАНИХ FIREBASE --- */
+function listenToPlayers() {
+    roomRef.child('players').on('value', (snapshot) => {
+        players = [];
+        snapshot.forEach((childSnap) => {
+            const playerData = childSnap.val();
+            playerData.id = childSnap.key;
+            players.push(playerData);
         });
+        updateLobbyUI();
+    });
+}
+
+function listenToGameStatus() {
+    roomRef.child('status').on('value', (snapshot) => {
+        if (snapshot.val() === 'started' && myRole === 'client') {
+            alert("Хост запустив гру! (Тут буде генерація карток)");
+        }
     });
 }
 
@@ -597,22 +555,22 @@ function updateLobbyUI() {
     list.innerHTML = '';
     players.forEach(p => {
         const li = document.createElement('li');
-        li.textContent = p.name + (p.id === (peer ? peer.id : null) ? " (Ти)" : "");
+        li.textContent = p.name + (p.id === myId ? " (Ти)" : "") + (p.isHost ? " 👑" : "");
         li.style.marginBottom = "4px";
         list.appendChild(li);
     });
     document.getElementById('lobby-players').style.display = 'flex';
 }
 
-function broadcastData(data) {
-    connections.forEach(conn => {
-        if(conn.open) conn.send(data);
-    });
-}
-
 function cancelOnline() {
-    if (peer) { peer.destroy(); peer = null; }
-    connections = []; hostConnection = null; players = [];
+    if (roomRef) {
+        if (myRole === 'host') roomRef.remove();
+        else roomRef.child('players/' + myId).remove();
+        roomRef.off();
+    }
+    currentRoomId = null;
+    roomRef = null;
+    players = [];
     document.getElementById('lobby-screen').style.display = 'none';
     document.getElementById('start-screen').style.display = 'flex';
 }
@@ -621,6 +579,6 @@ function startOnlineGame() {
     if (players.length < 2) {
         if (!confirm("Ви єдиний гравець у лобі. Почати гру?")) return;
     }
-    broadcastData({ type: 'game_start' });
+    roomRef.child('status').set('started');
     alert("Генерація даних для " + players.length + " гравців... (Далі буде)");
 }
