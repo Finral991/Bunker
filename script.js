@@ -56,9 +56,10 @@ function logAction(type, label, oldVal, newVal) {
     auditLog.push({ time, type, label, oldVal, newVal });
     totalChanges++;
     const counterBadge = document.getElementById('changes-counter');
-    // Оновлено: тепер тут Material іконка замість емодзі
-    counterBadge.innerHTML = `<span class="material-symbols-outlined" style="font-size: 16px;">history</span> Змін: ${totalChanges}`;
-    counterBadge.style.display = 'inline-flex';
+    if (counterBadge) {
+        counterBadge.innerHTML = `<span class="material-symbols-outlined" style="font-size: 16px;">history</span> Змін: ${totalChanges}`;
+        counterBadge.style.display = 'inline-flex';
+    }
 }
 
 function openAuditModal() {
@@ -125,14 +126,17 @@ async function addNewCard(dbKey, labelText, fieldPrefix, tabId) {
     let extraClasses = "wide-card";
     if (dbKey === 'specials') extraClasses += " special-card";
 
+    const actionButtonsHtml = dbKey === 'specials' 
+        ? `<button class="m3-icon-btn highlight" onclick="useSpecial('${newFieldId}')"><span class="material-symbols-outlined">bolt</span></button>`
+        : `<button class="m3-icon-btn" onclick="openEditModal('${newFieldId}', '${dbKey}')"><span class="material-symbols-outlined">edit</span></button>
+           <button class="m3-icon-btn" onclick="requestResetField('${newFieldId}', '${dbKey}')"><span class="material-symbols-outlined">shuffle</span></button>`;
+
     const newCardHTML = `
         <div class="m3-card glass-panel ${extraClasses}" id="${newCardId}">
             <div class="card-header">
                 <span class="label">${labelText} (Дод.)</span>
                 <div class="action-btns">
-                    ${dbKey === 'specials' ? `<button class="m3-icon-btn highlight" onclick="useSpecial('${newFieldId}')"><span class="material-symbols-outlined">bolt</span></button>` : ''}
-                    <button class="m3-icon-btn" onclick="openEditModal('${newFieldId}', '${dbKey}')"><span class="material-symbols-outlined">edit</span></button>
-                    <button class="m3-icon-btn" onclick="requestResetField('${newFieldId}', '${dbKey}')"><span class="material-symbols-outlined">shuffle</span></button>
+                    ${actionButtonsHtml}
                 </div>
             </div>
             <div class="field-content revealed" id="${newFieldId}" data-value="${newValue}"></div>
@@ -142,7 +146,6 @@ async function addNewCard(dbKey, labelText, fieldPrefix, tabId) {
     const tabElement = document.getElementById(tabId);
     tabElement.insertAdjacentHTML('beforeend', newCardHTML);
     
-    // Запис в аудит
     logAction('<span class="material-symbols-outlined icon-inline">add_circle</span> Додано', `${labelText} (Дод.)`, '', newValue);
 
     const targetTabNavBtn = document.querySelector(`.m3-tab[onclick*="${tabId}"]`);
@@ -196,7 +199,6 @@ function switchTab(tabId, navElement) {
         navElement.classList.remove('tab-bump');
         void navElement.offsetWidth; 
         navElement.classList.add('tab-bump');
-        // НОВА АНІМАЦІЯ: Пульсація карток замість підсвітки
         cards.forEach(card => {
             card.classList.remove('card-pop-active');
             void card.offsetWidth; 
@@ -210,7 +212,6 @@ function switchTab(tabId, navElement) {
     activeTab.classList.add('active');
     navElement.classList.add('active');
 
-    // НОВА АНІМАЦІЯ при звичайному переході
     cards.forEach(card => {
         card.classList.remove('card-pop-active');
         void card.offsetWidth; 
@@ -243,10 +244,10 @@ function startGame() {
 }
 
 function generateCharacter() {
-    // Скидаємо античит при новій генерації
     totalChanges = 0;
     auditLog = [];
-    document.getElementById('changes-counter').style.display = 'none';
+    const counterBadge = document.getElementById('changes-counter');
+    if(counterBadge) counterBadge.style.display = 'none';
 
     document.getElementById('character-sheet').classList.add('hidden');
     document.getElementById('global-lock').style.display = 'flex';
@@ -305,8 +306,10 @@ async function unlockSheet() {
     const fields = ['gender', 'age', 'body', 'profession', 'health', 'phobia', 'hobby', 'inventory', 'info', 'special1', 'special2'];
     const promises = fields.map(id => {
         const container = document.getElementById(id);
-        container.classList.add('revealed');
-        return printText(container, container.dataset.value);
+        if(container) {
+            container.classList.add('revealed');
+            return printText(container, container.dataset.value);
+        }
     });
 
     await Promise.all(promises); 
@@ -323,14 +326,13 @@ function useSpecial(fieldId) {
     const container = document.getElementById(fieldId);
     if (!container.classList.contains('revealed')) return;
     
-    // Запис в аудит використання Стоп Бункера
     if (!container.classList.contains('used-special')) {
         logAction('<span class="material-symbols-outlined icon-inline">bolt</span> Використано', getCardLabel(fieldId), '', container.dataset.value);
     }
-    
     container.classList.toggle('used-special');
 }
 
+/* --- ВІДКРИТТЯ ВІКНА РЕДАГУВАННЯ --- */
 function openEditModal(fieldId, dbKey) {
     if (isTypingGlobal || !document.getElementById(fieldId).classList.contains('revealed')) return;
     currentEditField = fieldId;
@@ -343,7 +345,7 @@ function openEditModal(fieldId, dbKey) {
     const confirmBtn = document.getElementById('confirmEditBtn');
     if(confirmBtn) confirmBtn.disabled = true;
     
-    let options = db[dbKey] ? [...db[dbKey]] : []; 
+    let options = dbKey === 'health' ? [...db.health_diseases] : (db[dbKey] ? [...db[dbKey]] : []); 
     options.sort((a, b) => a.localeCompare(b, undefined, {numeric: true}));
 
     options.forEach(opt => {
@@ -353,8 +355,9 @@ function openEditModal(fieldId, dbKey) {
         el.onclick = () => selectOptionItem(el, opt); 
         list.appendChild(el);
     });
+    
     document.getElementById('edit-modal').style.display = 'flex';
-    document.getElementById('searchInput').focus();
+    // Я повністю прибрав .focus() тут, тому клавіатура більше не вилітатиме автоматично!
 }
 
 function selectOptionItem(element, value) {
@@ -382,14 +385,13 @@ async function saveEditField(newValue) {
     const fieldId = pendingAction.fieldId; 
     const dbKey = pendingAction.dbKey;
     const container = document.getElementById(fieldId);
-    const oldValue = container.dataset.value; // Зберігаємо старе значення для логу
+    const oldValue = container.dataset.value; 
     
     if (dbKey === 'professions' || dbKey === 'hobbies') newValue += `\nДосвід: ${getExperienceD6()}`;
     else if (dbKey === 'health_diseases' || dbKey === 'health') {
         if (!newValue.toLowerCase().includes('здоров') && newValue !== "Дані відсутні") newValue += ` (ступінь: ${getRandomItem(db.health_stages)})`;
     } 
 
-    // Запис в аудит
     logAction('<span class="material-symbols-outlined icon-inline">edit</span> Вручну', getCardLabel(fieldId), oldValue, newValue);
 
     container.dataset.value = newValue;
@@ -404,7 +406,7 @@ async function saveEditField(newValue) {
 
 async function resetField(elementId, dbKey) {
     const container = document.getElementById(elementId);
-    const oldValue = container.dataset.value; // Зберігаємо старе значення для логу
+    const oldValue = container.dataset.value; 
     container.classList.remove('used-special'); 
     let newItem = "";
 
@@ -427,7 +429,6 @@ async function resetField(elementId, dbKey) {
         newItem = getRandomItem(db[dbKey]); 
     }
 
-    // Запис в аудит
     logAction('<span class="material-symbols-outlined icon-inline">casino</span> Рандом', getCardLabel(elementId), oldValue, newItem);
 
     container.dataset.value = newItem;

@@ -4,7 +4,7 @@ const db = {
     names: [], 
     genders: ["Чоловік", "Жінка"],
     ages: Array.from({length: 65 - 18 + 1}, (_, i) => `${i + 18} років`),
-    bodies: ["1 (Худорлява)", "2 (Струнка)", "3 (Середня)", "4 (Щільна)", "5 (З надмірною вагою)"],
+    bodies: ["Худорлява", "Струнка", "Середня", "Щільна", "З надмірною вагою"],
     health_stages: ["легкий", "середній", "важкий", "критичний"], 
     professions: [],
     health_diseases: [],
@@ -50,6 +50,14 @@ async function loadDatabase() {
 
         await Promise.all(fetchPromises);
         console.log("Базу даних успішно завантажено з Google Таблиць!");
+        
+        // Бронебійний пошук кнопки: шукаємо за ID, а якщо його немає - за атрибутом onclick
+        const startBtn = document.getElementById('startBtn') || document.querySelector('button[onclick="startGame()"]');
+        if(startBtn) {
+            startBtn.disabled = false;
+            startBtn.textContent = "Розпочати симуляцію";
+        }
+        
     } catch (globalError) {
         console.error("Глобальна помилка завантаження бази:", globalError);
     }

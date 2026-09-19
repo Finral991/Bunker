@@ -391,3 +391,22 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
     animation: cardPop 0.3s ease-out; 
     will-change: transform; 
 }
+
+/* --- НОВИЙ КОНТЕЙНЕР ДЛЯ ШАПКИ ПРАВОРУЧ --- */
+.header-right-actions {
+    display: flex;
+    flex-direction: row; /* Ставимо їх горизонтально в один ряд */
+    align-items: center; /* Рівняємо по центру по вертикалі */
+    justify-content: flex-end; /* Притискаємо до правого краю екрана */
+    flex-wrap: wrap; /* Дозволяємо перенесення, якщо екран телефону буде надто вузьким */
+    gap: 8px; /* Відступ між статусом і лічильником */
+}
+
+/* Прибираємо margin, оскільки тепер працює flex gap */
+.changes-badge {
+    display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+    background-color: rgba(255, 180, 171, 0.15); color: var(--md-error);
+    padding: 4px 10px; border-radius: 8px; font-size: 13px; font-weight: 700;
+    border: 1px solid rgba(255, 180, 171, 0.3);
+    margin-top: 0; /* Обов'язково забираємо старий margin-top */
+}

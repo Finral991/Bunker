@@ -26,8 +26,9 @@
                 <input type="text" id="lastNameInput" placeholder="Прізвище (за бажанням)" onkeydown="if(event.key === 'Enter') startGame()">
             </div>
             
+            <!-- У блоці ЕКРАН ІДЕНТИФІКАЦІЇ заблокована кнопка -->
             <div class="start-actions">
-                <button class="m3-btn filled large" onclick="startGame()">Розпочати симуляцію</button>
+                <button id="startBtn" class="m3-btn filled large" onclick="startGame()" disabled>Завантаження баз даних...</button>
                 <button class="m3-btn filled large" onclick="openRules()">
                     <span class="material-symbols-outlined">menu_book</span> Правила гри
                 </button>
@@ -199,22 +200,26 @@
     <div class="app-wrapper">
         <div class="sheet-container">
             <!-- Шапка (оновлена з лічильником) -->
+            <!-- У блоці ГОЛОВНИЙ ЕКРАН КАРТОК (Шапка) -->
             <div class="m3-header glass-panel">
                 <div class="m3-profile-row">
                     <div class="photo-box" id="profile-photo"></div>
                     <div class="header-text">
                         <h1 id="candidate-name" style="display:none;">Ім'я</h1>
                         <p class="sub-header">ОБ'ЄКТ № <span id="candidate-id">0000</span></p>
-                        <!-- ЛІЧИЛЬНИК АНТИЧИТУ -->
-                        <!-- ЛІЧИЛЬНИК АНТИЧИТУ (Із Material іконкою) -->
-                        <div id="changes-counter" class="changes-badge" style="display: none;">
-                            <span class="material-symbols-outlined" style="font-size: 16px;">history</span> Змін: 0
-                        </div>
                     </div>
                 </div>
-                <div class="status-pill animated-progress" id="header-actions" style="display: none;">
-                    <span class="material-symbols-outlined progress-icon">sync</span>
-                    <span class="status-text">Очікує рішення...</span>
+                <!-- Зміни перенесено праворуч у загальний контейнер -->
+                <div class="header-right-actions">
+                    <!-- 1. Спершу йде статус (він буде зліва) -->
+                    <div class="status-pill animated-progress" id="header-actions" style="display: none;">
+                        <span class="material-symbols-outlined progress-icon">sync</span>
+                        <span class="status-text">Очікує рішення...</span>
+                    </div>
+                    <!-- 2. Потім йде лічильник змін (він буде справа) -->
+                    <div id="changes-counter" class="changes-badge" style="display: none;">
+                        <span class="material-symbols-outlined" style="font-size: 16px;">history</span> Змін: 0
+                    </div>
                 </div>
             </div>
 
@@ -338,14 +343,13 @@
                     </div>
                 </div>
 
+                <!-- Вкладка 4: ДІЇ (Видалено кнопки редагування) -->
                 <div id="tab-actions" class="cards-grid tab-pane">
                     <div class="m3-card glass-panel special-card wide-card" id="card-special1">
                         <div class="card-header">
                             <span class="label">Стоп Бункер 1</span>
                             <div class="action-btns">
                                 <button class="m3-icon-btn highlight" onclick="useSpecial('special1')"><span class="material-symbols-outlined">bolt</span></button>
-                                <button class="m3-icon-btn" onclick="openEditModal('special1', 'specials')"><span class="material-symbols-outlined">edit</span></button>
-                                <button class="m3-icon-btn" onclick="requestResetField('special1', 'specials')"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
                         </div>
                         <div class="field-content" id="special1"></div>
@@ -355,8 +359,6 @@
                             <span class="label">Стоп Бункер 2</span>
                             <div class="action-btns">
                                 <button class="m3-icon-btn highlight" onclick="useSpecial('special2')"><span class="material-symbols-outlined">bolt</span></button>
-                                <button class="m3-icon-btn" onclick="openEditModal('special2', 'specials')"><span class="material-symbols-outlined">edit</span></button>
-                                <button class="m3-icon-btn" onclick="requestResetField('special2', 'specials')"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
                         </div>
                         <div class="field-content" id="special2"></div>
