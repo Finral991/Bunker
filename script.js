@@ -528,7 +528,7 @@ function joinGame() {
     });
 }
 
-/* --- СИНХРОНІЗАЦІЯ ДАНИХ FIREBASE --- */
+/* --- СИНХРОНІЗАЦІЯ ДАНИХ FIREBASE ТА СТАРТ ГРИ --- */
 function listenToPlayers() {
     roomRef.child('players').on('value', (snapshot) => {
         players = [];
@@ -543,10 +543,89 @@ function listenToPlayers() {
 
 function listenToGameStatus() {
     roomRef.child('status').on('value', (snapshot) => {
-        if (snapshot.val() === 'started' && myRole === 'client') {
-            alert("Хост запустив гру! (Тут буде генерація карток)");
+        if (snapshot.val() === 'started') {
+            // Гра почалася! Всі (і Хост, і Клієнти) завантажують свої дані з Firebase
+            roomRef.child('gameData/' + myId).once('value', (dataSnap) => {
+                if(dataSnap.exists()) {
+                    loadOnlineCharacter(dataSnap.val());
+                }
+            });
         }
     });
+}
+
+function startOnlineGame() {
+    if (players.length < 2) {
+        if (!confirm("Ви єдиний гравець у лобі. Почати гру?")) return;
+    }
+    
+    document.getElementById('startGameOnlineBtn').disabled = true;
+    document.getElementById('startGameOnlineBtn').textContent = "Генерація...";
+
+    let gameData = {};
+    
+    // Хост генерує картки для всіх гравців у кімнаті
+    players.forEach(p => {
+        const gender = getRandomItem(db.genders);
+        let sp1 = getRandomItem(db.specials), sp2 = getRandomItem(db.specials);
+        while (sp1 === sp2 && db.specials.length > 1) sp2 = getRandomItem(db.specials);
+
+        gameData[p.id] = {
+            gender: gender, age: getRandomItem(db.ages), body: getRandomItem(db.bodies),
+            profession: `${getRandomItem(db.professions)}\nДосвід: ${getExperienceD6()}`,
+            health: generateHealth(), phobia: getRandomItem(db.phobias),
+            hobby: `${getRandomItem(db.hobbies)}\nРівень: ${getExperienceD6()}`,
+            inventory: getRandomItem(db.inventory), info: getRandomItem(db.additional_info),
+            special1: sp1, special2: sp2
+        };
+    });
+
+    // Хост записує всі досьє у Firebase, а потім змінює статус кімнати
+    roomRef.child('gameData').set(gameData).then(() => {
+        roomRef.child('status').set('started');
+    });
+}
+
+function loadOnlineCharacter(charData) {
+    totalChanges = 0;
+    auditLog = [];
+    const counterBadge = document.getElementById('changes-counter');
+    if(counterBadge) counterBadge.style.display = 'none';
+
+    document.getElementById('lobby-screen').style.display = 'none';
+    document.getElementById('character-sheet').classList.add('hidden');
+    document.getElementById('global-lock').style.display = 'flex';
+    document.getElementById('bottomNav').style.display = 'none';
+    document.getElementById('header-actions').style.display = 'flex'; 
+
+    document.querySelectorAll('.m3-card[id*="-extra-"]').forEach(card => card.remove());
+    extraCardCounter = 0;
+
+    const firstTabBtn = document.querySelector('.m3-tab');
+    if(firstTabBtn) switchTab('tab-bio', firstTabBtn);
+
+    // Заповнюємо інтерфейс згенерованими сервером даними
+    document.getElementById('profile-photo').innerHTML = charData.gender === "Чоловік" ? imgMale : imgFemale;
+    document.getElementById('candidate-id').textContent = currentRoomId; // Використовуємо код кімнати як ID об'єкта
+
+    for (const [key, value] of Object.entries(charData)) {
+        const container = document.getElementById(key);
+        if(container) {
+            container.dataset.value = value;
+            container.classList.remove('revealed');
+            container.classList.remove('used-special');
+            container.textContent = ""; 
+        }
+    }
+    
+    // Встановлюємо ім'я гравця
+    const myPlayer = players.find(p => p.id === myId);
+    if (myPlayer) {
+        document.getElementById('candidate-name').textContent = myPlayer.name;
+        document.getElementById('candidate-name').style.display = 'block';
+    }
+
+    document.getElementById('character-sheet').classList.remove('hidden');
 }
 
 /* --- ДОПОМІЖНІ ФУНКЦІЇ ЛОБІ --- */
@@ -573,12 +652,4 @@ function cancelOnline() {
     players = [];
     document.getElementById('lobby-screen').style.display = 'none';
     document.getElementById('start-screen').style.display = 'flex';
-}
-
-function startOnlineGame() {
-    if (players.length < 2) {
-        if (!confirm("Ви єдиний гравець у лобі. Почати гру?")) return;
-    }
-    roomRef.child('status').set('started');
-    alert("Генерація даних для " + players.length + " гравців... (Далі буде)");
 }
