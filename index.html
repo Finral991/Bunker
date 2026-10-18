@@ -20,6 +20,9 @@
     <!-- ФОНОВИЙ ПАТЕРН -->
     <div class="emoji-wallpaper" id="emojiWallpaper"></div>
 
+    <!-- СПЛИВАЮЧІ СПОВІЩЕННЯ (TOAST) -->
+    <div id="toast-container" class="toast-container"></div>
+
     <!-- 1. ЕКРАН ІДЕНТИФІКАЦІЇ (ОФЛАЙН/ОНЛАЙН) -->
     <div id="start-screen" class="start-screen">
         <div class="start-card glass-panel">
@@ -29,12 +32,12 @@
             <!-- ТАБИ РЕЖИМІВ -->
             <div class="mode-tabs">
                 <div class="mode-tab active" onclick="switchStartMode('offline')">Офлайн</div>
-                <div class="mode-tab beta" onclick="switchStartMode('online')">Онлайн (Beta)</div>
+                <div class="mode-tab beta" onclick="switchStartMode('online')">Онлайн</div>
             </div>
 
             <!-- ПОЛЯ ВВОДУ (Спільні) -->
             <div class="input-group">
-                <input type="text" id="firstNameInput" placeholder="Ім'я (обов'язково)">
+                <input type="text" id="firstNameInput" placeholder="Ім'я або позивний">
             </div>
             <div class="input-group" style="margin-bottom: 8px;">
                 <input type="text" id="lastNameInput" placeholder="Прізвище (за бажанням)">
@@ -52,14 +55,14 @@
             <div id="mode-online" class="start-actions" style="display: none;">
                 <button id="hostBtn" class="m3-btn filled large" onclick="hostGame()" disabled>Створити гру (Хост)</button>
                 <div class="input-group" style="margin-top: 8px;">
-                    <input type="text" id="joinIdInput" placeholder="Код кімнати...">
+                    <input type="text" id="joinIdInput" placeholder="Код кімнати (4 цифри)...">
                 </div>
                 <button id="joinBtn" class="m3-btn filled large" onclick="joinGame()" disabled>Приєднатись до гри</button>
             </div>
 
-            <a href="https://t.me/Skertoon" target="_blank" class="telegram-link">
+            <a href="https://t.me/Skertoon" target="_blank" rel="noopener noreferrer" class="telegram-link">
                 <svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.19-.08-.05-.19-.02-.27 0l-3.85 2.42c-.56.39-1.07.57-1.54.56-.51-.01-1.5-.29-2.24-.53-.9-.29-1.61-.44-1.55-.93.03-.25.38-.51 1.06-.78 4.15-1.81 6.92-3.01 8.31-3.59 3.95-1.66 4.77-1.94 5.3-1.95.12 0 .38.03.53.15.13.1.18.25.19.38 0 .07.01.21-.01.37z"/></svg>
-                <span>Telegram для зворотнього звязку</span>
+                <span>Telegram для зворотного зв'язку</span>
             </a>
         </div>
     </div>
@@ -70,22 +73,18 @@
             <span class="material-symbols-outlined hero-icon">satellite_alt</span>
             <h2 id="lobby-title" class="start-title">Створення кімнати...</h2>
             
-            <!-- Блок для коду Хоста -->
-            <div id="lobby-code-box" class="changes-badge" style="display: none; font-size: 24px; padding: 12px 24px; margin: 16px auto; letter-spacing: 2px;">
-                <!-- Тут буде код -->
+            <div id="lobby-code-box" class="changes-badge" style="display: none; font-size: 24px; padding: 12px 24px; margin: 8px auto; letter-spacing: 3px;">
             </div>
             
-            <p id="lobby-status" style="color: var(--md-on-surface-variant); margin-bottom: 16px;">З'єднання з сервером...</p>
+            <p id="lobby-status" style="color: var(--md-on-surface-variant); margin: 4px 0 12px;">З'єднання з сервером...</p>
             
-            <!-- Список підключених гравців -->
-            <div id="lobby-players" style="display: none; flex-direction: column; gap: 8px; margin-bottom: 16px; text-align: left; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 12px;">
+            <div id="lobby-players" style="display: none; flex-direction: column; gap: 8px; margin-bottom: 12px; text-align: left; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 12px;">
                 <div style="font-size: 12px; color: var(--md-on-surface-variant); text-transform: uppercase; font-weight: 700;">Гравці в лобі:</div>
                 <ul id="players-list" style="margin: 0; padding-left: 20px; color: var(--md-on-surface); font-size: 15px;"></ul>
             </div>
 
-            <!-- Кнопка старту (тільки для Хоста) -->
-            <button id="startGameOnlineBtn" class="m3-btn filled large" style="display: none; margin-top: 16px;" onclick="startOnlineGame()">Почати гру</button>
-            <button class="m3-btn text-btn" style="margin-top: 8px;" onclick="cancelOnline()">Скасувати</button>
+            <button id="startGameOnlineBtn" class="m3-btn filled large" style="display: none; margin-top: 8px;" onclick="startOnlineGame()">Почати гру</button>
+            <button class="m3-btn text-btn" style="margin-top: 4px;" onclick="cancelOnline()">Вийти з лобі</button>
         </div>
     </div>
 
@@ -95,9 +94,9 @@
             <h2 class="dialog-title">Правила гри</h2>
             <div class="rules-content">
                 <p><strong>Мета:</strong> Довести, що саме ви найкорисніші для виживання людства, і потрапити до Бункера.</p>
-                <p><strong>Хід гри:</strong> Гравці по колу відкривають по кілька характеристик і пояснюють свою корисність. Брехати не можна, але можна недоговорювати.</p>
+                <p><strong>Хід гри:</strong> Гравці по колу відкривають по кілька характеристик (в онлайні — натискаючи іконку ока 👁️ на картці) і пояснюють свою корисність.</p>
                 <p><strong>Голосування:</strong> Гравець, який набрав найбільше голосів проти себе, виганяється з Бункера.</p>
-                <p><strong>Стоп Бункер:</strong> Спеціальні картки для зміни ходу гри. Використовуються 1 раз.</p>
+                <p><strong>Стоп Бункер:</strong> Спеціальні картки для зміни ходу гри. При натисканні на блискавку ⚡ автоматично застосовують свій ефект на вибраного гравця або весь стіл.</p>
             </div>
             <div class="dialog-actions">
                 <button class="m3-btn filled" onclick="closeRules()">Зрозуміло</button>
@@ -108,7 +107,7 @@
     <div id="confirm-modal" class="modal-overlay" style="display: none; z-index: 1000;">
         <div class="m3-dialog glass-panel">
             <h2 class="dialog-title">Увага</h2>
-            <p>Ви впевнені, що хочете виконати цю дію? Повернути попереднє значення буде неможливо.</p>
+            <p id="confirm-modal-text">Ви впевнені, що хочете виконати цю дію? Повернути попереднє значення буде неможливо.</p>
             <div class="dialog-actions">
                 <button class="m3-btn text-btn" onclick="cancelAction()">Скасувати</button>
                 <button class="m3-btn filled" onclick="confirmAction()">Підтвердити</button>
@@ -121,12 +120,24 @@
             <h2 class="dialog-title">Оберіть варіант</h2>
             <div class="input-group search-bar">
                 <span class="material-symbols-outlined search-icon">search</span>
-                <input type="text" id="searchInput" placeholder="Пошук..." onkeyup="filterOptions()">
+                <input type="text" id="searchInput" placeholder="Пошук..." oninput="filterOptions()">
             </div>
             <div id="optionsList" class="options-container"></div>
             <div class="dialog-actions">
                 <button class="m3-btn text-btn" onclick="closeEditModal()">Скасувати</button>
                 <button class="m3-btn filled" id="confirmEditBtn" onclick="confirmEditSelection()" disabled>Підтвердити</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛКА ВИБОРУ ЦІЛІ ДЛЯ КАРТКИ СТОП БУНКЕР -->
+    <div id="target-modal" class="modal-overlay" style="display: none; z-index: 1050;">
+        <div class="m3-dialog glass-panel">
+            <h2 class="dialog-title" id="target-modal-title">Оберіть ціль</h2>
+            <p id="target-modal-subtitle" style="margin: 0; font-size: 14px; color: var(--md-on-surface-variant);"></p>
+            <div id="target-list" class="options-container" style="max-height: 45vh;"></div>
+            <div class="dialog-actions">
+                <button class="m3-btn text-btn" onclick="closeTargetModal()">Скасувати</button>
             </div>
         </div>
     </div>
@@ -151,7 +162,7 @@
                     <span class="menu-icon-wrapper material-symbols-outlined">palette</span> Кольорова тема
                 </button>
                 <button class="m3-btn filled" onclick="returnToStart(); closeMoreMenu();">
-                    <span class="menu-icon-wrapper material-symbols-outlined">logout</span> До верифікації
+                    <span class="menu-icon-wrapper material-symbols-outlined">logout</span> Вийти в головне меню
                 </button>
                 <button class="m3-btn text-btn" onclick="closeMoreMenu();">
                     <span class="material-symbols-outlined">close</span> Закрити
@@ -213,13 +224,11 @@
         </div>
     </div>
 
-    <!-- ВІКНО АУДИТУ (АНТИЧИТ) -->
+    <!-- ВІКНО АУДИТУ (АНТИЧИТ ТА ІСТОРІЯ ПАРТІЇ) -->
     <div id="audit-modal" class="modal-overlay" style="display: none; z-index: 1000;">
         <div class="m3-dialog glass-panel full-height">
             <h2 class="dialog-title">Журнал аудиту</h2>
-            <div id="audit-list" class="options-container" style="display: flex; flex-direction: column; gap: 8px;">
-                <!-- Тут будуть записи -->
-            </div>
+            <div id="audit-list" class="options-container" style="display: flex; flex-direction: column; gap: 8px;"></div>
             <div class="dialog-actions">
                 <button class="m3-btn filled" onclick="closeAuditModal()">Закрити</button>
             </div>
@@ -245,6 +254,10 @@
                 <span class="material-symbols-outlined">front_hand</span>
                 <span class="text">Дії</span>
             </div>
+            <div class="m3-tab" id="nav-tab-players" style="display: none;" onclick="switchTab('tab-players', this)">
+                <span class="material-symbols-outlined">groups</span>
+                <span class="text">Стіл</span>
+            </div>
         </div>
         <button class="m3-fab-circle glass-panel" onclick="openMoreMenu()">
             <span class="material-symbols-outlined">more_horiz</span>
@@ -261,15 +274,16 @@
                     <div class="header-text">
                         <h1 id="candidate-name" style="display:none;">Ім'я</h1>
                         <p class="sub-header">ОБ'ЄКТ № <span id="candidate-id">0000</span></p>
+                        <div id="my-statuses-bar" class="statuses-bar"></div>
                     </div>
                 </div>
                 
                 <div class="header-right-actions">
                     <div class="status-pill animated-progress" id="header-actions" style="display: none;">
                         <span class="material-symbols-outlined progress-icon">sync</span>
-                        <span class="status-text">Очікує рішення...</span>
+                        <span class="status-text" id="room-status-label">Очікує рішення...</span>
                     </div>
-                    <div id="changes-counter" class="changes-badge" style="display: none;">
+                    <div id="changes-counter" class="changes-badge" style="display: none;" onclick="openAuditModal()">
                         <span class="material-symbols-outlined" style="font-size: 16px;">history</span> Змін: 0
                     </div>
                 </div>
@@ -282,11 +296,13 @@
                     </button>
                 </div>
 
+                <!-- Вкладка 1: ОСОБА -->
                 <div id="tab-bio" class="cards-grid tab-pane active">
                     <div class="m3-card glass-panel" id="card-gender">
                         <div class="card-header">
                             <span class="label">Стать</span>
                             <div class="action-btns">
+                                <button class="m3-icon-btn online-reveal-btn" id="reveal-btn-gender" onclick="togglePublicReveal('gender')" title="Відкрити для всіх"><span class="material-symbols-outlined">visibility</span></button>
                                 <button class="m3-icon-btn" onclick="openEditModal('gender', 'genders')"><span class="material-symbols-outlined">edit</span></button>
                                 <button class="m3-icon-btn" onclick="requestResetField('gender', 'genders')"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
@@ -297,6 +313,7 @@
                         <div class="card-header">
                             <span class="label">Вік</span>
                             <div class="action-btns">
+                                <button class="m3-icon-btn online-reveal-btn" id="reveal-btn-age" onclick="togglePublicReveal('age')" title="Відкрити для всіх"><span class="material-symbols-outlined">visibility</span></button>
                                 <button class="m3-icon-btn" onclick="openEditModal('age', 'ages')"><span class="material-symbols-outlined">edit</span></button>
                                 <button class="m3-icon-btn" onclick="requestResetField('age', 'ages')"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
@@ -307,6 +324,7 @@
                         <div class="card-header">
                             <span class="label">Статура</span>
                             <div class="action-btns">
+                                <button class="m3-icon-btn online-reveal-btn" id="reveal-btn-body" onclick="togglePublicReveal('body')" title="Відкрити для всіх"><span class="material-symbols-outlined">visibility</span></button>
                                 <button class="m3-icon-btn" onclick="openEditModal('body', 'bodies')"><span class="material-symbols-outlined">edit</span></button>
                                 <button class="m3-icon-btn" onclick="requestResetField('body', 'bodies')"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
@@ -317,6 +335,7 @@
                         <div class="card-header">
                             <span class="label">Професія</span>
                             <div class="action-btns">
+                                <button class="m3-icon-btn online-reveal-btn" id="reveal-btn-profession" onclick="togglePublicReveal('profession')" title="Відкрити для всіх"><span class="material-symbols-outlined">visibility</span></button>
                                 <button class="m3-icon-btn" onclick="openEditModal('profession', 'professions')"><span class="material-symbols-outlined">edit</span></button>
                                 <button class="m3-icon-btn" onclick="requestResetField('profession', 'professions')"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
@@ -325,11 +344,13 @@
                     </div>
                 </div>
 
+                <!-- Вкладка 2: СТАН -->
                 <div id="tab-health" class="cards-grid tab-pane">
                     <div class="m3-card glass-panel wide-card" id="card-health">
                         <div class="card-header">
                             <span class="label">Здоров'я</span>
                             <div class="action-btns">
+                                <button class="m3-icon-btn online-reveal-btn" id="reveal-btn-health" onclick="togglePublicReveal('health')" title="Відкрити для всіх"><span class="material-symbols-outlined">visibility</span></button>
                                 <button class="m3-icon-btn" onclick="openEditModal('health', 'health')"><span class="material-symbols-outlined">edit</span></button>
                                 <button class="m3-icon-btn" onclick="requestResetField('health', 'health')"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
@@ -340,6 +361,7 @@
                         <div class="card-header">
                             <span class="label">Фобія</span>
                             <div class="action-btns">
+                                <button class="m3-icon-btn online-reveal-btn" id="reveal-btn-phobia" onclick="togglePublicReveal('phobia')" title="Відкрити для всіх"><span class="material-symbols-outlined">visibility</span></button>
                                 <button class="m3-icon-btn" onclick="openEditModal('phobia', 'phobias')"><span class="material-symbols-outlined">edit</span></button>
                                 <button class="m3-icon-btn" onclick="requestResetField('phobia', 'phobias')"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
@@ -348,11 +370,13 @@
                     </div>
                 </div>
 
+                <!-- Вкладка 3: БАГАЖ -->
                 <div id="tab-inventory" class="cards-grid tab-pane">
                     <div class="m3-card glass-panel wide-card" id="card-hobby">
                         <div class="card-header">
                             <span class="label">Хобі / Навички</span>
                             <div class="action-btns">
+                                <button class="m3-icon-btn online-reveal-btn" id="reveal-btn-hobby" onclick="togglePublicReveal('hobby')" title="Відкрити для всіх"><span class="material-symbols-outlined">visibility</span></button>
                                 <button class="m3-icon-btn" onclick="openEditModal('hobby', 'hobbies')"><span class="material-symbols-outlined">edit</span></button>
                                 <button class="m3-icon-btn" onclick="requestResetField('hobby', 'hobbies')"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
@@ -361,8 +385,9 @@
                     </div>
                     <div class="m3-card glass-panel wide-card" id="card-inventory">
                         <div class="card-header">
-                            <span class="label">Рюкзак</span>
+                            <span class="label">Рюкзак <span id="baggage-shield-badge" class="shield-badge" style="display:none;">🛡️ Захищено</span></span>
                             <div class="action-btns">
+                                <button class="m3-icon-btn online-reveal-btn" id="reveal-btn-inventory" onclick="togglePublicReveal('inventory')" title="Відкрити для всіх"><span class="material-symbols-outlined">visibility</span></button>
                                 <button class="m3-icon-btn" onclick="openEditModal('inventory', 'inventory')"><span class="material-symbols-outlined">edit</span></button>
                                 <button class="m3-icon-btn" onclick="requestResetField('inventory', 'inventory')"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
@@ -373,6 +398,7 @@
                         <div class="card-header">
                             <span class="label">Дод. інформація</span>
                             <div class="action-btns">
+                                <button class="m3-icon-btn online-reveal-btn" id="reveal-btn-info" onclick="togglePublicReveal('info')" title="Відкрити для всіх"><span class="material-symbols-outlined">visibility</span></button>
                                 <button class="m3-icon-btn" onclick="openEditModal('info', 'additional_info')"><span class="material-symbols-outlined">edit</span></button>
                                 <button class="m3-icon-btn" onclick="requestResetField('info', 'additional_info')"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
@@ -381,13 +407,22 @@
                     </div>
                 </div>
 
-                <!-- Вкладка 4: ДІЇ -->
+                <!-- Вкладка 4: ДІЇ (СТОП БУНКЕР) -->
                 <div id="tab-actions" class="cards-grid tab-pane">
+                    <div id="specials-lock-banner" class="specials-lock-banner glass-panel wide-card" style="display: none;">
+                        <div>
+                            <span class="material-symbols-outlined" style="vertical-align: middle; color: var(--md-error);">block</span>
+                            <strong>Картки «Стоп Бункер» заблоковано на цей хід!</strong>
+                        </div>
+                        <button class="m3-btn text-btn" id="unlockSpecialsBtn" style="padding: 4px 12px; font-size: 13px;" onclick="clearRoomSpecialsLock()">Зняти блок</button>
+                    </div>
+
                     <div class="m3-card glass-panel special-card wide-card" id="card-special1">
                         <div class="card-header">
                             <span class="label">Стоп Бункер 1</span>
                             <div class="action-btns">
-                                <button class="m3-icon-btn highlight" onclick="useSpecial('special1')"><span class="material-symbols-outlined">bolt</span></button>
+                                <button class="m3-icon-btn highlight" onclick="useSpecial('special1')" title="Активувати картку"><span class="material-symbols-outlined">bolt</span></button>
+                                <button class="m3-icon-btn" onclick="requestResetField('special1', 'specials')" title="Замінити випадково"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
                         </div>
                         <div class="field-content" id="special1"></div>
@@ -396,10 +431,18 @@
                         <div class="card-header">
                             <span class="label">Стоп Бункер 2</span>
                             <div class="action-btns">
-                                <button class="m3-icon-btn highlight" onclick="useSpecial('special2')"><span class="material-symbols-outlined">bolt</span></button>
+                                <button class="m3-icon-btn highlight" onclick="useSpecial('special2')" title="Активувати картку"><span class="material-symbols-outlined">bolt</span></button>
+                                <button class="m3-icon-btn" onclick="requestResetField('special2', 'specials')" title="Замінити випадково"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
                         </div>
                         <div class="field-content" id="special2"></div>
+                    </div>
+                </div>
+
+                <!-- Вкладка 5: СТІЛ ГРАВЦІВ (МУЛЬТИПЛЕЄР) -->
+                <div id="tab-players" class="cards-grid tab-pane">
+                    <div id="players-board-container" class="wide-card" style="display: flex; flex-direction: column; gap: 16px;">
+                        <!-- Динамічні картки всіх гравців -->
                     </div>
                 </div>
             </div>
