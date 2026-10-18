@@ -13,8 +13,9 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     
-    <!-- Стилі -->
-    <link rel="stylesheet" href="style.css">
+    <!-- Модульні стилі -->
+    <link rel="stylesheet" href="css/themes.css">
+    <link rel="stylesheet" href="css/main.css">
 </head>
 <body data-theme="default">
     <!-- ФОНОВИЙ ПАТЕРН -->
@@ -29,13 +30,11 @@
             <span class="material-symbols-outlined hero-icon">fingerprint</span>
             <h1 class="start-title">Досьє Бункера</h1>
 
-            <!-- ТАБИ РЕЖИМІВ -->
             <div class="mode-tabs">
                 <div class="mode-tab active" onclick="switchStartMode('offline')">Офлайн</div>
                 <div class="mode-tab beta" onclick="switchStartMode('online')">Онлайн</div>
             </div>
 
-            <!-- ПОЛЯ ВВОДУ (Спільні) -->
             <div class="input-group">
                 <input type="text" id="firstNameInput" placeholder="Ім'я або позивний">
             </div>
@@ -73,8 +72,7 @@
             <span class="material-symbols-outlined hero-icon">satellite_alt</span>
             <h2 id="lobby-title" class="start-title">Створення кімнати...</h2>
             
-            <div id="lobby-code-box" class="changes-badge" style="display: none; font-size: 24px; padding: 12px 24px; margin: 8px auto; letter-spacing: 3px;">
-            </div>
+            <div id="lobby-code-box" class="changes-badge" style="display: none; font-size: 24px; padding: 12px 24px; margin: 8px auto; letter-spacing: 3px;"></div>
             
             <p id="lobby-status" style="color: var(--md-on-surface-variant); margin: 4px 0 12px;">З'єднання з сервером...</p>
             
@@ -95,8 +93,8 @@
             <div class="rules-content">
                 <p><strong>Мета:</strong> Довести, що саме ви найкорисніші для виживання людства, і потрапити до Бункера.</p>
                 <p><strong>Хід гри:</strong> Гравці по колу відкривають по кілька характеристик (в онлайні — натискаючи іконку ока 👁️ на картці) і пояснюють свою корисність.</p>
-                <p><strong>Голосування:</strong> Гравець, який набрав найбільше голосів проти себе, виганяється з Бункера.</p>
-                <p><strong>Стоп Бункер:</strong> Спеціальні картки для зміни ходу гри. При натисканні на блискавку ⚡ автоматично застосовують свій ефект на вибраного гравця або весь стіл.</p>
+                <p><strong>Стіл гравців:</strong> У вкладці «Стіл» зверху є панель перемикання між учасниками, де можна оглянути відкриті картки кожного гравця.</p>
+                <p><strong>Стоп Бункер:</strong> Спеціальні картки для зміни ходу гри. При натисканні на блискавку ⚡ автоматично застосовують свій ефект.</p>
             </div>
             <div class="dialog-actions">
                 <button class="m3-btn filled" onclick="closeRules()">Зрозуміло</button>
@@ -224,7 +222,7 @@
         </div>
     </div>
 
-    <!-- ВІКНО АУДИТУ (АНТИЧИТ ТА ІСТОРІЯ ПАРТІЇ) -->
+    <!-- ВІКНО АУДИТУ -->
     <div id="audit-modal" class="modal-overlay" style="display: none; z-index: 1000;">
         <div class="m3-dialog glass-panel full-height">
             <h2 class="dialog-title">Журнал аудиту</h2>
@@ -235,7 +233,7 @@
         </div>
     </div>
 
-    <!-- MATERIAL YOU БОТОМ БАР -->
+    <!-- АДАПТИВНИЙ БОТОМ БАР (НЕ ВИЛАЗИТЬ ЗА ЕКРАН ПРИ БУДЬ-ЯКОМУ МАСШТАБІ) -->
     <div class="m3-bottom-container" id="bottomNav" style="display: none;">
         <div class="m3-tabs-pill glass-panel">
             <div class="m3-tab active" onclick="switchTab('tab-bio', this)">
@@ -259,7 +257,7 @@
                 <span class="text">Стіл</span>
             </div>
         </div>
-        <button class="m3-fab-circle glass-panel" onclick="openMoreMenu()">
+        <button class="m3-fab-circle glass-panel" onclick="openMoreMenu()" aria-label="Меню">
             <span class="material-symbols-outlined">more_horiz</span>
         </button>
     </div>
@@ -439,19 +437,23 @@
                     </div>
                 </div>
 
-                <!-- Вкладка 5: СТІЛ ГРАВЦІВ (МУЛЬТИПЛЕЄР) -->
+                <!-- Вкладка 5: СТІЛ ГРАВЦІВ З ВЕРХНІМ ДОК-БАРОМ -->
                 <div id="tab-players" class="cards-grid tab-pane">
-                    <div id="players-board-container" class="wide-card" style="display: flex; flex-direction: column; gap: 16px;">
-                        <!-- Динамічні картки всіх гравців -->
+                    <!-- ВЕРХНІЙ ДОК-БАР УЧАСНИКІВ (ЯК НИЖНІЙ) -->
+                    <div class="wide-card players-top-dock-wrapper">
+                        <div id="players-top-dock" class="m3-tabs-pill glass-panel players-top-pill">
+                            <!-- Сюди рендеряться вкладки гравців -->
+                        </div>
                     </div>
+
+                    <!-- КОНТЕЙНЕР КАРТОК ОБРАНОГО ГРАВЦЯ -->
+                    <div id="players-board-container" class="wide-card"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Скрипти -->
-    <script src="background.js"></script>
-    <script src="data.js"></script>
-    <script src="script.js"></script>
+    <!-- Головний модульний скрипт -->
+    <script type="module" src="js/app.js"></script>
 </body>
 </html>

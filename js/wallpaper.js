@@ -1,6 +1,6 @@
-// background.js
+// js/wallpaper.js
 
-function createStaticWallpaper() {
+export function createStaticWallpaper() {
     const bg = document.getElementById('emojiWallpaper');
     if (!bg) return;
     
@@ -11,7 +11,6 @@ function createStaticWallpaper() {
         'radar', 'map', 'key', 'restaurant', 'bolt', 'explore'
     ];
     
-    // Оптимізовано під реальний розмір вікна (+ невеликий запас)
     const canvasWidth = Math.max(window.innerWidth, 400) + 120;
     const canvasHeight = Math.max(window.innerHeight, 700) + 120;
     const cellSize = 110;
@@ -20,7 +19,6 @@ function createStaticWallpaper() {
     const rows = Math.ceil(canvasHeight / cellSize);
     
     let content = '';
-    
     for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
             if (Math.random() > 0.6) continue;
@@ -31,7 +29,6 @@ function createStaticWallpaper() {
             
             const baseX = c * cellSize + (cellSize / 2);
             const baseY = r * cellSize + (cellSize / 2);
-            
             const jitterX = Math.round((Math.random() - 0.5) * 40); 
             const jitterY = Math.round((Math.random() - 0.5) * 40); 
             
@@ -40,5 +37,3 @@ function createStaticWallpaper() {
     }
     bg.innerHTML = content;
 }
-
-window.addEventListener('DOMContentLoaded', createStaticWallpaper);

@@ -1,8 +1,13 @@
-// script.js
+// js/app.js
+import { firebaseConfig, FIELD_NAMES, CORE_FIELDS, imgMale, imgFemale } from './config.js';
+import { db, loadDatabase, getRandomItem, getExperienceD6, generateHealth, generateFieldValue, createDossierObject } from './data.js';
+import { createStaticWallpaper } from './wallpaper.js';
+import { typingAudio, escapeHtml, showToast, initSavedTheme, setTheme, setCustomTheme, printText, getCardLabel } from './ui.js';
 
-const typingAudio = new Audio('typewriter.mp3');
-typingAudio.loop = true; 
-typingAudio.preload = 'auto';
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const database = firebase.database();
 
 let isTypingGlobal = false; 
 let currentEditField = ""; 
@@ -13,38 +18,6 @@ let extraCardCounter = 0;
 
 let totalChanges = 0;
 let auditLog = [];
-
-const FIELD_NAMES = {
-    gender: "Стать",
-    age: "Вік",
-    body: "Статура",
-    profession: "Професія",
-    health: "Здоров'я",
-    phobia: "Фобія",
-    hobby: "Хобі / Навички",
-    inventory: "Рюкзак",
-    info: "Дод. інформація",
-    special1: "Стоп Бункер 1",
-    special2: "Стоп Бункер 2"
-};
-
-const CORE_FIELDS = ['gender', 'age', 'body', 'profession', 'health', 'phobia', 'hobby', 'inventory', 'info'];
-
-// --- МЕРЕЖЕВА ЛОГІКА (FIREBASE) ---
-const firebaseConfig = {
-    apiKey: "AIzaSyCkJ93viSMFWMuoraJcIohakdsVNBsQE9E",
-    authDomain: "bunker-c9082.firebaseapp.com",
-    databaseURL: "https://bunker-c9082-default-rtdb.europe-west1.firebasedatabase.app", 
-    projectId: "bunker-c9082",
-    storageBucket: "bunker-c9082.firebasestorage.app",
-    messagingSenderId: "1069457346181",
-    appId: "1:1069457346181:web:bc6ef8fe3eda8eef49a3ec"
-};
-
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
-const database = firebase.database();
 
 let myRole = 'offline'; 
 let myId = sessionStorage.getItem('bunkerPlayerId') || ('p_' + Math.random().toString(36).substring(2, 10));
@@ -57,60 +30,18 @@ let allGameData = {};
 let roomState = {};
 let isSheetUnlocked = false;
 let lastSeenEventTimestamp = 0;
+let selectedBoardPlayerId = null; // Активний гравець у верхньому док-барі вкладки «Стіл»
 
-/* --- БЕЗПЕКА ТА ДОПОМІЖНІ ФУНКЦІЇ --- */
-function escapeHtml(str) {
-    if (str === null || str === undefined) return '';
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-}
-
-function showToast(message, icon = 'bolt') {
-    const container = document.getElementById('toast-container');
-    if (!container) return;
-    const toast = document.createElement('div');
-    toast.className = 'toast-msg';
-    toast.innerHTML = `<span class="material-symbols-outlined" style="color: var(--md-primary);">${escapeHtml(icon)}</span><span>${escapeHtml(message)}</span>`;
-    container.appendChild(toast);
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transition = 'opacity 0.3s ease';
-        setTimeout(() => toast.remove(), 300);
-    }, 4200);
-}
-
-/* --- СИСТЕМА ТЕМ --- */
+/* --- ІНІЦІАЛІЗАЦІЯ --- */
 window.addEventListener('DOMContentLoaded', () => {
-    const savedTheme = localStorage.getItem('bunkerTheme');
-    const savedHue = localStorage.getItem('bunkerCustomHue');
-    if (savedTheme) {
-        document.body.setAttribute('data-theme', savedTheme);
-        if (savedTheme === 'custom' && savedHue) {
-            document.body.style.setProperty('--hue', savedHue);
-            const slider = document.getElementById('customHueSlider');
-            if (slider) slider.value = savedHue;
-        }
-    }
+    createStaticWallpaper();
+    initSavedTheme();
+    loadDatabase();
 });
 
+/* --- МОДАЛЬНІ ВІКНА --- */
 function openThemeModal() { document.getElementById('theme-modal').style.display = 'flex'; }
 function closeThemeModal() { document.getElementById('theme-modal').style.display = 'none'; }
-function setTheme(themeName) {
-    document.body.setAttribute('data-theme', themeName);
-    localStorage.setItem('bunkerTheme', themeName);
-}
-function setCustomTheme(hueValue) {
-    document.body.setAttribute('data-theme', 'custom');
-    document.body.style.setProperty('--hue', hueValue);
-    localStorage.setItem('bunkerTheme', 'custom');
-    localStorage.setItem('bunkerCustomHue', hueValue);
-}
-
-/* --- МЕНЮ ТА ПРАВИЛА --- */
 function openRules() { document.getElementById('rules-modal').style.display = 'flex'; }
 function closeRules() { document.getElementById('rules-modal').style.display = 'none'; }
 function openMoreMenu() { document.getElementById('more-menu-modal').style.display = 'flex'; }
@@ -118,12 +49,13 @@ function closeMoreMenu() { document.getElementById('more-menu-modal').style.disp
 function openAddCardModal() { document.getElementById('add-card-modal').style.display = 'flex'; }
 function closeAddCardModal() { document.getElementById('add-card-modal').style.display = 'none'; }
 function closeTargetModal() { document.getElementById('target-modal').style.display = 'none'; }
+function closeAuditModal() { document.getElementById('audit-modal').style.display = 'none'; }
+function closeEditModal() { document.getElementById('edit-modal').style.display = 'none'; }
 
-/* --- ЛОГІКА АНТИЧИТУ ТА АУДИТУ --- */
+/* --- АУДИТ ТА АНТИЧИТ --- */
 function logAction(type, label, oldVal, newVal, isPublicEvent = false) {
     const time = new Date().toLocaleTimeString('uk-UA', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    const entry = { time, type, label, oldVal: oldVal || '', newVal: newVal || '' };
-    auditLog.push(entry);
+    auditLog.push({ time, type, label, oldVal: oldVal || '', newVal: newVal || '' });
     totalChanges++;
     updateChangesCounterUI();
 
@@ -175,17 +107,8 @@ function openAuditModal() {
     closeMoreMenu();
     document.getElementById('audit-modal').style.display = 'flex';
 }
-function closeAuditModal() { document.getElementById('audit-modal').style.display = 'none'; }
 
-function getCardLabel(fieldId) {
-    if (FIELD_NAMES[fieldId]) return FIELD_NAMES[fieldId];
-    const card = document.getElementById('card-' + fieldId);
-    if (!card) return fieldId;
-    const labelEl = card.querySelector('.label');
-    return labelEl ? labelEl.textContent.trim() : fieldId;
-}
-
-/* --- СТАРТОВИЙ ЕКРАН ТА ПЕРЕМИКАННЯ РЕЖИМІВ --- */
+/* --- СТАРТОВИЙ ЕКРАН --- */
 function switchStartMode(mode) {
     const tabs = document.querySelectorAll('.mode-tab');
     if (tabs.length >= 2) {
@@ -197,9 +120,7 @@ function switchStartMode(mode) {
 }
 
 function returnToStart() {
-    if (myRole !== 'offline') {
-        cancelOnline();
-    }
+    if (myRole !== 'offline') cancelOnline();
     myRole = 'offline';
     isSheetUnlocked = false;
     document.body.classList.remove('is-online');
@@ -214,34 +135,6 @@ function returnToStart() {
     document.getElementById('start-screen').style.display = 'flex';
 }
 
-/* --- ГЕНЕРАЦІЯ ДОСЬЄ --- */
-function createDossierObject() {
-    let sp1 = getRandomItem(db.specials);
-    let sp2 = getRandomItem(db.specials);
-    while (sp1 === sp2 && db.specials.length > 1) sp2 = getRandomItem(db.specials);
-
-    return {
-        gender: generateFieldValue('gender'),
-        age: generateFieldValue('age'),
-        body: generateFieldValue('body'),
-        profession: generateFieldValue('profession'),
-        health: generateFieldValue('health'),
-        phobia: generateFieldValue('phobia'),
-        hobby: generateFieldValue('hobby'),
-        inventory: generateFieldValue('inventory'),
-        info: generateFieldValue('info'),
-        special1: sp1,
-        special2: sp2,
-        usedSpecials: { special1: false, special2: false },
-        revealed: {},
-        extraCards: {},
-        statuses: [],
-        baggageProtected: false,
-        changesCount: 0
-    };
-}
-
-/* --- ОФЛАЙН РЕЖИМ --- */
 function startGame() {
     myRole = 'offline';
     document.body.classList.remove('is-online');
@@ -307,17 +200,6 @@ function generateCharacter() {
     document.getElementById('character-sheet').classList.remove('hidden');
 }
 
-/* --- АНІМАЦІЯ ВІДКРИТТЯ ДОСЬЄ --- */
-async function printText(element, text) {
-    let currentString = "";
-    const str = String(text || "");
-    for (let i = 0; i < str.length; i++) {
-        currentString += str.charAt(i);
-        element.textContent = currentString; 
-        await new Promise(r => setTimeout(r, 15)); 
-    }
-}
-
 async function unlockSheet() {
     if (isTypingGlobal) return;
     isTypingGlobal = true;
@@ -328,7 +210,6 @@ async function unlockSheet() {
         if (playPromise !== undefined) await playPromise; 
     } catch(e) {}
 
-    // Анімуємо лише першу видиму вкладку для плавності, решту заповнюємо миттєво
     const bioFields = ['gender', 'age', 'body', 'profession'];
     const otherFields = ['health', 'phobia', 'hobby', 'inventory', 'info', 'special1', 'special2'];
 
@@ -359,7 +240,7 @@ function unlockSheetAndShowNav() {
     document.getElementById('bottomNav').style.display = 'flex';
 }
 
-/* --- ПУБЛІЧНЕ ВІДКРИТТЯ КАРТКИ ДЛЯ СТОЛУ (ОНЛАЙН) --- */
+/* --- ПУБЛІЧНЕ ВІДКРИТТЯ КАРТКИ ДЛЯ СТОЛУ --- */
 function togglePublicReveal(fieldId) {
     if (myRole === 'offline' || !roomRef || !isSheetUnlocked) return;
     const currentState = !!(allGameData[myId]?.revealed?.[fieldId]);
@@ -380,7 +261,7 @@ function togglePublicReveal(fieldId) {
     }
 }
 
-/* --- МЕХАНІКА КАРТОК СТОП БУНКЕР --- */
+/* --- КАРТКИ СТОП БУНКЕР --- */
 function mapCardTextToFieldKey(text) {
     const t = text.toLowerCase();
     if (t.includes("здоров")) return "health";
@@ -484,20 +365,16 @@ function executeSpecialCard(specialFieldId, cardText) {
     const textLower = cardText.toLowerCase();
     const targetField = mapCardTextToFieldKey(cardText);
 
-    // Якщо офлайн — виконуємо локально для себе
     if (myRole === 'offline') {
         handleOfflineSpecial(specialFieldId, cardText, textLower, targetField);
         return;
     }
 
-    // --- ОНЛАЙН МЕХАНІКА ВСІХ КАРТОК СТОП БУНКЕР ---
-
-    // 1. Зміна всього Досьє всім / собі / гравцеві на вибір
+    // 1. Зміна всього Досьє
     if (textLower.includes("досьє")) {
         if (textLower.includes("всім гравцям")) {
             players.forEach(p => {
                 const fresh = createDossierObject();
-                // Зберігаємо поточні Стоп Бункери гравців
                 const cur = allGameData[p.id] || {};
                 fresh.special1 = cur.special1 || fresh.special1;
                 fresh.special2 = cur.special2 || fresh.special2;
@@ -534,7 +411,7 @@ function executeSpecialCard(specialFieldId, cardText) {
         }
     }
 
-    // 2. Вилікувати себе від хвороби або фобії
+    // 2. Вилікувати себе
     if (textLower.includes("вилікувати себе")) {
         if (textLower.includes("хвороб") || textLower.includes("травм")) {
             roomRef.child(`gameData/${myId}/health`).set("Ідеально здоровий (Вилікувано)");
@@ -548,7 +425,7 @@ function executeSpecialCard(specialFieldId, cardText) {
         }
     }
 
-    // 3. Захистити карту Багаж від крадіжки
+    // 3. Захистити карту Багаж
     if (textLower.includes("захистити карту") && textLower.includes("багаж")) {
         roomRef.child(`gameData/${myId}/baggageProtected`).set(true);
         addPlayerStatus(myId, "🛡️ Багаж захищено");
@@ -556,7 +433,7 @@ function executeSpecialCard(specialFieldId, cardText) {
         return;
     }
 
-    // 4. Отримати додаткову карту Хобі або Багаж
+    // 4. Отримати додаткову карту
     if (textLower.includes("отримати додаткову карту")) {
         if (targetField === 'hobby') {
             addNewCard('hobbies', 'Хобі / Навички', 'hobby', 'tab-inventory');
@@ -570,9 +447,8 @@ function executeSpecialCard(specialFieldId, cardText) {
         }
     }
 
-    // 5. Дії з конкретною характеристикою (Здоров'я, Фобія, Професія, Хобі, Багаж, Дод.Інфо, Вік, Стать, Статура)
+    // 5. Дії з конкретною характеристикою
     if (targetField) {
-        // 5a. Змінити всім гравцям на нову з колоди
         if (textLower.includes("всім гравцям")) {
             players.forEach(p => {
                 roomRef.child(`gameData/${p.id}/${targetField}`).set(generateFieldValue(targetField));
@@ -580,13 +456,11 @@ function executeSpecialCard(specialFieldId, cardText) {
             markSpecialAsUsed(specialFieldId, cardText);
             return;
         }
-        // 5b. Змінити свою картку на нову з колоди
         if (textLower.includes("свою картку")) {
             roomRef.child(`gameData/${myId}/${targetField}`).set(generateFieldValue(targetField));
             markSpecialAsUsed(specialFieldId, cardText);
             return;
         }
-        // 5c. Змінити картку гравцеві на вибір
         if (textLower.includes("гравцеві на вибір")) {
             promptPlayerSelection(`Кому змінити «${FIELD_NAMES[targetField]}»?`, cardText, true, (targetPlayer) => {
                 roomRef.child(`gameData/${targetPlayer.id}/${targetField}`).set(generateFieldValue(targetField));
@@ -594,7 +468,6 @@ function executeSpecialCard(specialFieldId, cardText) {
             });
             return;
         }
-        // 5d. Обмінятися картками із вибраним гравцем (або Вкрасти)
         if (textLower.includes("обмінятися картками")) {
             promptPlayerSelection(`З ким обмінятися карткою «${FIELD_NAMES[targetField]}»?`, cardText, false, (targetPlayer) => {
                 if (targetField === 'inventory' && allGameData[targetPlayer.id]?.baggageProtected) {
@@ -609,7 +482,6 @@ function executeSpecialCard(specialFieldId, cardText) {
             });
             return;
         }
-        // 5e. Відкрити картку будь-якого гравця
         if (textLower.includes("відкрити картку")) {
             promptPlayerSelection(`Чию картку «${FIELD_NAMES[targetField]}» відкрити?`, cardText, false, (targetPlayer) => {
                 roomRef.child(`gameData/${targetPlayer.id}/revealed/${targetField}`).set(true);
@@ -619,7 +491,7 @@ function executeSpecialCard(specialFieldId, cardText) {
         }
     }
 
-    // 6. Змусити будь-якого гравця відкрити одну приховану картку на ваш вибір
+    // 6. Змусити відкрити одну приховану картку
     if (textLower.includes("відкрити одну приховану картку")) {
         promptPlayerSelection("Оберіть гравця для розкриття картки", cardText, false, (targetPlayer) => {
             const pData = allGameData[targetPlayer.id] || {};
@@ -661,14 +533,14 @@ function executeSpecialCard(specialFieldId, cardText) {
         return;
     }
 
-    // 9. Заборонити використання карток 'Стоп Бункер' на цьому ході всім гравцям
+    // 9. Заборонити використання карток Стоп Бункер
     if (textLower.includes("заборонити використання карток")) {
         roomRef.child('roomState/specialsLockedBy').set(myId);
         markSpecialAsUsed(specialFieldId, cardText);
         return;
     }
 
-    // 10. Змусити гравця скинути свою картку 'Стоп Бункер' без використання
+    // 10. Скинути чужу картку Стоп Бункер
     if (textLower.includes("скинути свою картку")) {
         promptPlayerSelection("Хто має скинути «Стоп Бункер»?", cardText, false, (targetPlayer) => {
             promptFieldSelection(`Яку картку скинути у ${targetPlayer.name}?`, "Оберіть слот Стоп Бункера:", ['special1', 'special2'], (spSlot) => {
@@ -680,7 +552,7 @@ function executeSpecialCard(specialFieldId, cardText) {
         return;
     }
 
-    // 11. Відкрити всі свої картки добровільно, щоб отримати імунітет на одне голосування
+    // 11. Відкрити всі свої картки добровільно
     if (textLower.includes("відкрити всі свої картки добровільно")) {
         const revObj = {};
         CORE_FIELDS.forEach(f => revObj[f] = true);
@@ -690,7 +562,7 @@ function executeSpecialCard(specialFieldId, cardText) {
         return;
     }
 
-    // 12. Картки голосування та статусів, що накладаються на іншого гравця
+    // 12. Картки голосування на іншого гравця
     if (
         textLower.includes("голосувати так само") ||
         textLower.includes("перенаправити всі голоси") ||
@@ -701,7 +573,7 @@ function executeSpecialCard(specialFieldId, cardText) {
             if (textLower.includes("голосувати так само")) {
                 addPlayerStatus(targetPlayer.id, `🗳️ Голосує як ${getMyPlayerName()}`);
             } else if (textLower.includes("перенаправити всі голоси")) {
-                addPlayerStatus(myId, `🔄 Голоси перенаправлено на ${targetPlayer.name}`);
+                addPlayerStatus(myId, `🔄 Голоси -> ${targetPlayer.name}`);
                 addPlayerStatus(targetPlayer.id, `🎯 Приймає голоси замість ${getMyPlayerName()}`);
             } else if (textLower.includes("заборонити одному гравцю голосувати")) {
                 addPlayerStatus(targetPlayer.id, `🚫 Без права голосу (1 хід)`);
@@ -714,7 +586,7 @@ function executeSpecialCard(specialFieldId, cardText) {
         return;
     }
 
-    // 13. Картки голосування та статусів на себе / стіл (Диктатура, Пропуск голосування, 2 голоси, Імунітет)
+    // 13. Статуси на себе або стіл
     if (textLower.includes("диктатур")) {
         addPlayerStatus(myId, "👑 ДИКТАТОР (Вирішує одноосібно)");
     } else if (textLower.includes("двох голосів")) {
@@ -792,9 +664,7 @@ function addPlayerStatus(playerId, statusText) {
 }
 
 function clearRoomSpecialsLock() {
-    if (roomRef) {
-        roomRef.child('roomState/specialsLockedBy').remove();
-    }
+    if (roomRef) roomRef.child('roomState/specialsLockedBy').remove();
 }
 
 /* --- РЕДАГУВАННЯ ХАРАКТЕРИСТИК --- */
@@ -840,10 +710,10 @@ function filterOptions() {
         items[i].style.display = (items[i].textContent.toLowerCase().indexOf(filter) > -1) ? "" : "none";
     }
 }
+
 function confirmEditSelection() {
     if (temporarySelectedValue) requestSaveEditField(temporarySelectedValue); 
 }
-function closeEditModal() { document.getElementById('edit-modal').style.display = 'none'; }
 
 async function saveEditField(newValue) {
     const fieldId = pendingAction.fieldId; 
@@ -916,7 +786,7 @@ async function resetField(elementId, dbKey) {
     await printText(container, newItem);
 }
 
-/* --- ДОДАВАННЯ НОВОЇ ХАРАКТЕРИСТИКИ --- */
+/* --- ДОДАТКОВІ КАРТКИ --- */
 async function addNewCard(dbKey, labelText, fieldPrefix, tabId) {
     closeAddCardModal();
     if (isTypingGlobal) return;
@@ -930,7 +800,6 @@ async function addNewCard(dbKey, labelText, fieldPrefix, tabId) {
     else newValue = getRandomItem(db[dbKey]);
 
     renderExtraCardDOM(newFieldId, dbKey, `${labelText} (Дод.)`, newValue, tabId, false);
-    
     logAction('➕ Додано', `${labelText} (Дод.)`, '', newValue, true);
 
     if (myRole !== 'offline' && roomRef) {
@@ -993,7 +862,7 @@ function toggleExtraCardReveal(extraFieldId) {
     roomRef.child(`gameData/${myId}/extraCards/${extraFieldId}/revealed`).set(!cur);
 }
 
-/* --- СИСТЕМА ПІДТВЕРДЖЕННЯ ДІЙ --- */
+/* --- ПІДТВЕРДЖЕННЯ ДІЙ --- */
 function requestResetField(elementId, dbKey) {
     if (isTypingGlobal) return;
     if (!document.getElementById(elementId)?.classList.contains('revealed')) return;
@@ -1030,7 +899,7 @@ function cancelAction() {
     pendingAction = null;
 }
 
-/* --- ЛОГІКА ВКЛАДОК --- */
+/* --- ПЕРЕМИКАННЯ ВКЛАДОК --- */
 function switchTab(tabId, navElement) {
     if (isTypingGlobal) return;
     const activeTab = document.getElementById(tabId);
@@ -1054,6 +923,10 @@ function switchTab(tabId, navElement) {
     activeTab.classList.add('active');
     if (navElement) navElement.classList.add('active');
 
+    if (tabId === 'tab-players') {
+        renderPlayersBoard();
+    }
+
     cards.forEach(card => {
         card.classList.remove('card-pop-active');
         void card.offsetWidth; 
@@ -1062,7 +935,7 @@ function switchTab(tabId, navElement) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-/* --- МУЛЬТИПЛЕЄР FIREBASE (ХОСТ ТА КЛІЄНТ) --- */
+/* --- МУЛЬТИПЛЕЄР --- */
 function getFormattedInputName(defaultFallback) {
     const fName = document.getElementById('firstNameInput')?.value.trim() || "";
     const lName = document.getElementById('lastNameInput')?.value.trim() || "";
@@ -1098,9 +971,7 @@ function hostGame() {
         }
     });
 
-    // Поки гра в лобі — якщо хост закриє вкладку, кімната прибереться
     roomRef.onDisconnect().remove();
-
     attachRoomListeners();
 }
 
@@ -1150,13 +1021,15 @@ function attachRoomListeners() {
             p.id = childSnap.key;
             players.push(p);
         });
+        if (!selectedBoardPlayerId && players.length > 0) {
+            selectedBoardPlayerId = players[0].id;
+        }
         updateLobbyUI();
         renderPlayersBoard();
     });
 
     roomRef.child('status').on('value', (snapshot) => {
         if (snapshot.val() === 'started') {
-            // Скасовуємо автовидалення кімнати при згортанні браузера на телефоні!
             if (myRole === 'host') {
                 roomRef.onDisconnect().cancel();
             }
@@ -1256,7 +1129,6 @@ function enterOnlineGameScreen() {
 function syncMyCharacterUI(myData) {
     document.getElementById('profile-photo').innerHTML = myData.gender === "Чоловік" ? imgMale : imgFemale;
 
-    // Статуси гравця під ім'ям
     const statusesBar = document.getElementById('my-statuses-bar');
     if (statusesBar) {
         statusesBar.innerHTML = '';
@@ -1268,7 +1140,6 @@ function syncMyCharacterUI(myData) {
         });
     }
 
-    // Бейдж захисту багажу
     const shieldBadge = document.getElementById('baggage-shield-badge');
     if (shieldBadge) {
         shieldBadge.style.display = myData.baggageProtected ? 'inline-block' : 'none';
@@ -1289,7 +1160,6 @@ function syncMyCharacterUI(myData) {
             }
         }
 
-        // Публічне відкриття картки (іконка ока)
         const isPublic = !!(myData.revealed && myData.revealed[key]);
         const revealBtn = document.getElementById(`reveal-btn-${key}`);
         const cardEl = document.getElementById(`card-${key}`);
@@ -1297,7 +1167,6 @@ function syncMyCharacterUI(myData) {
         if (cardEl) cardEl.classList.toggle('publicly-revealed', isPublic);
     });
 
-    // Використані Стоп Бункери
     ['special1', 'special2'].forEach(spKey => {
         const container = document.getElementById(spKey);
         if (!container) return;
@@ -1305,7 +1174,6 @@ function syncMyCharacterUI(myData) {
         container.classList.toggle('used-special', isUsed);
     });
 
-    // Додаткові картки
     if (myData.extraCards) {
         Object.entries(myData.extraCards).forEach(([extraId, extraObj]) => {
             renderExtraCardDOM(extraId, extraObj.dbKey, extraObj.label, extraObj.value, extraObj.tabId, !!extraObj.revealed);
@@ -1322,84 +1190,121 @@ function syncMyCharacterUI(myData) {
     }
 }
 
-/* --- РЕНДЕР ВКЛАДКИ «СТІЛ» (ВСІ ГРАВЦІ ТА ЇХНІ ВІДКРИТІ КАРТКИ) --- */
-function renderPlayersBoard() {
-    const board = document.getElementById('players-board-container');
-    if (!board || myRole === 'offline') return;
-    board.innerHTML = '';
+/* --- СТІЛ ГРАВЦІВ ІЗ ВЕРХНІМ ДОК-БАРОМ ДЛЯ ПЕРЕМИКАННЯ УЧАСНИКІВ --- */
+function selectBoardPlayer(playerId) {
+    selectedBoardPlayerId = playerId;
+    renderPlayersBoard();
+}
 
+function renderPlayersBoard() {
+    const topDock = document.getElementById('players-top-dock');
+    const board = document.getElementById('players-board-container');
+    if (!board || !topDock || myRole === 'offline') return;
+
+    if (!players.some(p => p.id === selectedBoardPlayerId)) {
+        selectedBoardPlayerId = players[0]?.id || myId;
+    }
+
+    // 1. Рендеримо верхній док-бар учасників
+    topDock.innerHTML = '';
     players.forEach(p => {
         const pData = allGameData[p.id] || {};
-        const revealedMap = pData.revealed || {};
-        const statuses = pData.statuses || [];
-        const changes = pData.changesCount || 0;
+        const openCount = CORE_FIELDS.filter(f => pData.revealed && pData.revealed[f]).length;
+        const btn = document.createElement('div');
+        btn.className = `player-dock-tab ${p.id === selectedBoardPlayerId ? 'active' : ''}`;
+        btn.onclick = () => selectBoardPlayer(p.id);
+        btn.innerHTML = `
+            <span class="material-symbols-outlined">${p.isHost ? 'military_tech' : 'person'}</span>
+            <span>${escapeHtml(p.name)}${p.id === myId ? ' (Ви)' : ''}</span>
+            <span class="player-dock-badge">${openCount}/${CORE_FIELDS.length}</span>
+        `;
+        topDock.appendChild(btn);
+    });
 
-        const card = document.createElement('div');
-        card.className = 'm3-card glass-panel player-board-card';
+    // 2. Рендеримо картки обраного гравця у звичному стилі досьє
+    board.innerHTML = '';
+    const activePlayer = players.find(p => p.id === selectedBoardPlayerId);
+    if (!activePlayer) return;
 
-        let statusesHtml = statuses.map(s => `<span class="status-chip">${escapeHtml(s)}</span>`).join('');
-        if (pData.baggageProtected) {
-            statusesHtml += `<span class="status-chip">🛡️ Багаж захищено</span>`;
-        }
+    const pData = allGameData[activePlayer.id] || {};
+    const revealedMap = pData.revealed || {};
+    const statuses = pData.statuses || [];
+    const changes = pData.changesCount || 0;
 
-        let traitsHtml = '';
-        CORE_FIELDS.forEach(fKey => {
-            const isOpen = !!revealedMap[fKey];
-            const val = isOpen ? (pData[fKey] || "—") : "Приховано";
-            traitsHtml += `
-                <div class="player-trait-box ${isOpen ? 'is-open' : ''}">
-                    <div class="player-trait-title">${escapeHtml(FIELD_NAMES[fKey])}</div>
-                    <div class="player-trait-val ${isOpen ? '' : 'secret'}">${escapeHtml(val)}</div>
+    let statusesHtml = statuses.map(s => `<span class="status-chip">${escapeHtml(s)}</span>`).join('');
+    if (pData.baggageProtected) {
+        statusesHtml += `<span class="status-chip">🛡️ Багаж захищено</span>`;
+    }
+
+    let cardsHtml = '';
+
+    // Шапка обраного гравця (якщо є статуси або зміни)
+    if (statusesHtml || changes > 0) {
+        cardsHtml += `
+            <div class="m3-card glass-panel wide-card" style="padding: 14px 18px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                    <div class="statuses-bar" style="margin: 0;">${statusesHtml || '<span style="font-size:13px; color:var(--md-on-surface-variant);">Активних ефектів немає</span>'}</div>
+                    ${changes > 0 ? `<span class="changes-badge" style="padding: 4px 10px; font-size: 12px;">Ручних змін: ${changes}</span>` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    // Основні картки характеристик
+    CORE_FIELDS.forEach(fKey => {
+        const isOpen = !!revealedMap[fKey];
+        const val = isOpen ? (pData[fKey] || "—") : "🔒 Засекречено";
+        const isWide = ['health', 'phobia', 'hobby', 'inventory', 'info'].includes(fKey);
+        cardsHtml += `
+            <div class="m3-card glass-panel ${isWide ? 'wide-card' : ''} ${isOpen ? 'publicly-revealed' : ''}">
+                <div class="card-header">
+                    <span class="label">${escapeHtml(FIELD_NAMES[fKey])}</span>
+                    <span class="material-symbols-outlined" style="font-size: 18px; color: ${isOpen ? '#9CD69E' : 'var(--md-outline)'};">
+                        ${isOpen ? 'visibility' : 'lock'}
+                    </span>
+                </div>
+                <div class="field-content ${isOpen ? '' : 'secret-value'}">${escapeHtml(val)}</div>
+            </div>
+        `;
+    });
+
+    // Додаткові картки обраного гравця
+    if (pData.extraCards) {
+        Object.values(pData.extraCards).forEach(ext => {
+            const isOpen = !!ext.revealed;
+            const val = isOpen ? ext.value : "🔒 Засекречено";
+            cardsHtml += `
+                <div class="m3-card glass-panel wide-card ${isOpen ? 'publicly-revealed' : ''}">
+                    <div class="card-header">
+                        <span class="label">${escapeHtml(ext.label)}</span>
+                        <span class="material-symbols-outlined" style="font-size: 18px; color: ${isOpen ? '#9CD69E' : 'var(--md-outline)'};">
+                            ${isOpen ? 'visibility' : 'lock'}
+                        </span>
+                    </div>
+                    <div class="field-content ${isOpen ? '' : 'secret-value'}">${escapeHtml(val)}</div>
                 </div>
             `;
         });
+    }
 
-        // Додаткові картки гравця
-        if (pData.extraCards) {
-            Object.values(pData.extraCards).forEach(ext => {
-                const isOpen = !!ext.revealed;
-                const val = isOpen ? ext.value : "Приховано";
-                traitsHtml += `
-                    <div class="player-trait-box ${isOpen ? 'is-open' : ''}">
-                        <div class="player-trait-title">${escapeHtml(ext.label)}</div>
-                        <div class="player-trait-val ${isOpen ? '' : 'secret'}">${escapeHtml(val)}</div>
+    // Активовані Стоп Бункери обраного гравця
+    ['special1', 'special2'].forEach((spKey, idx) => {
+        const isUsed = !!(pData.usedSpecials && pData.usedSpecials[spKey]);
+        if (isUsed || revealedMap[spKey]) {
+            cardsHtml += `
+                <div class="m3-card glass-panel wide-card" style="border-color: var(--md-error) !important;">
+                    <div class="card-header">
+                        <span class="label" style="color: var(--md-error);">⚡ Стоп Бункер ${idx + 1} (Використано)</span>
                     </div>
-                `;
-            });
+                    <div class="field-content">${escapeHtml(pData[spKey] || '')}</div>
+                </div>
+            `;
         }
-
-        // Використані Стоп Бункери
-        ['special1', 'special2'].forEach((spKey, idx) => {
-            const isUsed = !!(pData.usedSpecials && pData.usedSpecials[spKey]);
-            if (isUsed || revealedMap[spKey]) {
-                traitsHtml += `
-                    <div class="player-trait-box is-open" style="grid-column: 1 / -1; border-color: var(--md-error);">
-                        <div class="player-trait-title">⚡ Стоп Бункер ${idx + 1} (Активовано)</div>
-                        <div class="player-trait-val">${escapeHtml(pData[spKey] || '')}</div>
-                    </div>
-                `;
-            }
-        });
-
-        card.innerHTML = `
-            <div class="player-board-header">
-                <div class="player-board-name">
-                    <span class="material-symbols-outlined">${p.isHost ? 'military_tech' : 'person'}</span>
-                    <span>${escapeHtml(p.name)} ${p.id === myId ? '(Ви)' : ''}</span>
-                </div>
-                <div style="display: flex; gap: 8px; align-items: center;">
-                    ${changes > 0 ? `<span class="changes-badge" style="padding: 2px 8px; font-size: 11px;">Змін: ${changes}</span>` : ''}
-                </div>
-            </div>
-            ${statusesHtml ? `<div class="statuses-bar" style="margin-top: 0;">${statusesHtml}</div>` : ''}
-            <div class="player-traits-grid">${traitsHtml}</div>
-        `;
-
-        board.appendChild(card);
     });
+
+    board.innerHTML = `<div class="cards-grid">${cardsHtml}</div>`;
 }
 
-/* --- ДОПОМІЖНІ ФУНКЦІЇ ЛОБІ --- */
 function updateLobbyUI() {
     const list = document.getElementById('players-list');
     if (!list) return;
@@ -1436,3 +1341,14 @@ function cancelOnline() {
     document.getElementById('lobby-screen').style.display = 'none';
     document.getElementById('start-screen').style.display = 'flex';
 }
+
+// Експортуємо функції у window для сумісності з HTML-атрибутами onclick
+Object.assign(window, {
+    switchStartMode, startGame, hostGame, joinGame, startOnlineGame, cancelOnline,
+    openRules, closeRules, openMoreMenu, closeMoreMenu, openThemeModal, closeThemeModal,
+    setTheme, setCustomTheme, openAddCardModal, closeAddCardModal, addNewCard,
+    openAuditModal, closeAuditModal, returnToStart, unlockSheetAndShowNav, switchTab,
+    togglePublicReveal, toggleExtraCardReveal, openEditModal, closeEditModal,
+    filterOptions, confirmEditSelection, requestResetField, requestNewDossier,
+    confirmAction, cancelAction, useSpecial, clearRoomSpecialsLock, closeTargetModal
+});

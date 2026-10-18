@@ -1,0 +1,84 @@
+/* css/themes.css */
+
+:root, [data-theme="default"] {
+    --md-bg: #141218;
+    --md-surface: #1D192B; 
+    --md-surface-container: #211F26;
+    --md-primary: #D0BCFF; 
+    --md-on-primary: #381E72; 
+    --md-secondary-container: #4A4458; 
+    --md-on-secondary-container: #E8DEF8;
+    --md-on-surface: #E6E0E9; 
+    --md-on-surface-variant: #CAC4D0; 
+    --md-error: #FFB4AB; 
+    --md-outline: #49454F;
+    --glass-bg: rgba(29, 25, 43, 0.45); 
+    --glass-border: rgba(208, 188, 255, 0.20);
+}
+
+[data-theme="blue"] {
+    --md-bg: #101418; --md-surface: #1A2027; --md-surface-container: #1C2229;
+    --md-primary: #9ECAFF; --md-on-primary: #003258; --md-secondary-container: #354A5F; 
+    --md-on-secondary-container: #D1E4FF; --md-on-surface: #DFE3E7; --md-on-surface-variant: #C3C7CF; 
+    --md-outline: #49454F; --glass-bg: rgba(26, 32, 39, 0.45); --glass-border: rgba(158, 202, 255, 0.20);
+}
+
+[data-theme="green"] {
+    --md-bg: #111410; --md-surface: #1B211A; --md-surface-container: #1E241C;
+    --md-primary: #9CD69E; --md-on-primary: #003912; --md-secondary-container: #374B39; 
+    --md-on-secondary-container: #B8CCB5; --md-on-surface: #E1E3DF; --md-on-surface-variant: #C2C8BE; 
+    --md-outline: #49454F; --glass-bg: rgba(27, 33, 26, 0.45); --glass-border: rgba(156, 214, 158, 0.20);
+}
+
+[data-theme="pink"] {
+    --md-bg: #1A1114; --md-surface: #2B1A20; --md-surface-container: #2E1D23;
+    --md-primary: #FFB1C8; --md-on-primary: #5E112A; --md-secondary-container: #5D3F47; 
+    --md-on-secondary-container: #FFD9E2; --md-on-surface: #EFE0E3; --md-on-surface-variant: #D7C1C5; 
+    --md-outline: #49454F; --glass-bg: rgba(43, 26, 32, 0.45); --glass-border: rgba(255, 177, 200, 0.20);
+}
+
+[data-theme="yellow"] {
+    --md-bg: #171610; --md-surface: #262315; --md-surface-container: #2A2617;
+    --md-primary: #E6C744; --md-on-primary: #3A3000; --md-secondary-container: #524A32; 
+    --md-on-secondary-container: #EAE2C6; --md-on-surface: #E7E2D9; --md-on-surface-variant: #CCC6B5; 
+    --md-outline: #49454F; --glass-bg: rgba(38, 35, 21, 0.45); --glass-border: rgba(230, 199, 68, 0.20);
+}
+
+[data-theme="monochrome"] {
+    --md-bg: #101010; --md-surface: #1E1E1E; --md-surface-container: #242424;
+    --md-primary: #FFFFFF; --md-on-primary: #000000; --md-secondary-container: #333333; 
+    --md-on-secondary-container: #FFFFFF; --md-on-surface: #E0E0E0; --md-on-surface-variant: #AAAAAA; 
+    --md-error: #FFB4AB; --md-outline: #555555;
+    --glass-bg: rgba(30, 30, 30, 0.60); --glass-border: rgba(255, 255, 255, 0.20);
+}
+
+[data-theme="custom"] {
+    --hue: 200; 
+    --md-bg: hsl(var(--hue), 20%, 8%);
+    --md-surface: hsl(var(--hue), 20%, 12%);
+    --md-surface-container: hsl(var(--hue), 20%, 15%);
+    --md-primary: hsl(var(--hue), 80%, 75%);
+    --md-on-primary: hsl(var(--hue), 80%, 15%);
+    --md-secondary-container: hsl(var(--hue), 30%, 25%);
+    --md-on-secondary-container: hsl(var(--hue), 80%, 85%);
+    --md-on-surface: hsl(var(--hue), 20%, 90%);
+    --md-on-surface-variant: hsl(var(--hue), 20%, 75%);
+    --md-error: #FFB4AB;
+    --md-outline: hsl(var(--hue), 15%, 30%);
+    --glass-bg: hsla(var(--hue), 20%, 15%, 0.45);
+    --glass-border: hsla(var(--hue), 80%, 75%, 0.20);
+}
+
+.themes-grid { display: flex; justify-content: center; gap: 16px; margin-top: 16px; flex-wrap: wrap; }
+.theme-swatch { width: 48px; height: 48px; border-radius: 50%; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 2px solid transparent; transition: transform 0.2s, border 0.2s; }
+.theme-swatch:hover { border-color: #fff; }
+.swatch-default { background-color: #D0BCFF; } 
+.swatch-blue { background-color: #9ECAFF; } 
+.swatch-green { background-color: #9CD69E; } 
+.swatch-yellow { background-color: #E6C744; } 
+.swatch-pink { background-color: #FFB1C8; } 
+.swatch-monochrome { background-color: #FFFFFF; border: 1px solid #555; } 
+
+.custom-theme-wrapper { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--glass-border); width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+#customHueSlider { -webkit-appearance: none; appearance: none; width: 90%; height: 12px; border-radius: 100px; background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000); outline: none; }
+#customHueSlider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 26px; height: 26px; border-radius: 50%; background-color: #fff; border: 3px solid var(--md-surface); cursor: pointer; }
