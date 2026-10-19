@@ -30,27 +30,38 @@ let allGameData = {};
 let roomState = {};
 let isSheetUnlocked = false;
 let lastSeenEventTimestamp = 0;
-let selectedBoardPlayerId = null; // Активний гравець у верхньому док-барі вкладки «Стіл»
+let selectedBoardPlayerId = null;
 
 /* --- ІНІЦІАЛІЗАЦІЯ --- */
 window.addEventListener('DOMContentLoaded', () => {
     createStaticWallpaper();
     initSavedTheme();
     loadDatabase();
+    syncBodyScrollLock();
 });
 
+/* --- БЛОКУВАННЯ ПРОКРУТКИ ПІД ЕКРАНОМ ВХОДУ ТА МОДАЛКАМИ --- */
+function syncBodyScrollLock() {
+    const startVisible = document.getElementById('start-screen')?.style.display !== 'none';
+    const lobbyVisible = document.getElementById('lobby-screen')?.style.display !== 'none';
+    const anyModalVisible = Array.from(document.querySelectorAll('.modal-overlay')).some(
+        el => el.style.display === 'flex' || el.style.display === 'block'
+    );
+    document.body.classList.toggle('no-scroll', startVisible || lobbyVisible || anyModalVisible);
+}
+
 /* --- МОДАЛЬНІ ВІКНА --- */
-function openThemeModal() { document.getElementById('theme-modal').style.display = 'flex'; }
-function closeThemeModal() { document.getElementById('theme-modal').style.display = 'none'; }
-function openRules() { document.getElementById('rules-modal').style.display = 'flex'; }
-function closeRules() { document.getElementById('rules-modal').style.display = 'none'; }
-function openMoreMenu() { document.getElementById('more-menu-modal').style.display = 'flex'; }
-function closeMoreMenu() { document.getElementById('more-menu-modal').style.display = 'none'; }
-function openAddCardModal() { document.getElementById('add-card-modal').style.display = 'flex'; }
-function closeAddCardModal() { document.getElementById('add-card-modal').style.display = 'none'; }
-function closeTargetModal() { document.getElementById('target-modal').style.display = 'none'; }
-function closeAuditModal() { document.getElementById('audit-modal').style.display = 'none'; }
-function closeEditModal() { document.getElementById('edit-modal').style.display = 'none'; }
+function openThemeModal() { document.getElementById('theme-modal').style.display = 'flex'; syncBodyScrollLock(); }
+function closeThemeModal() { document.getElementById('theme-modal').style.display = 'none'; syncBodyScrollLock(); }
+function openRules() { document.getElementById('rules-modal').style.display = 'flex'; syncBodyScrollLock(); }
+function closeRules() { document.getElementById('rules-modal').style.display = 'none'; syncBodyScrollLock(); }
+function openMoreMenu() { document.getElementById('more-menu-modal').style.display = 'flex'; syncBodyScrollLock(); }
+function closeMoreMenu() { document.getElementById('more-menu-modal').style.display = 'none'; syncBodyScrollLock(); }
+function openAddCardModal() { document.getElementById('add-card-modal').style.display = 'flex'; syncBodyScrollLock(); }
+function closeAddCardModal() { document.getElementById('add-card-modal').style.display = 'none'; syncBodyScrollLock(); }
+function closeTargetModal() { document.getElementById('target-modal').style.display = 'none'; syncBodyScrollLock(); }
+function closeAuditModal() { document.getElementById('audit-modal').style.display = 'none'; syncBodyScrollLock(); }
+function closeEditModal() { document.getElementById('edit-modal').style.display = 'none'; syncBodyScrollLock(); }
 
 /* --- АУДИТ ТА АНТИЧИТ --- */
 function logAction(type, label, oldVal, newVal, isPublicEvent = false) {
@@ -106,6 +117,7 @@ function openAuditModal() {
     }
     closeMoreMenu();
     document.getElementById('audit-modal').style.display = 'flex';
+    syncBodyScrollLock();
 }
 
 /* --- СТАРТОВИЙ ЕКРАН --- */
@@ -133,6 +145,7 @@ function returnToStart() {
     document.getElementById('profile-photo').innerHTML = '';
     document.getElementById('my-statuses-bar').innerHTML = '';
     document.getElementById('start-screen').style.display = 'flex';
+    syncBodyScrollLock();
 }
 
 function startGame() {
@@ -159,41 +172,65 @@ function startGame() {
     document.getElementById('candidate-name').style.display = 'block';
     document.getElementById('room-status-label').textContent = "Очікує рішення...";
     
-    generateCharacter();
+    generateCharacter(false);
+    syncBodyScrollLock();
 }
 
-function generateCharacter() {
-    totalChanges = 0;
-    auditLog = [];
-    isSheetUnlocked = false;
-    updateChangesCounterUI();
+/* Генерація нового досьє зі збереженням уже відкритих карток (якщо preserveRevealed = true) */
+function createDossierPreservingState(existingData, preserveRevealed = true) {
+    const fresh = createDossierObject();
+    if (existingData && preserveRevealed) {
+        fresh.revealed = existingData.revealed ? { ...existingData.revealed } : {};
+        fresh.changesCount = existingData.changesCount || 0;
+        fresh.statuses = existingData.statuses ? [...existingData.statuses] : [];
+        fresh.baggageProtected = !!existingData.baggageProtected;
+    }
+    return fresh;
+}
 
-    document.getElementById('character-sheet').classList.add('hidden');
-    document.getElementById('global-lock').style.display = 'flex';
-    document.getElementById('bottomNav').style.display = 'none';
-    document.getElementById('header-actions').style.display = 'flex'; 
-    document.getElementById('my-statuses-bar').innerHTML = '';
-    document.getElementById('baggage-shield-badge').style.display = 'none';
+function generateCharacter(preserveOpenState = false) {
+    if (!preserveOpenState) {
+        totalChanges = 0;
+        auditLog = [];
+        isSheetUnlocked = false;
+        updateChangesCounterUI();
 
-    document.querySelectorAll('.m3-card[id*="-extra-"]').forEach(card => card.remove());
-    extraCardCounter = 0;
+        document.getElementById('character-sheet').classList.add('hidden');
+        document.getElementById('global-lock').style.display = 'flex';
+        document.getElementById('bottomNav').style.display = 'none';
+        document.getElementById('header-actions').style.display = 'flex'; 
+        document.getElementById('my-statuses-bar').innerHTML = '';
+        document.getElementById('baggage-shield-badge').style.display = 'none';
 
-    const firstTabBtn = document.querySelector('.m3-tab');
-    if (firstTabBtn) switchTab('tab-bio', firstTabBtn);
+        document.querySelectorAll('.m3-card[id*="-extra-"]').forEach(card => card.remove());
+        extraCardCounter = 0;
 
-    const charData = createDossierObject();
+        const firstTabBtn = document.querySelector('.m3-tab');
+        if (firstTabBtn) switchTab('tab-bio', firstTabBtn);
+    }
+
+    const prevData = allGameData[myId] || {};
+    const charData = createDossierPreservingState(prevData, preserveOpenState);
     allGameData[myId] = charData;
 
     document.getElementById('profile-photo').innerHTML = charData.gender === "Чоловік" ? imgMale : imgFemale;
-    document.getElementById('candidate-id').textContent = Math.floor(1000 + Math.random() * 9000);
+    if (!preserveOpenState) {
+        document.getElementById('candidate-id').textContent = Math.floor(1000 + Math.random() * 9000);
+    }
 
     const fields = [...CORE_FIELDS, 'special1', 'special2'];
     fields.forEach(key => {
         const container = document.getElementById(key);
         if (container) {
             container.dataset.value = charData[key];
-            container.classList.remove('revealed', 'used-special');
-            container.textContent = ""; 
+            container.classList.remove('used-special');
+            if (preserveOpenState && isSheetUnlocked) {
+                container.classList.add('revealed');
+                container.textContent = charData[key];
+            } else {
+                container.classList.remove('revealed');
+                container.textContent = ""; 
+            }
         }
     });
 
@@ -240,25 +277,35 @@ function unlockSheetAndShowNav() {
     document.getElementById('bottomNav').style.display = 'flex';
 }
 
-/* --- ПУБЛІЧНЕ ВІДКРИТТЯ КАРТКИ ДЛЯ СТОЛУ --- */
-function togglePublicReveal(fieldId) {
+/* --- НЕЗВОРОТНЕ ПУБЛІЧНЕ ВІДКРИТТЯ КАРТКИ ДЛЯ СТОЛУ --- */
+function revealCardPublicly(fieldId) {
     if (myRole === 'offline' || !roomRef || !isSheetUnlocked) return;
-    const currentState = !!(allGameData[myId]?.revealed?.[fieldId]);
-    const nextState = !currentState;
-    roomRef.child(`gameData/${myId}/revealed/${fieldId}`).set(nextState);
-
-    if (nextState) {
-        const label = getCardLabel(fieldId);
-        const val = document.getElementById(fieldId)?.dataset.value || '';
-        roomRef.child('events').push({
-            timestamp: Date.now(),
-            actor: getMyPlayerName(),
-            type: '👁️ Відкрито картку',
-            label: `${getMyPlayerName()} відкрив «${label}»`,
-            oldVal: '',
-            newVal: val
-        });
+    const alreadyOpen = !!(allGameData[myId]?.revealed?.[fieldId]);
+    if (alreadyOpen) {
+        showToast("Цю характеристику вже відкрито! Сховати назад не можна.", "lock");
+        return;
     }
+
+    roomRef.child(`gameData/${myId}/revealed/${fieldId}`).set(true);
+
+    const label = getCardLabel(fieldId);
+    const val = document.getElementById(fieldId)?.dataset.value || '';
+    roomRef.child('events').push({
+        timestamp: Date.now(),
+        actor: getMyPlayerName(),
+        type: '👁️ Відкрито картку',
+        label: `${getMyPlayerName()} відкрив «${label}»`,
+        oldVal: '',
+        newVal: val
+    });
+}
+
+function revealExtraCardPublicly(extraFieldId) {
+    if (myRole === 'offline' || !roomRef) return;
+    const alreadyOpen = !!(allGameData[myId]?.extraCards?.[extraFieldId]?.revealed);
+    if (alreadyOpen) return;
+
+    roomRef.child(`gameData/${myId}/extraCards/${extraFieldId}/revealed`).set(true);
 }
 
 /* --- КАРТКИ СТОП БУНКЕР --- */
@@ -339,6 +386,7 @@ function promptPlayerSelection(title, subtitle, includeSelf, callback) {
     });
 
     document.getElementById('target-modal').style.display = 'flex';
+    syncBodyScrollLock();
 }
 
 function promptFieldSelection(title, subtitle, allowedFields, callback) {
@@ -359,6 +407,7 @@ function promptFieldSelection(title, subtitle, allowedFields, callback) {
     });
 
     document.getElementById('target-modal').style.display = 'flex';
+    syncBodyScrollLock();
 }
 
 function executeSpecialCard(specialFieldId, cardText) {
@@ -370,12 +419,12 @@ function executeSpecialCard(specialFieldId, cardText) {
         return;
     }
 
-    // 1. Зміна всього Досьє
+    // 1. Зміна всього Досьє (ЗБЕРІГАЮЧИ ВІДКРИТІ ПОЗИЦІЇ!)
     if (textLower.includes("досьє")) {
         if (textLower.includes("всім гравцям")) {
             players.forEach(p => {
-                const fresh = createDossierObject();
                 const cur = allGameData[p.id] || {};
+                const fresh = createDossierPreservingState(cur, true);
                 fresh.special1 = cur.special1 || fresh.special1;
                 fresh.special2 = cur.special2 || fresh.special2;
                 fresh.usedSpecials = cur.usedSpecials || { special1: false, special2: false };
@@ -386,8 +435,8 @@ function executeSpecialCard(specialFieldId, cardText) {
             return;
         }
         if (textLower.includes("собі")) {
-            const fresh = createDossierObject();
             const cur = allGameData[myId] || {};
+            const fresh = createDossierPreservingState(cur, true);
             fresh.special1 = cur.special1;
             fresh.special2 = cur.special2;
             fresh.usedSpecials = cur.usedSpecials || {};
@@ -398,8 +447,8 @@ function executeSpecialCard(specialFieldId, cardText) {
         }
         if (textLower.includes("гравцеві на вибір")) {
             promptPlayerSelection("Кому змінити все Досьє?", cardText, true, (targetPlayer) => {
-                const fresh = createDossierObject();
                 const cur = allGameData[targetPlayer.id] || {};
+                const fresh = createDossierPreservingState(cur, true);
                 fresh.special1 = cur.special1 || fresh.special1;
                 fresh.special2 = cur.special2 || fresh.special2;
                 fresh.usedSpecials = cur.usedSpecials || {};
@@ -447,7 +496,7 @@ function executeSpecialCard(specialFieldId, cardText) {
         }
     }
 
-    // 5. Дії з конкретною характеристикою
+    // 5. Дії з конкретною характеристикою (відкритість картки у `revealed` не скидається!)
     if (targetField) {
         if (textLower.includes("всім гравцям")) {
             players.forEach(p => {
@@ -604,8 +653,9 @@ function executeSpecialCard(specialFieldId, cardText) {
 
 function handleOfflineSpecial(specialFieldId, cardText, textLower, targetField) {
     if (textLower.includes("досьє")) {
-        generateCharacter();
-        showToast("Згенеровано нове досьє!", "autorenew");
+        generateCharacter(true);
+        markSpecialAsUsed(specialFieldId, cardText);
+        showToast("Досьє оновлено зі збереженням відкритих карток!", "autorenew");
         return;
     }
     if (textLower.includes("вилікувати себе")) {
@@ -692,6 +742,7 @@ function openEditModal(fieldId, dbKey) {
     });
     
     document.getElementById('edit-modal').style.display = 'flex';
+    syncBodyScrollLock();
 }
 
 function selectOptionItem(element, value) {
@@ -832,10 +883,13 @@ function renderExtraCardDOM(newFieldId, dbKey, fullLabel, value, tabId, isPublic
     card.id = newCardId;
 
     const actionButtonsHtml = dbKey === 'specials' 
-        ? `<button class="m3-icon-btn highlight" onclick="useSpecial('${escapeHtml(newFieldId)}')"><span class="material-symbols-outlined">bolt</span></button>`
-        : `<button class="m3-icon-btn online-reveal-btn ${isPubliclyRevealed ? 'is-public' : ''}" id="reveal-btn-${escapeHtml(newFieldId)}" onclick="toggleExtraCardReveal('${escapeHtml(newFieldId)}')" title="Відкрити для всіх"><span class="material-symbols-outlined">visibility</span></button>
-           <button class="m3-icon-btn" onclick="openEditModal('${escapeHtml(newFieldId)}', '${escapeHtml(dbKey)}')"><span class="material-symbols-outlined">edit</span></button>
-           <button class="m3-icon-btn" onclick="requestResetField('${escapeHtml(newFieldId)}', '${escapeHtml(dbKey)}')"><span class="material-symbols-outlined">shuffle</span></button>`;
+        ? `<button class="reveal-pill-btn use-special-pill" onclick="useSpecial('${escapeHtml(newFieldId)}')"><span class="material-symbols-outlined">bolt</span><span>Активувати</span></button>`
+        : `<button class="reveal-pill-btn online-reveal-btn ${isPubliclyRevealed ? 'is-public' : ''}" id="reveal-btn-${escapeHtml(newFieldId)}" onclick="revealExtraCardPublicly('${escapeHtml(newFieldId)}')">
+               <span class="material-symbols-outlined">${isPubliclyRevealed ? 'check_circle' : 'visibility'}</span>
+               <span class="reveal-btn-text">${isPubliclyRevealed ? 'Відкрито' : 'Відкрити'}</span>
+           </button>
+           <button class="m3-icon-btn subtle" onclick="openEditModal('${escapeHtml(newFieldId)}', '${escapeHtml(dbKey)}')"><span class="material-symbols-outlined">edit</span></button>
+           <button class="m3-icon-btn subtle" onclick="requestResetField('${escapeHtml(newFieldId)}', '${escapeHtml(dbKey)}')"><span class="material-symbols-outlined">shuffle</span></button>`;
 
     card.innerHTML = `
         <div class="card-header">
@@ -856,46 +910,46 @@ function renderExtraCardDOM(newFieldId, dbKey, fullLabel, value, tabId, isPublic
     }
 }
 
-function toggleExtraCardReveal(extraFieldId) {
-    if (myRole === 'offline' || !roomRef) return;
-    const cur = !!(allGameData[myId]?.extraCards?.[extraFieldId]?.revealed);
-    roomRef.child(`gameData/${myId}/extraCards/${extraFieldId}/revealed`).set(!cur);
-}
-
 /* --- ПІДТВЕРДЖЕННЯ ДІЙ --- */
 function requestResetField(elementId, dbKey) {
     if (isTypingGlobal) return;
     if (!document.getElementById(elementId)?.classList.contains('revealed')) return;
     pendingAction = { type: 'random', fieldId: elementId, dbKey: dbKey };
     document.getElementById('confirm-modal').style.display = 'flex';
+    syncBodyScrollLock();
 }
 function requestSaveEditField(selectedValue) {
     pendingAction = { type: 'manual', fieldId: currentEditField, dbKey: currentEditDbKey, value: selectedValue };
     document.getElementById('edit-modal').style.display = 'none';
     document.getElementById('confirm-modal').style.display = 'flex';
+    syncBodyScrollLock();
 }
 function requestNewDossier() {
     pendingAction = { type: 'new_dossier' };
     document.getElementById('confirm-modal').style.display = 'flex';
+    syncBodyScrollLock();
 }
 function confirmAction() {
     document.getElementById('confirm-modal').style.display = 'none';
+    syncBodyScrollLock();
     if (!pendingAction) return;
     if (pendingAction.type === 'random') resetField(pendingAction.fieldId, pendingAction.dbKey);
     else if (pendingAction.type === 'manual') saveEditField(pendingAction.value);
     else if (pendingAction.type === 'new_dossier') {
         if (myRole !== 'offline' && roomRef) {
-            const fresh = createDossierObject();
+            const cur = allGameData[myId] || {};
+            const fresh = createDossierPreservingState(cur, true);
             roomRef.child(`gameData/${myId}`).set(fresh);
-            logAction('🔄 Нове досьє', 'Повна перегенерація', '', 'Новий персонаж', true);
+            logAction('🔄 Нове досьє', 'Перегенерація (відкриті збережено)', '', 'Оновлено', true);
         } else {
-            generateCharacter();
+            generateCharacter(false);
         }
     }
     pendingAction = null;
 }
 function cancelAction() {
     document.getElementById('confirm-modal').style.display = 'none';
+    syncBodyScrollLock();
     pendingAction = null;
 }
 
@@ -950,6 +1004,8 @@ function hostGame() {
     
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('lobby-screen').style.display = 'flex';
+    syncBodyScrollLock();
+
     document.getElementById('lobby-title').textContent = "Код вашої кімнати";
     document.getElementById('lobby-status').textContent = "Очікування приєднання гравців...";
     
@@ -988,6 +1044,8 @@ function joinGame() {
     
     document.getElementById('start-screen').style.display = 'none';
     document.getElementById('lobby-screen').style.display = 'flex';
+    syncBodyScrollLock();
+
     document.getElementById('lobby-title').textContent = `Кімната #${currentRoomId}`;
     document.getElementById('lobby-status').textContent = "Підключення до сервера...";
     document.getElementById('lobby-code-box').style.display = 'none';
@@ -1024,6 +1082,10 @@ function attachRoomListeners() {
         if (!selectedBoardPlayerId && players.length > 0) {
             selectedBoardPlayerId = players[0].id;
         }
+        // Оновлюємо лічильник гравців на вкладці «Стіл» знизу
+        const navText = document.getElementById('nav-tab-players-text');
+        if (navText) navText.textContent = `Стіл (${players.length})`;
+
         updateLobbyUI();
         renderPlayersBoard();
     });
@@ -1101,6 +1163,8 @@ function enterOnlineGameScreen() {
     document.body.classList.add('is-online');
     document.getElementById('nav-tab-players').style.display = 'flex';
     document.getElementById('lobby-screen').style.display = 'none';
+    syncBodyScrollLock();
+
     document.getElementById('global-lock').style.display = 'flex';
     document.getElementById('bottomNav').style.display = 'none';
     document.getElementById('header-actions').style.display = 'flex';
@@ -1124,6 +1188,19 @@ function enterOnlineGameScreen() {
     }
 
     document.getElementById('character-sheet').classList.remove('hidden');
+}
+
+function updateRevealButtonState(btnEl, cardEl, isPublic) {
+    if (btnEl) {
+        btnEl.classList.toggle('is-public', isPublic);
+        const iconSpan = btnEl.querySelector('.material-symbols-outlined');
+        const textSpan = btnEl.querySelector('.reveal-btn-text');
+        if (iconSpan) iconSpan.textContent = isPublic ? 'check_circle' : 'visibility';
+        if (textSpan) textSpan.textContent = isPublic ? 'Відкрито' : 'Відкрити';
+    }
+    if (cardEl) {
+        cardEl.classList.toggle('publicly-revealed', isPublic);
+    }
 }
 
 function syncMyCharacterUI(myData) {
@@ -1155,7 +1232,7 @@ function syncMyCharacterUI(myData) {
         container.dataset.value = newVal;
         if (isSheetUnlocked) {
             container.classList.add('revealed');
-            if (oldVal !== newVal) {
+            if (oldVal !== newVal || container.textContent === "") {
                 container.textContent = newVal;
             }
         }
@@ -1163,8 +1240,7 @@ function syncMyCharacterUI(myData) {
         const isPublic = !!(myData.revealed && myData.revealed[key]);
         const revealBtn = document.getElementById(`reveal-btn-${key}`);
         const cardEl = document.getElementById(`card-${key}`);
-        if (revealBtn) revealBtn.classList.toggle('is-public', isPublic);
-        if (cardEl) cardEl.classList.toggle('publicly-revealed', isPublic);
+        updateRevealButtonState(revealBtn, cardEl, isPublic);
     });
 
     ['special1', 'special2'].forEach(spKey => {
@@ -1184,28 +1260,55 @@ function syncMyCharacterUI(myData) {
             }
             const revBtn = document.getElementById(`reveal-btn-${extraId}`);
             const cardBox = document.getElementById(`card-${extraId}`);
-            if (revBtn) revBtn.classList.toggle('is-public', !!extraObj.revealed);
-            if (cardBox) cardBox.classList.toggle('publicly-revealed', !!extraObj.revealed);
+            updateRevealButtonState(revBtn, cardBox, !!extraObj.revealed);
         });
     }
 }
 
-/* --- СТІЛ ГРАВЦІВ ІЗ ВЕРХНІМ ДОК-БАРОМ ДЛЯ ПЕРЕМИКАННЯ УЧАСНИКІВ --- */
+/* --- СТІЛ ГРАВЦІВ ІЗ АДАПТИВНИМ ДОК-БАРОМ ТА СТРІЛКАМИ ДЛЯ ПК --- */
 function selectBoardPlayer(playerId) {
     selectedBoardPlayerId = playerId;
     renderPlayersBoard();
 }
 
+function cycleBoardPlayer(direction) {
+    if (!players || players.length <= 1) return;
+    const currentIndex = players.findIndex(p => p.id === selectedBoardPlayerId);
+    const safeIndex = currentIndex === -1 ? 0 : currentIndex;
+    const nextIndex = (safeIndex + direction + players.length) % players.length;
+    selectedBoardPlayerId = players[nextIndex].id;
+    renderPlayersBoard();
+
+    // Прокручуємо верхній док-бар до активного гравця
+    const activeTabEl = document.querySelector('.player-dock-tab.active');
+    if (activeTabEl) {
+        activeTabEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+}
+
 function renderPlayersBoard() {
     const topDock = document.getElementById('players-top-dock');
     const board = document.getElementById('players-board-container');
+    const countSubtitle = document.getElementById('players-count-subtitle');
+    const prevBtn = document.getElementById('prevPlayerBtn');
+    const nextBtn = document.getElementById('nextPlayerBtn');
+
     if (!board || !topDock || myRole === 'offline') return;
 
     if (!players.some(p => p.id === selectedBoardPlayerId)) {
         selectedBoardPlayerId = players[0]?.id || myId;
     }
 
-    // 1. Рендеримо верхній док-бар учасників
+    if (countSubtitle) {
+        countSubtitle.textContent = `Учасників за столом: ${players.length}`;
+    }
+
+    // Ховаємо бокові стрілки, якщо в кімнаті лише 1 гравець
+    const showArrows = players.length > 1;
+    if (prevBtn) prevBtn.style.display = showArrows ? 'flex' : 'none';
+    if (nextBtn) nextBtn.style.display = showArrows ? 'flex' : 'none';
+
+    // 1. Рендеримо адаптивний верхній док-бар учасників
     topDock.innerHTML = '';
     players.forEach(p => {
         const pData = allGameData[p.id] || {};
@@ -1221,7 +1324,7 @@ function renderPlayersBoard() {
         topDock.appendChild(btn);
     });
 
-    // 2. Рендеримо картки обраного гравця у звичному стилі досьє
+    // 2. Рендеримо картки обраного гравця
     board.innerHTML = '';
     const activePlayer = players.find(p => p.id === selectedBoardPlayerId);
     if (!activePlayer) return;
@@ -1238,7 +1341,6 @@ function renderPlayersBoard() {
 
     let cardsHtml = '';
 
-    // Шапка обраного гравця (якщо є статуси або зміни)
     if (statusesHtml || changes > 0) {
         cardsHtml += `
             <div class="m3-card glass-panel wide-card" style="padding: 14px 18px;">
@@ -1250,7 +1352,6 @@ function renderPlayersBoard() {
         `;
     }
 
-    // Основні картки характеристик
     CORE_FIELDS.forEach(fKey => {
         const isOpen = !!revealedMap[fKey];
         const val = isOpen ? (pData[fKey] || "—") : "🔒 Засекречено";
@@ -1260,7 +1361,7 @@ function renderPlayersBoard() {
                 <div class="card-header">
                     <span class="label">${escapeHtml(FIELD_NAMES[fKey])}</span>
                     <span class="material-symbols-outlined" style="font-size: 18px; color: ${isOpen ? '#9CD69E' : 'var(--md-outline)'};">
-                        ${isOpen ? 'visibility' : 'lock'}
+                        ${isOpen ? 'check_circle' : 'lock'}
                     </span>
                 </div>
                 <div class="field-content ${isOpen ? '' : 'secret-value'}">${escapeHtml(val)}</div>
@@ -1268,7 +1369,6 @@ function renderPlayersBoard() {
         `;
     });
 
-    // Додаткові картки обраного гравця
     if (pData.extraCards) {
         Object.values(pData.extraCards).forEach(ext => {
             const isOpen = !!ext.revealed;
@@ -1278,7 +1378,7 @@ function renderPlayersBoard() {
                     <div class="card-header">
                         <span class="label">${escapeHtml(ext.label)}</span>
                         <span class="material-symbols-outlined" style="font-size: 18px; color: ${isOpen ? '#9CD69E' : 'var(--md-outline)'};">
-                            ${isOpen ? 'visibility' : 'lock'}
+                            ${isOpen ? 'check_circle' : 'lock'}
                         </span>
                     </div>
                     <div class="field-content ${isOpen ? '' : 'secret-value'}">${escapeHtml(val)}</div>
@@ -1287,7 +1387,6 @@ function renderPlayersBoard() {
         });
     }
 
-    // Активовані Стоп Бункери обраного гравця
     ['special1', 'special2'].forEach((spKey, idx) => {
         const isUsed = !!(pData.usedSpecials && pData.usedSpecials[spKey]);
         if (isUsed || revealedMap[spKey]) {
@@ -1307,7 +1406,9 @@ function renderPlayersBoard() {
 
 function updateLobbyUI() {
     const list = document.getElementById('players-list');
+    const countLabel = document.getElementById('lobby-players-count');
     if (!list) return;
+    if (countLabel) countLabel.textContent = `Гравці в лобі (${players.length}):`;
     list.innerHTML = '';
     players.forEach(p => {
         const li = document.createElement('li');
@@ -1340,6 +1441,7 @@ function cancelOnline() {
     document.body.classList.remove('is-online');
     document.getElementById('lobby-screen').style.display = 'none';
     document.getElementById('start-screen').style.display = 'flex';
+    syncBodyScrollLock();
 }
 
 // Експортуємо функції у window для сумісності з HTML-атрибутами onclick
@@ -1348,7 +1450,7 @@ Object.assign(window, {
     openRules, closeRules, openMoreMenu, closeMoreMenu, openThemeModal, closeThemeModal,
     setTheme, setCustomTheme, openAddCardModal, closeAddCardModal, addNewCard,
     openAuditModal, closeAuditModal, returnToStart, unlockSheetAndShowNav, switchTab,
-    togglePublicReveal, toggleExtraCardReveal, openEditModal, closeEditModal,
+    revealCardPublicly, revealExtraCardPublicly, cycleBoardPlayer, openEditModal, closeEditModal,
     filterOptions, confirmEditSelection, requestResetField, requestNewDossier,
     confirmAction, cancelAction, useSpecial, clearRoomSpecialsLock, closeTargetModal
 });

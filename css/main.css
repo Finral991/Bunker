@@ -12,6 +12,14 @@ body {
     padding: 16px; margin: 0; padding-bottom: 120px;
     position: relative; min-height: 100vh;
     transition: background-color 0.4s ease;
+    overflow-x: hidden;
+}
+
+/* Блокування скролу під екраном автентифікації та модалками */
+body.no-scroll {
+    overflow: hidden !important;
+    height: 100vh !important;
+    touch-action: none;
 }
 
 .emoji-wallpaper {
@@ -54,13 +62,15 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 /* --- ЕКРАН ІДЕНТИФІКАЦІЇ --- */
 .start-screen {
     position: fixed; inset: 0;
-    background-color: rgba(20, 18, 24, 0.65);
-    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    background-color: rgba(20, 18, 24, 0.75);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
     display: flex; justify-content: center; align-items: center; z-index: 500; padding: 16px;
+    overflow-y: auto;
 }
 .start-card {
     padding: 32px 24px; width: 100%; max-width: 400px;
     display: flex; flex-direction: column; gap: 14px; text-align: center;
+    margin: auto;
 }
 .hero-icon { font-size: 64px; color: var(--md-primary); margin-bottom: 4px; transition: color 0.4s; }
 .start-title { font-size: 28px; color: var(--md-on-surface); margin: 0; }
@@ -88,11 +98,11 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 .telegram-link svg { fill: currentColor; transition: transform 0.3s ease; }
 .telegram-link:hover, .telegram-link:active { color: var(--md-primary); opacity: 1; }
 
-/* --- MATERIAL YOU НИЖНІЙ ТА ВЕРХНІЙ ДОК-БАРИ (ВИПРАВЛЕНО МАСШТАБУВАННЯ) --- */
+/* --- MATERIAL YOU НИЖНІЙ ДОК-БАР --- */
 .m3-bottom-container {
     position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
     display: flex; gap: 8px; z-index: 100; align-items: center; justify-content: center;
-    width: calc(100vw - 20px); max-width: 520px;
+    width: calc(100vw - 20px); max-width: 540px;
 }
 .m3-tabs-pill {
     display: flex; align-items: center; justify-content: space-between;
@@ -108,7 +118,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
     display: flex; align-items: center; justify-content: center; gap: 4px;
     padding: 10px 10px; border-radius: 100px; cursor: pointer;
     color: var(--md-on-surface-variant); transition: background 0.3s, color 0.3s, padding 0.3s;
-    flex-shrink: 0;
+    flex-shrink: 0; user-select: none;
 }
 .m3-tab .text {
     max-width: 0; opacity: 0; overflow: hidden; white-space: nowrap;
@@ -116,42 +126,67 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
     font-weight: 600; font-size: 13px; margin-left: 0;
 }
 .m3-tab.active { background-color: var(--md-primary); color: var(--md-on-primary); padding: 10px 14px; }
-.m3-tab.active .text { max-width: 80px; opacity: 1; margin-left: 3px; }
+.m3-tab.active .text { max-width: 95px; opacity: 1; margin-left: 3px; }
 
 .m3-fab-circle {
     width: 50px; height: 50px; border-radius: 50%; 
     display: flex; align-items: center; justify-content: center;
-    flex: 0 0 50px; /* Залізно фіксуємо кнопку 3 крапок, щоб вона ніколи не стискалась і не випадала */
+    flex: 0 0 50px;
     color: var(--md-on-surface); cursor: pointer; transition: 0.2s;
     background-color: var(--md-surface-container);
     box-shadow: 0 4px 18px rgba(0,0,0,0.45);
 }
 .m3-fab-circle:active { transform: scale(0.9); }
 
-/* На дуже вузьких екранах або величезному масштабі робимо відступи компактнішими */
 @media (max-width: 390px) {
     .m3-tab { padding: 9px 8px; }
     .m3-tab.active { padding: 9px 11px; }
-    .m3-tab.active .text { font-size: 12px; max-width: 65px; }
+    .m3-tab.active .text { font-size: 12px; max-width: 75px; }
     .m3-fab-circle { width: 46px; height: 46px; flex: 0 0 46px; }
 }
 
-/* --- ВЕРХНІЙ ДОК-БАР ПЕРЕМИКАННЯ ГРАВЦІВ НА СТОЛІ --- */
+/* --- ВЕРХНІЙ ДОК-БАР ПЕРЕМИКАННЯ ГРАВЦІВ (АДАПТИВНИЙ ПІД КІЛЬКІСТЬ ЛЮДЕЙ + СТРІЛКИ) --- */
 .players-top-dock-wrapper {
     position: sticky; top: 10px; z-index: 40;
-    display: flex; justify-content: center; margin-bottom: 4px;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    margin-bottom: 4px;
+}
+.players-carousel-row {
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px; width: 100%; max-width: 100%;
 }
 .players-top-pill {
-    width: 100%; justify-content: flex-start; gap: 6px; padding: 6px;
+    flex: 0 1 auto !important; /* Не розтягується на весь екран, якщо гравець 1 */
+    width: fit-content;
+    max-width: calc(100% - 96px);
+    justify-content: center;
+    gap: 6px; padding: 6px;
     overflow-x: auto; scroll-behavior: smooth;
+}
+.dock-nav-arrow {
+    width: 42px; height: 42px; flex: 0 0 42px;
+    border-radius: 50% !important;
+    background-color: var(--md-surface-container);
+    color: var(--md-on-surface);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+}
+.dock-nav-arrow:hover {
+    border-color: var(--md-primary) !important;
+    color: var(--md-primary);
+}
+.players-count-subtitle {
+    font-size: 12px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.6px; color: var(--md-on-surface-variant);
+    background: rgba(0,0,0,0.25); padding: 3px 12px; border-radius: 100px;
 }
 .player-dock-tab {
     display: flex; align-items: center; gap: 6px;
-    padding: 10px 16px; border-radius: 100px; cursor: pointer;
+    padding: 9px 14px; border-radius: 100px; cursor: pointer;
     color: var(--md-on-surface-variant); font-weight: 600; font-size: 14px;
     white-space: nowrap; transition: 0.25s; flex-shrink: 0;
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(255, 255, 255, 0.03); user-select: none;
 }
+.player-dock-tab:hover { background: rgba(255, 255, 255, 0.08); }
 .player-dock-tab .material-symbols-outlined { font-size: 18px; }
 .player-dock-tab.active {
     background-color: var(--md-primary); color: var(--md-on-primary);
@@ -162,7 +197,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
     background: rgba(0,0,0,0.25); font-weight: 700;
 }
 
-/* --- BUTTONS & MENU --- */
+/* --- КНОПКИ В КАРТКАХ (ЗРОЗУМІЛА ІЄРАРХІЯ) --- */
 .m3-btn {
     padding: 12px 24px; border-radius: 100px; font-size: 15px; font-weight: 600;
     border: none; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px;
@@ -183,20 +218,52 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
     background-color: rgba(0, 0, 0, 0.15); margin-right: 4px; font-size: 18px;
 }
 
+/* Компактні другорядні кнопки редагування/рандому */
 .m3-icon-btn {
-    width: 38px; height: 38px; border-radius: 50%; border: none;
-    background-color: rgba(255,255,255,0.08); color: var(--md-on-surface);
+    width: 36px; height: 36px; border-radius: 50%; border: none;
+    background-color: rgba(255,255,255,0.07); color: var(--md-on-surface);
     display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s;
 }
-.m3-icon-btn:active { transform: scale(0.9); background-color: rgba(255,255,255,0.2); }
-.m3-icon-btn.highlight { background-color: var(--md-primary); color: var(--md-on-primary); }
+.m3-icon-btn.subtle {
+    width: 34px; height: 34px;
+    background-color: rgba(255,255,255,0.05);
+    color: var(--md-on-surface-variant);
+}
+.m3-icon-btn.subtle .material-symbols-outlined { font-size: 18px; }
+.m3-icon-btn:hover { background-color: rgba(255,255,255,0.14); color: var(--md-on-surface); }
+.m3-icon-btn:active { transform: scale(0.9); }
+
+/* Виразна головна кнопка «Відкрити» / «Активувати» */
+.reveal-pill-btn {
+    height: 34px; padding: 0 12px; border-radius: 100px;
+    border: 1px solid rgba(208, 188, 255, 0.3);
+    background-color: rgba(208, 188, 255, 0.12);
+    color: var(--md-primary);
+    font-size: 12px; font-weight: 700;
+    display: inline-flex; align-items: center; gap: 5px;
+    cursor: pointer; transition: 0.2s;
+}
+.reveal-pill-btn .material-symbols-outlined { font-size: 16px; }
+.reveal-pill-btn:hover { background-color: rgba(208, 188, 255, 0.22); }
+.reveal-pill-btn:active { transform: scale(0.95); }
+
+.use-special-pill {
+    background-color: var(--md-primary);
+    color: var(--md-on-primary);
+    border: none;
+}
+.use-special-pill:hover { opacity: 0.9; background-color: var(--md-primary); }
 
 .online-reveal-btn { display: none; }
-body.is-online .online-reveal-btn { display: flex; }
+body.is-online .online-reveal-btn { display: inline-flex; }
+
+/* Стан після відкриття (Незворотний!) */
 .online-reveal-btn.is-public {
-    background-color: rgba(156, 214, 158, 0.22);
+    background-color: rgba(156, 214, 158, 0.18);
     color: #9CD69E;
-    border: 1px solid rgba(156, 214, 158, 0.5);
+    border: 1px solid rgba(156, 214, 158, 0.45);
+    cursor: default;
+    pointer-events: none;
 }
 
 /* --- DIALOGS --- */
@@ -271,9 +338,9 @@ body.is-online .online-reveal-btn { display: flex; }
 .m3-card { padding: 18px; display: flex; flex-direction: column; position: relative; }
 .m3-card.publicly-revealed { border-color: rgba(156, 214, 158, 0.45) !important; }
 .wide-card { grid-column: 1 / -1; }
-.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px; }
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px; flex-wrap: wrap; }
 .label { color: var(--md-on-surface-variant); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-.action-btns { display: flex; gap: 6px; }
+.action-btns { display: flex; align-items: center; gap: 6px; }
 
 .field-content { 
     font-size: 17px; font-weight: 500; line-height: 1.45; color: var(--md-on-surface); 

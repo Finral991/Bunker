@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="css/themes.css">
     <link rel="stylesheet" href="css/main.css">
 </head>
-<body data-theme="default">
+<body data-theme="default" class="no-scroll">
     <!-- ФОНОВИЙ ПАТЕРН -->
     <div class="emoji-wallpaper" id="emojiWallpaper"></div>
 
@@ -77,7 +77,7 @@
             <p id="lobby-status" style="color: var(--md-on-surface-variant); margin: 4px 0 12px;">З'єднання з сервером...</p>
             
             <div id="lobby-players" style="display: none; flex-direction: column; gap: 8px; margin-bottom: 12px; text-align: left; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 12px;">
-                <div style="font-size: 12px; color: var(--md-on-surface-variant); text-transform: uppercase; font-weight: 700;">Гравці в лобі:</div>
+                <div id="lobby-players-count" style="font-size: 12px; color: var(--md-on-surface-variant); text-transform: uppercase; font-weight: 700;">Гравці в лобі (0):</div>
                 <ul id="players-list" style="margin: 0; padding-left: 20px; color: var(--md-on-surface); font-size: 15px;"></ul>
             </div>
 
@@ -92,9 +92,9 @@
             <h2 class="dialog-title">Правила гри</h2>
             <div class="rules-content">
                 <p><strong>Мета:</strong> Довести, що саме ви найкорисніші для виживання людства, і потрапити до Бункера.</p>
-                <p><strong>Хід гри:</strong> Гравці по колу відкривають по кілька характеристик (в онлайні — натискаючи іконку ока 👁️ на картці) і пояснюють свою корисність.</p>
-                <p><strong>Стіл гравців:</strong> У вкладці «Стіл» зверху є панель перемикання між учасниками, де можна оглянути відкриті картки кожного гравця.</p>
-                <p><strong>Стоп Бункер:</strong> Спеціальні картки для зміни ходу гри. При натисканні на блискавку ⚡ автоматично застосовують свій ефект.</p>
+                <p><strong>Хід гри:</strong> Гравці по колу відкривають свої характеристики кнопкою <strong>«Відкрити»</strong>. Відкриту характеристику сховати назад уже не можна!</p>
+                <p><strong>Стіл гравців:</strong> У вкладці «Стіл» зверху є панель перемикання між учасниками зі стрілками по боках для зручного перегляду з ПК та смартфона.</p>
+                <p><strong>Стоп Бункер:</strong> Спеціальні картки для зміни ходу гри. При натисканні на <strong>«Активувати ⚡»</strong> автоматично застосовують свій ефект, зберігаючи вже відкриті позиції.</p>
             </div>
             <div class="dialog-actions">
                 <button class="m3-btn filled" onclick="closeRules()">Зрозуміло</button>
@@ -233,7 +233,7 @@
         </div>
     </div>
 
-    <!-- АДАПТИВНИЙ БОТОМ БАР (НЕ ВИЛАЗИТЬ ЗА ЕКРАН ПРИ БУДЬ-ЯКОМУ МАСШТАБІ) -->
+    <!-- АДАПТИВНИЙ БОТОМ БАР -->
     <div class="m3-bottom-container" id="bottomNav" style="display: none;">
         <div class="m3-tabs-pill glass-panel">
             <div class="m3-tab active" onclick="switchTab('tab-bio', this)">
@@ -254,10 +254,10 @@
             </div>
             <div class="m3-tab" id="nav-tab-players" style="display: none;" onclick="switchTab('tab-players', this)">
                 <span class="material-symbols-outlined">groups</span>
-                <span class="text">Стіл</span>
+                <span class="text" id="nav-tab-players-text">Стіл</span>
             </div>
         </div>
-        <button class="m3-fab-circle glass-panel" onclick="openMoreMenu()" aria-label="Меню">
+        <button class="m3-fab-circle glass-panel" onclick="openMoreMenu()" title="Меню та налаштування">
             <span class="material-symbols-outlined">more_horiz</span>
         </button>
     </div>
@@ -281,7 +281,7 @@
                         <span class="material-symbols-outlined progress-icon">sync</span>
                         <span class="status-text" id="room-status-label">Очікує рішення...</span>
                     </div>
-                    <div id="changes-counter" class="changes-badge" style="display: none;" onclick="openAuditModal()">
+                    <div id="changes-counter" class="changes-badge" style="display: none;" onclick="openAuditModal()" title="Натисніть, щоб відкрити Журнал аудиту">
                         <span class="material-symbols-outlined" style="font-size: 16px;">history</span> Змін: 0
                     </div>
                 </div>
@@ -300,9 +300,12 @@
                         <div class="card-header">
                             <span class="label">Стать</span>
                             <div class="action-btns">
-                                <button class="m3-icon-btn online-reveal-btn" id="reveal-btn-gender" onclick="togglePublicReveal('gender')" title="Відкрити для всіх"><span class="material-symbols-outlined">visibility</span></button>
-                                <button class="m3-icon-btn" onclick="openEditModal('gender', 'genders')"><span class="material-symbols-outlined">edit</span></button>
-                                <button class="m3-icon-btn" onclick="requestResetField('gender', 'genders')"><span class="material-symbols-outlined">shuffle</span></button>
+                                <button class="reveal-pill-btn online-reveal-btn" id="reveal-btn-gender" onclick="revealCardPublicly('gender')">
+                                    <span class="material-symbols-outlined">visibility</span>
+                                    <span class="reveal-btn-text">Відкрити</span>
+                                </button>
+                                <button class="m3-icon-btn subtle" onclick="openEditModal('gender', 'genders')" title="Вибрати вручну"><span class="material-symbols-outlined">edit</span></button>
+                                <button class="m3-icon-btn subtle" onclick="requestResetField('gender', 'genders')" title="Випадкове значення"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
                         </div>
                         <div class="field-content" id="gender"></div>
@@ -311,9 +314,12 @@
                         <div class="card-header">
                             <span class="label">Вік</span>
                             <div class="action-btns">
-                                <button class="m3-icon-btn online-reveal-btn" id="reveal-btn-age" onclick="togglePublicReveal('age')" title="Відкрити для всіх"><span class="material-symbols-outlined">visibility</span></button>
-                                <button class="m3-icon-btn" onclick="openEditModal('age', 'ages')"><span class="material-symbols-outlined">edit</span></button>
-                                <button class="m3-icon-btn" onclick="requestResetField('age', 'ages')"><span class="material-symbols-outlined">shuffle</span></button>
+                                <button class="reveal-pill-btn online-reveal-btn" id="reveal-btn-age" onclick="revealCardPublicly('age')">
+                                    <span class="material-symbols-outlined">visibility</span>
+                                    <span class="reveal-btn-text">Відкрити</span>
+                                </button>
+                                <button class="m3-icon-btn subtle" onclick="openEditModal('age', 'ages')" title="Вибрати вручну"><span class="material-symbols-outlined">edit</span></button>
+                                <button class="m3-icon-btn subtle" onclick="requestResetField('age', 'ages')" title="Випадкове значення"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
                         </div>
                         <div class="field-content" id="age"></div>
@@ -322,9 +328,12 @@
                         <div class="card-header">
                             <span class="label">Статура</span>
                             <div class="action-btns">
-                                <button class="m3-icon-btn online-reveal-btn" id="reveal-btn-body" onclick="togglePublicReveal('body')" title="Відкрити для всіх"><span class="material-symbols-outlined">visibility</span></button>
-                                <button class="m3-icon-btn" onclick="openEditModal('body', 'bodies')"><span class="material-symbols-outlined">edit</span></button>
-                                <button class="m3-icon-btn" onclick="requestResetField('body', 'bodies')"><span class="material-symbols-outlined">shuffle</span></button>
+                                <button class="reveal-pill-btn online-reveal-btn" id="reveal-btn-body" onclick="revealCardPublicly('body')">
+                                    <span class="material-symbols-outlined">visibility</span>
+                                    <span class="reveal-btn-text">Відкрити</span>
+                                </button>
+                                <button class="m3-icon-btn subtle" onclick="openEditModal('body', 'bodies')" title="Вибрати вручну"><span class="material-symbols-outlined">edit</span></button>
+                                <button class="m3-icon-btn subtle" onclick="requestResetField('body', 'bodies')" title="Випадкове значення"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
                         </div>
                         <div class="field-content" id="body"></div>
@@ -333,9 +342,12 @@
                         <div class="card-header">
                             <span class="label">Професія</span>
                             <div class="action-btns">
-                                <button class="m3-icon-btn online-reveal-btn" id="reveal-btn-profession" onclick="togglePublicReveal('profession')" title="Відкрити для всіх"><span class="material-symbols-outlined">visibility</span></button>
-                                <button class="m3-icon-btn" onclick="openEditModal('profession', 'professions')"><span class="material-symbols-outlined">edit</span></button>
-                                <button class="m3-icon-btn" onclick="requestResetField('profession', 'professions')"><span class="material-symbols-outlined">shuffle</span></button>
+                                <button class="reveal-pill-btn online-reveal-btn" id="reveal-btn-profession" onclick="revealCardPublicly('profession')">
+                                    <span class="material-symbols-outlined">visibility</span>
+                                    <span class="reveal-btn-text">Відкрити</span>
+                                </button>
+                                <button class="m3-icon-btn subtle" onclick="openEditModal('profession', 'professions')" title="Вибрати вручну"><span class="material-symbols-outlined">edit</span></button>
+                                <button class="m3-icon-btn subtle" onclick="requestResetField('profession', 'professions')" title="Випадкове значення"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
                         </div>
                         <div class="field-content" id="profession"></div>
@@ -348,9 +360,12 @@
                         <div class="card-header">
                             <span class="label">Здоров'я</span>
                             <div class="action-btns">
-                                <button class="m3-icon-btn online-reveal-btn" id="reveal-btn-health" onclick="togglePublicReveal('health')" title="Відкрити для всіх"><span class="material-symbols-outlined">visibility</span></button>
-                                <button class="m3-icon-btn" onclick="openEditModal('health', 'health')"><span class="material-symbols-outlined">edit</span></button>
-                                <button class="m3-icon-btn" onclick="requestResetField('health', 'health')"><span class="material-symbols-outlined">shuffle</span></button>
+                                <button class="reveal-pill-btn online-reveal-btn" id="reveal-btn-health" onclick="revealCardPublicly('health')">
+                                    <span class="material-symbols-outlined">visibility</span>
+                                    <span class="reveal-btn-text">Відкрити</span>
+                                </button>
+                                <button class="m3-icon-btn subtle" onclick="openEditModal('health', 'health')" title="Вибрати вручну"><span class="material-symbols-outlined">edit</span></button>
+                                <button class="m3-icon-btn subtle" onclick="requestResetField('health', 'health')" title="Випадкове значення"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
                         </div>
                         <div class="field-content" id="health"></div>
@@ -359,9 +374,12 @@
                         <div class="card-header">
                             <span class="label">Фобія</span>
                             <div class="action-btns">
-                                <button class="m3-icon-btn online-reveal-btn" id="reveal-btn-phobia" onclick="togglePublicReveal('phobia')" title="Відкрити для всіх"><span class="material-symbols-outlined">visibility</span></button>
-                                <button class="m3-icon-btn" onclick="openEditModal('phobia', 'phobias')"><span class="material-symbols-outlined">edit</span></button>
-                                <button class="m3-icon-btn" onclick="requestResetField('phobia', 'phobias')"><span class="material-symbols-outlined">shuffle</span></button>
+                                <button class="reveal-pill-btn online-reveal-btn" id="reveal-btn-phobia" onclick="revealCardPublicly('phobia')">
+                                    <span class="material-symbols-outlined">visibility</span>
+                                    <span class="reveal-btn-text">Відкрити</span>
+                                </button>
+                                <button class="m3-icon-btn subtle" onclick="openEditModal('phobia', 'phobias')" title="Вибрати вручну"><span class="material-symbols-outlined">edit</span></button>
+                                <button class="m3-icon-btn subtle" onclick="requestResetField('phobia', 'phobias')" title="Випадкове значення"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
                         </div>
                         <div class="field-content" id="phobia"></div>
@@ -374,9 +392,12 @@
                         <div class="card-header">
                             <span class="label">Хобі / Навички</span>
                             <div class="action-btns">
-                                <button class="m3-icon-btn online-reveal-btn" id="reveal-btn-hobby" onclick="togglePublicReveal('hobby')" title="Відкрити для всіх"><span class="material-symbols-outlined">visibility</span></button>
-                                <button class="m3-icon-btn" onclick="openEditModal('hobby', 'hobbies')"><span class="material-symbols-outlined">edit</span></button>
-                                <button class="m3-icon-btn" onclick="requestResetField('hobby', 'hobbies')"><span class="material-symbols-outlined">shuffle</span></button>
+                                <button class="reveal-pill-btn online-reveal-btn" id="reveal-btn-hobby" onclick="revealCardPublicly('hobby')">
+                                    <span class="material-symbols-outlined">visibility</span>
+                                    <span class="reveal-btn-text">Відкрити</span>
+                                </button>
+                                <button class="m3-icon-btn subtle" onclick="openEditModal('hobby', 'hobbies')" title="Вибрати вручну"><span class="material-symbols-outlined">edit</span></button>
+                                <button class="m3-icon-btn subtle" onclick="requestResetField('hobby', 'hobbies')" title="Випадкове значення"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
                         </div>
                         <div class="field-content" id="hobby"></div>
@@ -385,9 +406,12 @@
                         <div class="card-header">
                             <span class="label">Рюкзак <span id="baggage-shield-badge" class="shield-badge" style="display:none;">🛡️ Захищено</span></span>
                             <div class="action-btns">
-                                <button class="m3-icon-btn online-reveal-btn" id="reveal-btn-inventory" onclick="togglePublicReveal('inventory')" title="Відкрити для всіх"><span class="material-symbols-outlined">visibility</span></button>
-                                <button class="m3-icon-btn" onclick="openEditModal('inventory', 'inventory')"><span class="material-symbols-outlined">edit</span></button>
-                                <button class="m3-icon-btn" onclick="requestResetField('inventory', 'inventory')"><span class="material-symbols-outlined">shuffle</span></button>
+                                <button class="reveal-pill-btn online-reveal-btn" id="reveal-btn-inventory" onclick="revealCardPublicly('inventory')">
+                                    <span class="material-symbols-outlined">visibility</span>
+                                    <span class="reveal-btn-text">Відкрити</span>
+                                </button>
+                                <button class="m3-icon-btn subtle" onclick="openEditModal('inventory', 'inventory')" title="Вибрати вручну"><span class="material-symbols-outlined">edit</span></button>
+                                <button class="m3-icon-btn subtle" onclick="requestResetField('inventory', 'inventory')" title="Випадкове значення"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
                         </div>
                         <div class="field-content" id="inventory"></div>
@@ -396,9 +420,12 @@
                         <div class="card-header">
                             <span class="label">Дод. інформація</span>
                             <div class="action-btns">
-                                <button class="m3-icon-btn online-reveal-btn" id="reveal-btn-info" onclick="togglePublicReveal('info')" title="Відкрити для всіх"><span class="material-symbols-outlined">visibility</span></button>
-                                <button class="m3-icon-btn" onclick="openEditModal('info', 'additional_info')"><span class="material-symbols-outlined">edit</span></button>
-                                <button class="m3-icon-btn" onclick="requestResetField('info', 'additional_info')"><span class="material-symbols-outlined">shuffle</span></button>
+                                <button class="reveal-pill-btn online-reveal-btn" id="reveal-btn-info" onclick="revealCardPublicly('info')">
+                                    <span class="material-symbols-outlined">visibility</span>
+                                    <span class="reveal-btn-text">Відкрити</span>
+                                </button>
+                                <button class="m3-icon-btn subtle" onclick="openEditModal('info', 'additional_info')" title="Вибрати вручну"><span class="material-symbols-outlined">edit</span></button>
+                                <button class="m3-icon-btn subtle" onclick="requestResetField('info', 'additional_info')" title="Випадкове значення"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
                         </div>
                         <div class="field-content" id="info"></div>
@@ -419,8 +446,11 @@
                         <div class="card-header">
                             <span class="label">Стоп Бункер 1</span>
                             <div class="action-btns">
-                                <button class="m3-icon-btn highlight" onclick="useSpecial('special1')" title="Активувати картку"><span class="material-symbols-outlined">bolt</span></button>
-                                <button class="m3-icon-btn" onclick="requestResetField('special1', 'specials')" title="Замінити випадково"><span class="material-symbols-outlined">shuffle</span></button>
+                                <button class="reveal-pill-btn use-special-pill" onclick="useSpecial('special1')">
+                                    <span class="material-symbols-outlined">bolt</span>
+                                    <span>Активувати</span>
+                                </button>
+                                <button class="m3-icon-btn subtle" onclick="requestResetField('special1', 'specials')" title="Замінити випадково"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
                         </div>
                         <div class="field-content" id="special1"></div>
@@ -429,21 +459,34 @@
                         <div class="card-header">
                             <span class="label">Стоп Бункер 2</span>
                             <div class="action-btns">
-                                <button class="m3-icon-btn highlight" onclick="useSpecial('special2')" title="Активувати картку"><span class="material-symbols-outlined">bolt</span></button>
-                                <button class="m3-icon-btn" onclick="requestResetField('special2', 'specials')" title="Замінити випадково"><span class="material-symbols-outlined">shuffle</span></button>
+                                <button class="reveal-pill-btn use-special-pill" onclick="useSpecial('special2')">
+                                    <span class="material-symbols-outlined">bolt</span>
+                                    <span>Активувати</span>
+                                </button>
+                                <button class="m3-icon-btn subtle" onclick="requestResetField('special2', 'specials')" title="Замінити випадково"><span class="material-symbols-outlined">shuffle</span></button>
                             </div>
                         </div>
                         <div class="field-content" id="special2"></div>
                     </div>
                 </div>
 
-                <!-- Вкладка 5: СТІЛ ГРАВЦІВ З ВЕРХНІМ ДОК-БАРОМ -->
+                <!-- Вкладка 5: СТІЛ ГРАВЦІВ З АДАПТИВНИМ ВЕРХНІМ ДОК-БАРОМ ТА СТРІЛКАМИ -->
                 <div id="tab-players" class="cards-grid tab-pane">
-                    <!-- ВЕРХНІЙ ДОК-БАР УЧАСНИКІВ (ЯК НИЖНІЙ) -->
                     <div class="wide-card players-top-dock-wrapper">
-                        <div id="players-top-dock" class="m3-tabs-pill glass-panel players-top-pill">
-                            <!-- Сюди рендеряться вкладки гравців -->
+                        <div class="players-carousel-row">
+                            <button class="m3-icon-btn glass-panel dock-nav-arrow" id="prevPlayerBtn" onclick="cycleBoardPlayer(-1)" title="Попередній гравець">
+                                <span class="material-symbols-outlined">chevron_left</span>
+                            </button>
+
+                            <div id="players-top-dock" class="m3-tabs-pill glass-panel players-top-pill">
+                                <!-- Сюди рендеряться вкладки гравців -->
+                            </div>
+
+                            <button class="m3-icon-btn glass-panel dock-nav-arrow" id="nextPlayerBtn" onclick="cycleBoardPlayer(1)" title="Наступний гравець">
+                                <span class="material-symbols-outlined">chevron_right</span>
+                            </button>
                         </div>
+                        <div id="players-count-subtitle" class="players-count-subtitle">Учасників за столом: 1</div>
                     </div>
 
                     <!-- КОНТЕЙНЕР КАРТОК ОБРАНОГО ГРАВЦЯ -->
