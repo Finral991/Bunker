@@ -28,6 +28,7 @@ let roomRef = null;
 let players = []; 
 let allGameData = {};
 let roomState = {};
+let votingState = {};
 let isSheetUnlocked = false;
 let lastSeenEventTimestamp = 0;
 let selectedBoardPlayerId = null;
@@ -40,7 +41,6 @@ window.addEventListener('DOMContentLoaded', () => {
     syncBodyScrollLock();
 });
 
-/* --- БЛОКУВАННЯ ПРОКРУТКИ ПІД ЕКРАНОМ ВХОДУ ТА МОДАЛКАМИ --- */
 function syncBodyScrollLock() {
     const startVisible = document.getElementById('start-screen')?.style.display !== 'none';
     const lobbyVisible = document.getElementById('lobby-screen')?.style.display !== 'none';
@@ -137,6 +137,7 @@ function returnToStart() {
     isSheetUnlocked = false;
     document.body.classList.remove('is-online');
     document.getElementById('nav-tab-players').style.display = 'none';
+    document.getElementById('active-vote-alert-btn').style.display = 'none';
     document.getElementById('character-sheet').classList.add('hidden');
     document.getElementById('bottomNav').style.display = 'none';
     document.getElementById('header-actions').style.display = 'none';
@@ -176,7 +177,6 @@ function startGame() {
     syncBodyScrollLock();
 }
 
-/* Генерація нового досьє зі збереженням уже відкритих карток (якщо preserveRevealed = true) */
 function createDossierPreservingState(existingData, preserveRevealed = true) {
     const fresh = createDossierObject();
     if (existingData && preserveRevealed) {
@@ -184,6 +184,8 @@ function createDossierPreservingState(existingData, preserveRevealed = true) {
         fresh.changesCount = existingData.changesCount || 0;
         fresh.statuses = existingData.statuses ? [...existingData.statuses] : [];
         fresh.baggageProtected = !!existingData.baggageProtected;
+        fresh.eliminated = !!existingData.eliminated;
+        fresh.voteEffects = existingData.voteEffects ? { ...existingData.voteEffects } : {};
     }
     return fresh;
 }
@@ -277,7 +279,7 @@ function unlockSheetAndShowNav() {
     document.getElementById('bottomNav').style.display = 'flex';
 }
 
-/* --- НЕЗВОРОТНЕ ПУБЛІЧНЕ ВІДКРИТТЯ КАРТКИ ДЛЯ СТОЛУ --- */
+/* --- НЕЗВОРОТНЕ ПУБЛІЧНЕ ВІДКРИТТЯ КАРТКИ --- */
 function revealCardPublicly(fieldId) {
     if (myRole === 'offline' || !roomRef || !isSheetUnlocked) return;
     const alreadyOpen = !!(allGameData[myId]?.revealed?.[fieldId]);
@@ -410,6 +412,11 @@ function promptFieldSelection(title, subtitle, allowedFields, callback) {
     syncBodyScrollLock();
 }
 
+function setVoteEffect(playerId, key, val) {
+    if (myRole === 'offline' || !roomRef) return;
+    roomRef.child(`gameData/${playerId}/voteEffects/${key}`).set(val);
+}
+
 function executeSpecialCard(specialFieldId, cardText) {
     const textLower = cardText.toLowerCase();
     const targetField = mapCardTextToFieldKey(cardText);
@@ -496,7 +503,7 @@ function executeSpecialCard(specialFieldId, cardText) {
         }
     }
 
-    // 5. Дії з конкретною характеристикою (відкритість картки у `revealed` не скидається!)
+    // 5. Дії з конкретною характеристикою
     if (targetField) {
         if (textLower.includes("всім гравцям")) {
             players.forEach(p => {
@@ -601,17 +608,18 @@ function executeSpecialCard(specialFieldId, cardText) {
         return;
     }
 
-    // 11. Відкрити всі свої картки добровільно
+    // 11. Відкрити всі свої картки добровільно -> Імунітет
     if (textLower.includes("відкрити всі свої картки добровільно")) {
         const revObj = {};
         CORE_FIELDS.forEach(f => revObj[f] = true);
         roomRef.child(`gameData/${myId}/revealed`).update(revObj);
+        setVoteEffect(myId, 'immune', true);
         addPlayerStatus(myId, "🛡️ Імунітет (Усі картки відкрито)");
         markSpecialAsUsed(specialFieldId, cardText);
         return;
     }
 
-    // 12. Картки голосування на іншого гравця
+    // 12. Картки голосування на іншого гравця (інтегровані з движком голосування!)
     if (
         textLower.includes("голосувати так само") ||
         textLower.includes("перенаправити всі голоси") ||
@@ -620,31 +628,42 @@ function executeSpecialCard(specialFieldId, cardText) {
     ) {
         promptPlayerSelection("Оберіть гравця для дії голосування", cardText, false, (targetPlayer) => {
             if (textLower.includes("голосувати так само")) {
+                setVoteEffect(targetPlayer.id, 'forcedSameAs', myId);
                 addPlayerStatus(targetPlayer.id, `🗳️ Голосує як ${getMyPlayerName()}`);
             } else if (textLower.includes("перенаправити всі голоси")) {
+                setVoteEffect(myId, 'redirectTo', targetPlayer.id);
                 addPlayerStatus(myId, `🔄 Голоси -> ${targetPlayer.name}`);
                 addPlayerStatus(targetPlayer.id, `🎯 Приймає голоси замість ${getMyPlayerName()}`);
             } else if (textLower.includes("заборонити одному гравцю голосувати")) {
-                addPlayerStatus(targetPlayer.id, `🚫 Без права голосу (1 хід)`);
+                setVoteEffect(targetPlayer.id, 'cantVoteThisRound', true);
+                addPlayerStatus(targetPlayer.id, `🚫 Без права голосу (цей хід)`);
             } else if (textLower.includes("захистити іншого гравця")) {
+                setVoteEffect(targetPlayer.id, 'immune', true);
+                setVoteEffect(myId, 'cantVoteNextRound', true);
                 addPlayerStatus(targetPlayer.id, `🛡️ Захищений від вигнання`);
-                addPlayerStatus(myId, `🚫 Втратив голос на наст. хід`);
+                addPlayerStatus(myId, `🚫 Без голосу на наст. хід`);
             }
             markSpecialAsUsed(specialFieldId, `${cardText} -> ${targetPlayer.name}`);
         });
         return;
     }
 
-    // 13. Статуси на себе або стіл
+    // 13. Статуси голосування на себе або стіл
     if (textLower.includes("диктатур")) {
+        setVoteEffect(myId, 'dictator', true);
         addPlayerStatus(myId, "👑 ДИКТАТОР (Вирішує одноосібно)");
     } else if (textLower.includes("двох голосів")) {
+        setVoteEffect(myId, 'doubleVote', true);
         addPlayerStatus(myId, "🗳️×2 Подвійний голос");
     } else if (textLower.includes("пропуск голосування")) {
+        if (roomRef) roomRef.child('voting/active').set(false);
         addPlayerStatus(myId, "⏭️ Стіл пропускає голосування");
     } else if (textLower.includes("втрачаєте право голосу")) {
+        setVoteEffect(myId, 'immune', true);
+        setVoteEffect(myId, 'cantVoteNextRound', true);
         addPlayerStatus(myId, "🛡️ Імунітет (Без голосу наст. хід)");
     } else if (textLower.includes("імунітет")) {
+        setVoteEffect(myId, 'immune', true);
         addPlayerStatus(myId, "🛡️ Імунітет на голосуванні");
     }
 
@@ -715,6 +734,174 @@ function addPlayerStatus(playerId, statusText) {
 
 function clearRoomSpecialsLock() {
     if (roomRef) roomRef.child('roomState/specialsLockedBy').remove();
+}
+
+/* --- СИСТЕМА ГОЛОСУВАННЯ --- */
+function goToVotingTab() {
+    const navBtn = document.getElementById('nav-tab-players');
+    if (navBtn) switchTab('tab-players', navBtn);
+}
+
+function startVotingSession() {
+    if (!roomRef || myRole !== 'host') return;
+    const nextRound = (votingState.round || 0) + 1;
+    roomRef.child('voting').set({
+        active: true,
+        round: nextRound,
+        votes: {},
+        lastResultText: ""
+    });
+    roomRef.child('events').push({
+        timestamp: Date.now(),
+        actor: getMyPlayerName(),
+        type: '🗳️ Голосування',
+        label: `Розпочато раунд голосування #${nextRound}`,
+        oldVal: '',
+        newVal: 'Перейдіть у вкладку «Стіл», щоб віддати голос'
+    });
+}
+
+function cancelVotingSession() {
+    if (!roomRef || myRole !== 'host') return;
+    roomRef.child('voting/active').set(false);
+}
+
+function castVote(targetPlayerId) {
+    if (!roomRef || !votingState.active) return;
+    const myData = allGameData[myId] || {};
+    if (myData.eliminated) {
+        showToast("Вигнані гравці не можуть голосувати!", "block");
+        return;
+    }
+    if (myData.voteEffects?.cantVoteThisRound) {
+        showToast("Ви позбавлені права голосу на цьому раунді!", "block");
+        return;
+    }
+    if (myData.voteEffects?.forcedSameAs) {
+        const masterId = myData.voteEffects.forcedSameAs;
+        const masterName = players.find(p => p.id === masterId)?.name || "іншим гравцем";
+        showToast(`Ваш голос автоматично закріплений за ${masterName}!`, "lock");
+        return;
+    }
+    const targetData = allGameData[targetPlayerId] || {};
+    if (targetData.voteEffects?.immune) {
+        showToast("Цей гравець має імунітет на поточному голосуванні!", "shield");
+        return;
+    }
+
+    roomRef.child(`voting/votes/${myId}`).set(targetPlayerId);
+
+    // Якщо хтось прив'язаний голосувати так само, як ми — автоматично дублюємо його голос!
+    players.forEach(p => {
+        const pEffects = allGameData[p.id]?.voteEffects || {};
+        if (pEffects.forcedSameAs === myId && !allGameData[p.id]?.eliminated) {
+            roomRef.child(`voting/votes/${p.id}`).set(targetPlayerId);
+        }
+    });
+}
+
+function computeTallies() {
+    const rawVotes = votingState.votes || {};
+    const tallies = {}; // candidateId -> { count, voters: [] }
+    players.forEach(p => {
+        tallies[p.id] = { count: 0, voters: [] };
+    });
+
+    Object.entries(rawVotes).forEach(([voterId, chosenTargetId]) => {
+        const voterPlayer = players.find(p => p.id === voterId);
+        const voterData = allGameData[voterId] || {};
+        if (!voterPlayer || voterData.eliminated || voterData.voteEffects?.cantVoteThisRound) return;
+
+        // Перевіряємо, чи має ціль перенаправлення голосів (redirectTo)
+        let finalTargetId = chosenTargetId;
+        const chosenTargetData = allGameData[chosenTargetId] || {};
+        if (chosenTargetData.voteEffects?.redirectTo) {
+            finalTargetId = chosenTargetData.voteEffects.redirectTo;
+        }
+
+        if (!tallies[finalTargetId]) {
+            tallies[finalTargetId] = { count: 0, voters: [] };
+        }
+
+        let weight = 1;
+        if (voterData.voteEffects?.dictator) weight = 100;
+        else if (voterData.voteEffects?.doubleVote) weight = 2;
+
+        tallies[finalTargetId].count += weight;
+        const suffix = weight === 100 ? ' (👑)' : (weight === 2 ? ' (×2)' : '');
+        const redirectNote = finalTargetId !== chosenTargetId ? ' 🔄' : '';
+        tallies[finalTargetId].voters.push(`${voterPlayer.name}${suffix}${redirectNote}`);
+    });
+
+    return tallies;
+}
+
+function finalizeVoting() {
+    if (!roomRef || myRole !== 'host') return;
+    const tallies = computeTallies();
+    let maxVotes = 0;
+    let leaders = [];
+
+    Object.entries(tallies).forEach(([candId, info]) => {
+        if (allGameData[candId]?.eliminated) return;
+        if (info.count > maxVotes) {
+            maxVotes = info.count;
+            leaders = [candId];
+        } else if (info.count === maxVotes && maxVotes > 0) {
+            leaders.push(candId);
+        }
+    });
+
+    let resultMsg = "";
+    if (maxVotes === 0) {
+        resultMsg = "Жодного голосу не віддано. Нікого не вигнано.";
+    } else if (leaders.length > 1) {
+        const names = leaders.map(id => players.find(p => p.id === id)?.name || id).join(', ');
+        resultMsg = `Нічия між: ${names} (по ${maxVotes} гол.). Проведіть переголосування!`;
+    } else {
+        const eliminatedId = leaders[0];
+        const eliminatedName = players.find(p => p.id === eliminatedId)?.name || "Гравець";
+        resultMsg = `За рішенням столу Бункер покидає: ${eliminatedName}!`;
+        roomRef.child(`gameData/${eliminatedId}/eliminated`).set(true);
+    }
+
+    // Очищуємо одноразові ефекти цього раунду і переносимо cantVoteNextRound -> cantVoteThisRound
+    players.forEach(p => {
+        const curEffects = allGameData[p.id]?.voteEffects || {};
+        const nextEffects = {};
+        if (curEffects.cantVoteNextRound) {
+            nextEffects.cantVoteThisRound = true;
+        }
+        roomRef.child(`gameData/${p.id}/voteEffects`).set(nextEffects);
+
+        // Очищуємо тимчасові статуси голосування з бейджів, залишаючи постійні
+        const curStatuses = allGameData[p.id]?.statuses || [];
+        const filteredStatuses = curStatuses.filter(s => s.includes("Багаж захищено"));
+        if (nextEffects.cantVoteThisRound) {
+            filteredStatuses.push("🚫 Без права голосу (цей хід)");
+        }
+        roomRef.child(`gameData/${p.id}/statuses`).set(filteredStatuses);
+    });
+
+    roomRef.child('voting').update({
+        active: false,
+        lastResultText: resultMsg
+    });
+
+    roomRef.child('events').push({
+        timestamp: Date.now(),
+        actor: getMyPlayerName(),
+        type: '⚖️ Підсумок голосування',
+        label: 'Результати голосування',
+        oldVal: '',
+        newVal: resultMsg
+    });
+}
+
+function toggleEliminatePlayer(playerId) {
+    if (!roomRef || myRole !== 'host') return;
+    const current = !!(allGameData[playerId]?.eliminated);
+    roomRef.child(`gameData/${playerId}/eliminated`).set(!current);
 }
 
 /* --- РЕДАГУВАННЯ ХАРАКТЕРИСТИК --- */
@@ -1082,7 +1269,6 @@ function attachRoomListeners() {
         if (!selectedBoardPlayerId && players.length > 0) {
             selectedBoardPlayerId = players[0].id;
         }
-        // Оновлюємо лічильник гравців на вкладці «Стіл» знизу
         const navText = document.getElementById('nav-tab-players-text');
         if (navText) navText.textContent = `Стіл (${players.length})`;
 
@@ -1114,6 +1300,15 @@ function attachRoomListeners() {
         if (banner) {
             banner.style.display = roomState.specialsLockedBy ? 'flex' : 'none';
         }
+    });
+
+    roomRef.child('voting').on('value', (snapshot) => {
+        votingState = snapshot.val() || { active: false, round: 0, votes: {} };
+        const alertBtn = document.getElementById('active-vote-alert-btn');
+        if (alertBtn) {
+            alertBtn.style.display = votingState.active ? 'inline-flex' : 'none';
+        }
+        renderPlayersBoard();
     });
 
     roomRef.child('events').limitToLast(1).on('child_added', (snapshot) => {
@@ -1209,6 +1404,12 @@ function syncMyCharacterUI(myData) {
     const statusesBar = document.getElementById('my-statuses-bar');
     if (statusesBar) {
         statusesBar.innerHTML = '';
+        if (myData.eliminated) {
+            const elChip = document.createElement('span');
+            elChip.className = 'status-chip eliminated-chip';
+            elChip.textContent = '💀 ВИГНАНИЙ З БУНКЕРА';
+            statusesBar.appendChild(elChip);
+        }
         (myData.statuses || []).forEach(st => {
             const chip = document.createElement('span');
             chip.className = 'status-chip';
@@ -1265,7 +1466,94 @@ function syncMyCharacterUI(myData) {
     }
 }
 
-/* --- СТІЛ ГРАВЦІВ ІЗ АДАПТИВНИМ ДОК-БАРОМ ТА СТРІЛКАМИ ДЛЯ ПК --- */
+/* --- РЕНДЕР ПАНЕЛІ ГОЛОСУВАННЯ ТА СТОЛУ --- */
+function renderVotingSection() {
+    const wrapper = document.getElementById('voting-section-wrapper');
+    if (!wrapper || myRole === 'offline') return;
+
+    const isVotingActive = !!votingState.active;
+    const roundNum = votingState.round || 1;
+    const lastResult = votingState.lastResultText || "";
+    const myVoteTarget = votingState.votes?.[myId] || null;
+    const myData = allGameData[myId] || {};
+    const tallies = computeTallies();
+
+    const alivePlayersCount = players.filter(p => !allGameData[p.id]?.eliminated).length;
+    const votedCount = Object.keys(votingState.votes || {}).length;
+
+    let html = `<div class="m3-card glass-panel voting-panel ${isVotingActive ? 'active-voting' : ''}">`;
+
+    // Шапка блоку голосування
+    html += `
+        <div class="voting-header-row">
+            <div class="voting-title">
+                <span class="material-symbols-outlined">${isVotingActive ? 'how_to_vote' : 'ballot'}</span>
+                <span>${isVotingActive ? `Голосування (Раунд #${roundNum}) — Проголосувало: ${votedCount}/${alivePlayersCount}` : 'Система голосування'}</span>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                ${myRole === 'host' && !isVotingActive ? `
+                    <button class="reveal-pill-btn use-special-pill" onclick="startVotingSession()">
+                        <span class="material-symbols-outlined">play_arrow</span> Почати голосування
+                    </button>
+                ` : ''}
+                ${myRole === 'host' && isVotingActive ? `
+                    <button class="reveal-pill-btn use-special-pill" onclick="finalizeVoting()">
+                        <span class="material-symbols-outlined">gavel</span> Підбити підсумки
+                    </button>
+                    <button class="reveal-pill-btn" onclick="cancelVotingSession()">Скасувати</button>
+                ` : ''}
+            </div>
+        </div>
+    `;
+
+    if (lastResult && !isVotingActive) {
+        html += `<div style="font-size: 14px; color: var(--md-primary); font-weight: 600; background: rgba(0,0,0,0.2); padding: 10px 14px; border-radius: 12px;">⚖️ ${escapeHtml(lastResult)}</div>`;
+    }
+
+    if (isVotingActive) {
+        if (myData.eliminated) {
+            html += `<div style="font-size: 13px; color: var(--md-error);">💀 Ви вигнані з Бункера і спостерігаєте за голосуванням.</div>`;
+        } else if (myData.voteEffects?.cantVoteThisRound) {
+            html += `<div style="font-size: 13px; color: var(--md-error);">🚫 Картка «Стоп Бункер» заблокувала ваше право голосу на цьому раунді.</div>`;
+        }
+
+        html += `<div class="voting-candidates-grid">`;
+        players.forEach(p => {
+            const pData = allGameData[p.id] || {};
+            if (pData.eliminated) return; // Вигнаних не показуємо у списку кандидатів на виліт
+
+            const tInfo = tallies[p.id] || { count: 0, voters: [] };
+            const isImmune = !!pData.voteEffects?.immune;
+            const isMyChoice = myVoteTarget === p.id;
+            const votersStr = tInfo.voters.length > 0 ? `Проти: ${tInfo.voters.join(', ')}` : 'Голосів немає';
+
+            html += `
+                <div class="vote-candidate-card ${isMyChoice ? 'my-vote-target' : ''}">
+                    <div class="vote-candidate-info">
+                        <div class="vote-candidate-name">
+                            ${escapeHtml(p.name)} ${p.id === myId ? '(Ви)' : ''}
+                            ${isImmune ? '<span class="shield-badge">🛡️ Імунітет</span>' : ''}
+                        </div>
+                        <div class="vote-candidate-voters">${escapeHtml(votersStr)}</div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+                        ${tInfo.count > 0 ? `<span class="vote-count-pill">${tInfo.count}</span>` : ''}
+                        ${!myData.eliminated && !myData.voteEffects?.cantVoteThisRound && !isImmune ? `
+                            <button class="reveal-pill-btn ${isMyChoice ? 'use-special-pill' : ''}" onclick="castVote('${escapeHtml(p.id)}')">
+                                ${isMyChoice ? '✓ Ваш голос' : 'Голосувати'}
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        });
+        html += `</div>`;
+    }
+
+    html += `</div>`;
+    wrapper.innerHTML = html;
+}
+
 function selectBoardPlayer(playerId) {
     selectedBoardPlayerId = playerId;
     renderPlayersBoard();
@@ -1279,7 +1567,6 @@ function cycleBoardPlayer(direction) {
     selectedBoardPlayerId = players[nextIndex].id;
     renderPlayersBoard();
 
-    // Прокручуємо верхній док-бар до активного гравця
     const activeTabEl = document.querySelector('.player-dock-tab.active');
     if (activeTabEl) {
         activeTabEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
@@ -1287,6 +1574,8 @@ function cycleBoardPlayer(direction) {
 }
 
 function renderPlayersBoard() {
+    renderVotingSection();
+
     const topDock = document.getElementById('players-top-dock');
     const board = document.getElementById('players-board-container');
     const countSubtitle = document.getElementById('players-count-subtitle');
@@ -1299,32 +1588,30 @@ function renderPlayersBoard() {
         selectedBoardPlayerId = players[0]?.id || myId;
     }
 
+    const aliveCount = players.filter(p => !allGameData[p.id]?.eliminated).length;
     if (countSubtitle) {
-        countSubtitle.textContent = `Учасників за столом: ${players.length}`;
+        countSubtitle.textContent = `Учасників за столом: ${players.length} (У грі: ${aliveCount})`;
     }
 
-    // Ховаємо бокові стрілки, якщо в кімнаті лише 1 гравець
     const showArrows = players.length > 1;
     if (prevBtn) prevBtn.style.display = showArrows ? 'flex' : 'none';
     if (nextBtn) nextBtn.style.display = showArrows ? 'flex' : 'none';
 
-    // 1. Рендеримо адаптивний верхній док-бар учасників
     topDock.innerHTML = '';
     players.forEach(p => {
         const pData = allGameData[p.id] || {};
         const openCount = CORE_FIELDS.filter(f => pData.revealed && pData.revealed[f]).length;
         const btn = document.createElement('div');
-        btn.className = `player-dock-tab ${p.id === selectedBoardPlayerId ? 'active' : ''}`;
+        btn.className = `player-dock-tab ${p.id === selectedBoardPlayerId ? 'active' : ''} ${pData.eliminated ? 'eliminated-tab' : ''}`;
         btn.onclick = () => selectBoardPlayer(p.id);
         btn.innerHTML = `
-            <span class="material-symbols-outlined">${p.isHost ? 'military_tech' : 'person'}</span>
+            <span class="material-symbols-outlined">${pData.eliminated ? 'skull' : (p.isHost ? 'military_tech' : 'person')}</span>
             <span>${escapeHtml(p.name)}${p.id === myId ? ' (Ви)' : ''}</span>
             <span class="player-dock-badge">${openCount}/${CORE_FIELDS.length}</span>
         `;
         topDock.appendChild(btn);
     });
 
-    // 2. Рендеримо картки обраного гравця
     board.innerHTML = '';
     const activePlayer = players.find(p => p.id === selectedBoardPlayerId);
     if (!activePlayer) return;
@@ -1334,23 +1621,36 @@ function renderPlayersBoard() {
     const statuses = pData.statuses || [];
     const changes = pData.changesCount || 0;
 
-    let statusesHtml = statuses.map(s => `<span class="status-chip">${escapeHtml(s)}</span>`).join('');
+    let statusesHtml = '';
+    if (pData.eliminated) {
+        statusesHtml += `<span class="status-chip eliminated-chip">💀 ВИГНАНИЙ З БУНКЕРА</span>`;
+    }
+    statusesHtml += statuses.map(s => `<span class="status-chip">${escapeHtml(s)}</span>`).join('');
     if (pData.baggageProtected) {
         statusesHtml += `<span class="status-chip">🛡️ Багаж захищено</span>`;
     }
 
     let cardsHtml = '';
 
-    if (statusesHtml || changes > 0) {
-        cardsHtml += `
-            <div class="m3-card glass-panel wide-card" style="padding: 14px 18px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                    <div class="statuses-bar" style="margin: 0;">${statusesHtml || '<span style="font-size:13px; color:var(--md-on-surface-variant);">Активних ефектів немає</span>'}</div>
+    // Панель статусів обраного гравця + кнопка для Хоста (Вигнати / Повернути в гру)
+    cardsHtml += `
+        <div class="m3-card glass-panel wide-card" style="padding: 14px 18px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                <div class="statuses-bar" style="margin: 0;">
+                    ${statusesHtml || '<span style="font-size:13px; color:var(--md-on-surface-variant);">Активних ефектів немає</span>'}
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
                     ${changes > 0 ? `<span class="changes-badge" style="padding: 4px 10px; font-size: 12px;">Ручних змін: ${changes}</span>` : ''}
+                    ${myRole === 'host' ? `
+                        <button class="reveal-pill-btn" onclick="toggleEliminatePlayer('${escapeHtml(activePlayer.id)}')" title="Керування статусом гравця">
+                            <span class="material-symbols-outlined">${pData.eliminated ? 'restore' : 'person_remove'}</span>
+                            <span>${pData.eliminated ? 'Повернути в гру' : 'Вигнати'}</span>
+                        </button>
+                    ` : ''}
                 </div>
             </div>
-        `;
-    }
+        </div>
+    `;
 
     CORE_FIELDS.forEach(fKey => {
         const isOpen = !!revealedMap[fKey];
@@ -1425,6 +1725,7 @@ function cancelOnline() {
         roomRef.child('status').off();
         roomRef.child('gameData').off();
         roomRef.child('roomState').off();
+        roomRef.child('voting').off();
         roomRef.child('events').off();
 
         if (myRole === 'host' && document.getElementById('character-sheet').classList.contains('hidden')) {
@@ -1437,14 +1738,16 @@ function cancelOnline() {
     roomRef = null;
     players = [];
     allGameData = {};
+    votingState = {};
     myRole = 'offline';
     document.body.classList.remove('is-online');
+    document.getElementById('active-vote-alert-btn').style.display = 'none';
     document.getElementById('lobby-screen').style.display = 'none';
     document.getElementById('start-screen').style.display = 'flex';
     syncBodyScrollLock();
 }
 
-// Експортуємо функції у window для сумісності з HTML-атрибутами onclick
+// Експортуємо функції у window для HTML-атрибутів onclick
 Object.assign(window, {
     switchStartMode, startGame, hostGame, joinGame, startOnlineGame, cancelOnline,
     openRules, closeRules, openMoreMenu, closeMoreMenu, openThemeModal, closeThemeModal,
@@ -1452,5 +1755,6 @@ Object.assign(window, {
     openAuditModal, closeAuditModal, returnToStart, unlockSheetAndShowNav, switchTab,
     revealCardPublicly, revealExtraCardPublicly, cycleBoardPlayer, openEditModal, closeEditModal,
     filterOptions, confirmEditSelection, requestResetField, requestNewDossier,
-    confirmAction, cancelAction, useSpecial, clearRoomSpecialsLock, closeTargetModal
+    confirmAction, cancelAction, useSpecial, clearRoomSpecialsLock, closeTargetModal,
+    startVotingSession, cancelVotingSession, castVote, finalizeVoting, toggleEliminatePlayer, goToVotingTab
 });

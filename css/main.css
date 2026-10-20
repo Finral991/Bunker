@@ -15,7 +15,6 @@ body {
     overflow-x: hidden;
 }
 
-/* Блокування скролу під екраном автентифікації та модалками */
 body.no-scroll {
     overflow: hidden !important;
     height: 100vh !important;
@@ -98,35 +97,47 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 .telegram-link svg { fill: currentColor; transition: transform 0.3s ease; }
 .telegram-link:hover, .telegram-link:active { color: var(--md-primary); opacity: 1; }
 
-/* --- MATERIAL YOU НИЖНІЙ ДОК-БАР --- */
+/* --- MATERIAL YOU НИЖНІЙ ДОК-БАР (Компактний + підписи на ПК) --- */
 .m3-bottom-container {
     position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
-    display: flex; gap: 8px; z-index: 100; align-items: center; justify-content: center;
-    width: calc(100vw - 20px); max-width: 540px;
+    display: flex; gap: 10px; z-index: 100; align-items: center; justify-content: center;
+    width: fit-content; max-width: calc(100vw - 20px);
 }
 .m3-tabs-pill {
-    display: flex; align-items: center; justify-content: space-between;
-    border-radius: 100px; padding: 5px; gap: 2px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 100px; padding: 6px; gap: 4px;
     background-color: var(--md-surface-container); 
     border: 1px solid rgba(255,255,255,0.06);
     box-shadow: 0 4px 18px rgba(0,0,0,0.45);
-    flex: 1 1 auto; min-width: 0; overflow-x: auto; scrollbar-width: none;
+    flex: 0 1 auto; width: fit-content; min-width: 0; overflow-x: auto; scrollbar-width: none;
 }
 .m3-tabs-pill::-webkit-scrollbar { display: none; }
 
 .m3-tab {
     display: flex; align-items: center; justify-content: center; gap: 4px;
-    padding: 10px 10px; border-radius: 100px; cursor: pointer;
-    color: var(--md-on-surface-variant); transition: background 0.3s, color 0.3s, padding 0.3s;
+    padding: 10px 12px; border-radius: 100px; cursor: pointer;
+    color: var(--md-on-surface-variant); transition: background 0.25s, color 0.25s, padding 0.25s;
     flex-shrink: 0; user-select: none;
 }
+.m3-tab:hover { background-color: rgba(255, 255, 255, 0.05); }
 .m3-tab .text {
     max-width: 0; opacity: 0; overflow: hidden; white-space: nowrap;
     transition: max-width 0.3s ease, opacity 0.3s ease, margin 0.3s ease;
     font-weight: 600; font-size: 13px; margin-left: 0;
 }
-.m3-tab.active { background-color: var(--md-primary); color: var(--md-on-primary); padding: 10px 14px; }
-.m3-tab.active .text { max-width: 95px; opacity: 1; margin-left: 3px; }
+.m3-tab.active { background-color: var(--md-primary); color: var(--md-on-primary); padding: 10px 16px; }
+.m3-tab.active .text { max-width: 110px; opacity: 1; margin-left: 4px; }
+
+/* НА ПК (екрани від 640px) ПОКАЗУЄМО НАЗВИ УСІХ ВКЛАДОК ПОСТІЙНО */
+@media (min-width: 640px) {
+    .m3-tabs-pill { gap: 6px; padding: 6px 8px; }
+    .m3-tab { padding: 10px 16px; gap: 6px; }
+    .m3-tab .text {
+        max-width: 120px !important;
+        opacity: 1 !important;
+        margin-left: 2px !important;
+    }
+}
 
 .m3-fab-circle {
     width: 50px; height: 50px; border-radius: 50%; 
@@ -136,6 +147,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
     background-color: var(--md-surface-container);
     box-shadow: 0 4px 18px rgba(0,0,0,0.45);
 }
+.m3-fab-circle:hover { border-color: var(--md-primary) !important; }
 .m3-fab-circle:active { transform: scale(0.9); }
 
 @media (max-width: 390px) {
@@ -145,7 +157,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
     .m3-fab-circle { width: 46px; height: 46px; flex: 0 0 46px; }
 }
 
-/* --- ВЕРХНІЙ ДОК-БАР ПЕРЕМИКАННЯ ГРАВЦІВ (АДАПТИВНИЙ ПІД КІЛЬКІСТЬ ЛЮДЕЙ + СТРІЛКИ) --- */
+/* --- ВЕРХНІЙ ДОК-БАР ПЕРЕМИКАННЯ ГРАВЦІВ --- */
 .players-top-dock-wrapper {
     position: sticky; top: 10px; z-index: 40;
     display: flex; flex-direction: column; align-items: center; gap: 6px;
@@ -156,10 +168,10 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
     gap: 8px; width: 100%; max-width: 100%;
 }
 .players-top-pill {
-    flex: 0 1 auto !important; /* Не розтягується на весь екран, якщо гравець 1 */
+    flex: 0 1 auto !important;
     width: fit-content;
     max-width: calc(100% - 96px);
-    justify-content: center;
+    justify-content: flex-start;
     gap: 6px; padding: 6px;
     overflow-x: auto; scroll-behavior: smooth;
 }
@@ -177,7 +189,7 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 .players-count-subtitle {
     font-size: 12px; font-weight: 700; text-transform: uppercase;
     letter-spacing: 0.6px; color: var(--md-on-surface-variant);
-    background: rgba(0,0,0,0.25); padding: 3px 12px; border-radius: 100px;
+    background: rgba(0,0,0,0.35); padding: 4px 12px; border-radius: 100px;
 }
 .player-dock-tab {
     display: flex; align-items: center; gap: 6px;
@@ -192,12 +204,73 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
     background-color: var(--md-primary); color: var(--md-on-primary);
     box-shadow: 0 2px 10px rgba(0,0,0,0.25);
 }
+.player-dock-tab.eliminated-tab {
+    opacity: 0.55; text-decoration: line-through;
+}
 .player-dock-badge {
     font-size: 11px; padding: 1px 6px; border-radius: 10px;
     background: rgba(0,0,0,0.25); font-weight: 700;
 }
 
-/* --- КНОПКИ В КАРТКАХ (ЗРОЗУМІЛА ІЄРАРХІЯ) --- */
+/* --- СИСТЕМА ГОЛОСУВАННЯ --- */
+.vote-alert-pill {
+    background-color: var(--md-error); color: #141218;
+    border: none; border-radius: 100px; padding: 7px 14px;
+    font-size: 12px; font-weight: 800; text-transform: uppercase;
+    display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+    animation: pulseVote 1.5s infinite;
+}
+.vote-alert-pill .material-symbols-outlined { font-size: 16px; }
+@keyframes pulseVote {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+}
+
+.voting-panel {
+    padding: 18px; display: flex; flex-direction: column; gap: 14px;
+    border: 1px solid rgba(208, 188, 255, 0.25) !important;
+}
+.voting-panel.active-voting {
+    border-color: var(--md-primary) !important;
+    background: linear-gradient(180deg, rgba(208, 188, 255, 0.07) 0%, var(--md-surface-container) 100%);
+}
+.voting-header-row {
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+}
+.voting-title {
+    font-size: 17px; font-weight: 700; color: var(--md-primary);
+    display: flex; align-items: center; gap: 8px;
+}
+.voting-candidates-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px;
+}
+.vote-candidate-card {
+    background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 16px; padding: 12px 14px;
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    transition: 0.2s;
+}
+.vote-candidate-card.my-vote-target {
+    border-color: var(--md-primary);
+    background: rgba(208, 188, 255, 0.12);
+}
+.vote-candidate-info {
+    display: flex; flex-direction: column; gap: 3px; min-width: 0;
+}
+.vote-candidate-name {
+    font-size: 15px; font-weight: 700; color: var(--md-on-surface);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.vote-candidate-voters {
+    font-size: 11px; color: var(--md-on-surface-variant);
+}
+.vote-count-pill {
+    background: rgba(255, 180, 171, 0.18); color: var(--md-error);
+    border: 1px solid rgba(255, 180, 171, 0.35);
+    padding: 3px 9px; border-radius: 100px; font-size: 12px; font-weight: 800;
+}
+
+/* --- КНОПКИ В КАРТКАХ --- */
 .m3-btn {
     padding: 12px 24px; border-radius: 100px; font-size: 15px; font-weight: 600;
     border: none; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px;
@@ -218,7 +291,6 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
     background-color: rgba(0, 0, 0, 0.15); margin-right: 4px; font-size: 18px;
 }
 
-/* Компактні другорядні кнопки редагування/рандому */
 .m3-icon-btn {
     width: 36px; height: 36px; border-radius: 50%; border: none;
     background-color: rgba(255,255,255,0.07); color: var(--md-on-surface);
@@ -233,7 +305,6 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 .m3-icon-btn:hover { background-color: rgba(255,255,255,0.14); color: var(--md-on-surface); }
 .m3-icon-btn:active { transform: scale(0.9); }
 
-/* Виразна головна кнопка «Відкрити» / «Активувати» */
 .reveal-pill-btn {
     height: 34px; padding: 0 12px; border-radius: 100px;
     border: 1px solid rgba(208, 188, 255, 0.3);
@@ -257,7 +328,6 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
 .online-reveal-btn { display: none; }
 body.is-online .online-reveal-btn { display: inline-flex; }
 
-/* Стан після відкриття (Незворотний!) */
 .online-reveal-btn.is-public {
     background-color: rgba(156, 214, 158, 0.18);
     color: #9CD69E;
@@ -305,6 +375,10 @@ body.is-online .online-reveal-btn { display: inline-flex; }
     font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 6px;
     background-color: var(--md-secondary-container); color: var(--md-on-secondary-container);
     display: inline-flex; align-items: center; gap: 4px;
+}
+.status-chip.eliminated-chip {
+    background-color: rgba(255, 180, 171, 0.2); color: var(--md-error);
+    border: 1px solid var(--md-error);
 }
 
 .status-pill.animated-progress {

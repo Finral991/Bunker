@@ -93,8 +93,8 @@
             <div class="rules-content">
                 <p><strong>Мета:</strong> Довести, що саме ви найкорисніші для виживання людства, і потрапити до Бункера.</p>
                 <p><strong>Хід гри:</strong> Гравці по колу відкривають свої характеристики кнопкою <strong>«Відкрити»</strong>. Відкриту характеристику сховати назад уже не можна!</p>
-                <p><strong>Стіл гравців:</strong> У вкладці «Стіл» зверху є панель перемикання між учасниками зі стрілками по боках для зручного перегляду з ПК та смартфона.</p>
-                <p><strong>Стоп Бункер:</strong> Спеціальні картки для зміни ходу гри. При натисканні на <strong>«Активувати ⚡»</strong> автоматично застосовують свій ефект, зберігаючи вже відкриті позиції.</p>
+                <p><strong>Голосування:</strong> У вкладці «Стіл» Хост запускає голосування. Всі бафи від карток «Стоп Бункер» (імунітет, подвійний голос, перенаправлення голосів, диктатура) враховуються автоматично!</p>
+                <p><strong>Стоп Бункер:</strong> Спеціальні картки для зміни ходу гри. При натисканні на <strong>«Активувати ⚡»</strong> автоматично застосовують свій ефект.</p>
             </div>
             <div class="dialog-actions">
                 <button class="m3-btn filled" onclick="closeRules()">Зрозуміло</button>
@@ -233,7 +233,7 @@
         </div>
     </div>
 
-    <!-- АДАПТИВНИЙ БОТОМ БАР -->
+    <!-- АДАПТИВНИЙ БОТОМ БАР (На ПК показує всі назви, не розтягується) -->
     <div class="m3-bottom-container" id="bottomNav" style="display: none;">
         <div class="m3-tabs-pill glass-panel">
             <div class="m3-tab active" onclick="switchTab('tab-bio', this)">
@@ -277,6 +277,9 @@
                 </div>
                 
                 <div class="header-right-actions">
+                    <button id="active-vote-alert-btn" class="vote-alert-pill" style="display: none;" onclick="goToVotingTab()">
+                        <span class="material-symbols-outlined">how_to_vote</span> Йде голосування!
+                    </button>
                     <div class="status-pill animated-progress" id="header-actions" style="display: none;">
                         <span class="material-symbols-outlined progress-icon">sync</span>
                         <span class="status-text" id="room-status-label">Очікує рішення...</span>
@@ -470,17 +473,19 @@
                     </div>
                 </div>
 
-                <!-- Вкладка 5: СТІЛ ГРАВЦІВ З АДАПТИВНИМ ВЕРХНІМ ДОК-БАРОМ ТА СТРІЛКАМИ -->
+                <!-- Вкладка 5: СТІЛ ГРАВЦІВ ТА ГОЛОСУВАННЯ -->
                 <div id="tab-players" class="cards-grid tab-pane">
+                    <!-- ПАНЕЛЬ ГОЛОСУВАННЯ -->
+                    <div id="voting-section-wrapper" class="wide-card"></div>
+
+                    <!-- ВЕРХНІЙ ДОК-БАР УЧАСНИКІВ ЗІ СТРІЛКАМИ -->
                     <div class="wide-card players-top-dock-wrapper">
                         <div class="players-carousel-row">
                             <button class="m3-icon-btn glass-panel dock-nav-arrow" id="prevPlayerBtn" onclick="cycleBoardPlayer(-1)" title="Попередній гравець">
                                 <span class="material-symbols-outlined">chevron_left</span>
                             </button>
 
-                            <div id="players-top-dock" class="m3-tabs-pill glass-panel players-top-pill">
-                                <!-- Сюди рендеряться вкладки гравців -->
-                            </div>
+                            <div id="players-top-dock" class="m3-tabs-pill glass-panel players-top-pill"></div>
 
                             <button class="m3-icon-btn glass-panel dock-nav-arrow" id="nextPlayerBtn" onclick="cycleBoardPlayer(1)" title="Наступний гравець">
                                 <span class="material-symbols-outlined">chevron_right</span>
